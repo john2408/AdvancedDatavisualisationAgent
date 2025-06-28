@@ -4,6 +4,7 @@ import plotly.express as px
 import time
 from datetime import datetime
 from frontend.utils import load_multiple_css
+from frontend.simple_audio import process_audio_input
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -146,6 +147,25 @@ with st.sidebar:
     # Chat input
     if prompt := st.chat_input("Ask about your Supabase data..."):
         st.session_state.run_query = prompt
+    
+    # Voice input using Streamlit's native audio input
+    st.markdown("---")
+    st.markdown("#### 🎤 Voice Input")
+    st.markdown("*Click the microphone button below to record your question*")
+    
+    audio_value = st.audio_input("Record a voice message")
+    
+    if audio_value:
+        # Show the recorded audio for user review
+        st.markdown("**Your recording:**")
+        st.audio(audio_value, format='audio/wav')
+        
+        # Process the audio and get transcription
+        transcribed_text = process_audio_input(audio_value)
+        
+        if transcribed_text:
+            # Set the transcribed text as the query to run
+            st.session_state.run_query = transcribed_text
 
 
 # --- MAIN PANEL (VISUALIZATION AREA) ---
