@@ -1,0 +1,7 @@
+/* Main CSS file that imports all component styles */
+@import url('./base.css');
+@import url('./sidebar.css');
+@import url('./chat.css');
+@import url('./components.css');
+
+/* Additional custom overrides can be added here */

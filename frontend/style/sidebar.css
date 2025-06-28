@@ -1,0 +1,31 @@
+/* Sidebar-specific styling */
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF;
+    border-right: 1px solid #E0E0E0;
+}
+
+.st-emotion-cache-16txtl3 {
+    padding-top: 2rem; /* Adjust top padding for sidebar content */
+}
+
+/* Sidebar text styling */
+[data-testid="stSidebar"] .stMarkdown p {
+    color: #374151 !important;
+}
+
+[data-testid="stSidebar"] h1, 
+[data-testid="stSidebar"] h2, 
+[data-testid="stSidebar"] h3, 
+[data-testid="stSidebar"] h4 {
+    color: #1F2937 !important;
+}
+
+/* Sidebar specific text override */
+[data-testid="stSidebar"] div, 
+[data-testid="stSidebar"] p, 
+[data-testid="stSidebar"] span, 
+[data-testid="stSidebar"] label {
+    color: #374151 !important;
+}

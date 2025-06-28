@@ -1,0 +1,57 @@
+/* Chat-specific styling */
+
+/* Chat input box */
+[data-testid="stChatInput"] {
+    background-color: #FFFFFF !important;
+    border: 2px solid #000000 !important;
+    border-radius: 25px !important;
+}
+
+[data-testid="stChatInput"] > div {
+    background-color: #FFFFFF !important;
+    border-radius: 25px !important;
+}
+
+[data-testid="stChatInput"] input {
+    background-color: #FFFFFF !important;
+    color: #1F2937 !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    background-color: #FFFFFF !important;
+    color: #1F2937 !important;
+    border-radius: 25px !important;
+}
+
+/* Chat message styling */
+[data-testid="stChatMessage"] {
+    background-color: #F3F4F6;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+}
+
+/* Chat input container and all child elements */
+.stChatFloatingInputContainer {
+    background-color: #FFFFFF !important;
+    border: 2px solid #000000 !important;
+    border-radius: 25px !important;
+}
+
+.stChatFloatingInputContainer * {
+    background-color: #FFFFFF !important;
+    color: #1F2937 !important;
+}
+
+/* Additional chat input styling */
+[data-testid="stChatInput"] * {
+    background-color: #FFFFFF !important;
+    color: #1F2937 !important;
+}
+
+/* Style the actual input field */
+[data-testid="stChatInput"] [contenteditable="true"] {
+    background-color: #FFFFFF !important;
+    color: #1F2937 !important;
+    border: 2px solid #000000 !important;
+    border-radius: 25px !important;
+}

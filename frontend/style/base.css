@@ -1,0 +1,46 @@
+/* Base styling and layout */
+
+/* Main app layout */
+.stApp {
+    background-color: #F0F2F6;
+}
+
+/* Hide Streamlit's default header and footer */
+header {visibility: hidden;}
+footer {visibility: hidden;}
+#MainMenu {visibility: hidden;}
+
+/* Fix text colors for main content */
+.main .block-container {
+    color: #1F2937;
+}
+
+/* Header text styling */
+h1, h2, h3, h4, h5, h6 {
+    color: #1F2937 !important;
+}
+
+/* General text styling */
+.stMarkdown p {
+    color: #1F2937 !important;
+}
+
+/* Force all text elements to have proper colors */
+.stApp * {
+    color: inherit;
+}
+
+/* Main content area text */
+.main * {
+    color: #1F2937;
+}
+
+/* Override any white text */
+[style*="color: white"], [style*="color: #FFFFFF"], [style*="color: #ffffff"] {
+    color: #1F2937 !important;
+}
+
+/* Ensure proper contrast for all text */
+.stApp div, .stApp p, .stApp span, .stApp label {
+    color: #1F2937 !important;
+}

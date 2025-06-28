@@ -1,0 +1,50 @@
+/* Button and component styling */
+
+/* Suggestion buttons styling */
+.stButton>button {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    border: none;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.stButton>button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Specific colors for suggestion buttons */
+div[data-testid="stHorizontalBlock"]>div:nth-child(1) .stButton>button { 
+    background-color: #E0E7FF; 
+    color: #4F46E5; 
+}
+
+div[data-testid="stHorizontalBlock"]>div:nth-child(2) .stButton>button { 
+    background-color: #D1FAE5; 
+    color: #065F46; 
+}
+
+div[data-testid="stHorizontalBlock"]>div:nth-child(3) .stButton>button { 
+    background-color: #FEF3C7; 
+    color: #92400E; 
+}
+
+/* Welcome message container */
+.welcome-container {
+    background-color: #FFFFFF;
+    border: 2px dashed #D1D5DB;
+    border-radius: 20px;
+    padding: 3rem;
+    text-align: center;
+    margin: auto;
+    max-width: 800px;
+}
+
+.welcome-container h2 {
+    color: #1F2937 !important;
+}
+
+.welcome-container p {
+    color: #6B7280 !important;
+}
