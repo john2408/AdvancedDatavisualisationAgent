@@ -176,31 +176,6 @@ The project uses a modular CSS approach. To add new styles:
 2. Add the file to the CSS loading list in `app.py`
 3. Document changes in `frontend/style/README.md`
 
-## 📝 Roadmap
-
-### Phase 1: Core Features ✅
-- [x] Basic Streamlit interface
-- [x] Chat-based interaction
-- [x] Sample visualizations
-- [x] Modular CSS architecture
-
-### Phase 2: AI Integration 🚧
-- [ ] CrewAI agent implementation
-- [ ] RAG pipeline with Elasticsearch
-- [ ] Natural language to SQL conversion
-- [ ] Advanced chart generation
-
-### Phase 3: Database Integration 📋
-- [ ] Supabase connection
-- [ ] Star schema support
-- [ ] Real-time data updates
-- [ ] Performance optimization
-
-### Phase 4: Advanced Features 📋
-- [ ] Multi-chart dashboards
-- [ ] Export capabilities
-- [ ] User authentication
-- [ ] Custom themes
 
 ## 🤝 Contributing
 
