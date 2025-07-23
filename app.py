@@ -3,7 +3,7 @@ import pandas as pd
 import time
 from datetime import datetime
 from frontend.utils import load_multiple_css
-from agents.sql_crew import sql_generator_crew
+from agents.sql_crew import sql_generator_crew, sql_reviewer_crew
 from utils.db_simulator import get_structured_schema, run_query
 
 # Try to import plotly, but handle gracefully if not available
@@ -75,21 +75,45 @@ def get_rag_context(query: str):
 
 def run_agent_crew(user_query: str):
     """
-    Main function for running the CrewAI process with SQL generation.
-    This integrates the SQL generator agent with the existing workflow.
+    Main function for running the CrewAI process with SQL generation and review.
+    This integrates both the SQL generator and reviewer agents.
     """
     # 1. Planner & Research Agent Simulation
     rag_context = get_rag_context(user_query)
 
-    # 2. SQL Agent - Use the actual query generator agent
+    # 2. SQL Generation Agent - Generate initial SQL
     try:
         db_schema = load_schema()
-        gen_output = sql_generator_crew.kickoff(inputs={"user_input": user_query, "db_schema": db_schema})
-        sql_query = gen_output.pydantic.sqlquery
-        st.info(f"Generated SQL Query: {sql_query}")
         
-        # Execute the generated query
-        query_result = query_database(sql_query)
+        # Step 1: Generate SQL using the generator agent
+        st.info("🤖 Generating initial SQL query...")
+        gen_output = sql_generator_crew.kickoff(inputs={"user_input": user_query, "db_schema": db_schema})
+        initial_sql = gen_output.pydantic.sqlquery
+        st.info(f"📝 Initial SQL Query: {initial_sql}")
+        
+        # Step 2: Review and optimize the SQL using GPT-4o reviewer
+        st.info("🔍 Reviewing SQL with GPT-4o verifier...")
+        review_output = sql_reviewer_crew.kickoff(inputs={"sql_query": initial_sql, "db_schema": db_schema})
+        reviewed_sql = review_output.pydantic.reviewed_sqlquery
+        
+        # Show comparison if the SQL was changed
+        if initial_sql.strip() != reviewed_sql.strip():
+            st.success("✨ SQL query was optimized by the reviewer!")
+            with st.expander("🔄 SQL Query Comparison"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.text("Original SQL:")
+                    st.code(initial_sql, language="sql")
+                with col2:
+                    st.text("Reviewed SQL:")
+                    st.code(reviewed_sql, language="sql")
+        else:
+            st.success("✅ SQL query approved by reviewer (no changes needed)")
+        
+        st.info(f"🎯 Final SQL Query: {reviewed_sql}")
+        
+        # Step 3: Execute the reviewed query
+        query_result = query_database(reviewed_sql)
         
         # Create a simple dummy visualization if plotly is available
         if PLOTLY_AVAILABLE:
@@ -104,27 +128,29 @@ def run_agent_crew(user_query: str):
             fig = None
         
         # Presentation Agent Simulation
-        summary = f"I generated and executed the following SQL query: {sql_query}. Check the debug section to see the raw results."
+        summary = f"I generated an initial SQL query, reviewed it with GPT-4o, and executed the final query: {reviewed_sql}. Check the debug section to see the results."
         
     except Exception as e:
-        st.error(f"Error in SQL generation or execution: {e}")
+        st.error(f"Error in SQL generation or review: {e}")
         # Fallback to mock data for now
         if PLOTLY_AVAILABLE:
             fig = px.bar(
                 x=['Error'], 
                 y=[0], 
-                title='Query Generation Failed',
+                title='Query Generation/Review Failed',
                 template="seaborn"
             )
         else:
             fig = None
-        summary = f"There was an error generating or executing the SQL query for: {user_query}. Error: {str(e)}"
+        summary = f"There was an error generating or reviewing the SQL query for: {user_query}. Error: {str(e)}"
         query_result = None
+        reviewed_sql = None
     
     response = {
         "chat_message": summary,
         "plotly_figure": fig,  # Store the figure object directly
         "query_result": query_result,  # Store the query result for debugging
+        "reviewed_sql": reviewed_sql,  # Store the final reviewed SQL
         "rag_summary": rag_context,
         "ran_at": datetime.now().strftime("%I:%M:%S %p")
     }
@@ -165,6 +191,11 @@ def display_visualization(viz_data):
     """Displays the chart and summaries in the main panel."""
     if viz_data.get("rag_summary"):
         st.info(f"**Research Found:** {viz_data['rag_summary']}", icon="💡")
+    
+    # Display the final reviewed SQL query prominently
+    if viz_data.get("reviewed_sql"):
+        st.subheader("🎯 Final SQL Query (Reviewed by GPT-4o)")
+        st.code(viz_data["reviewed_sql"], language="sql")
     
     # Display the dummy chart if plotly is available
     if PLOTLY_AVAILABLE and viz_data.get("plotly_figure"):
@@ -249,7 +280,7 @@ if st.session_state.run_query:
 # This logic block handles displaying the results after a query has been run
 # It checks if the latest message is from a user, implying the assistant needs to respond.
 if st.session_state.messages[-1]["role"] == "user":
-    with st.spinner("Generating SQL query and analyzing your request..."):
+    with st.spinner("Generating SQL query, reviewing with GPT-4o, and analyzing your request..."):
         # Run the agent crew
         visualization_data = run_agent_crew(st.session_state.messages[-1]["content"])
         

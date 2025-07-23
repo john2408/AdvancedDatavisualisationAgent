@@ -19,7 +19,7 @@ query_reviewer_agent:
         provide suggestions to improve the query's performance and readability.
   allow_delegation: False
   verbose: True
-  model: openai/gpt-4o-mini
+  model: openai/gpt-4o
   temperature: 0.2
 
 
