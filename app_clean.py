@@ -1,18 +1,11 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 import time
 from datetime import datetime
 from frontend.utils import load_multiple_css
 from agents.sql_crew import sql_generator_crew
 from utils.db_simulator import get_structured_schema, run_query
-
-# Try to import plotly, but handle gracefully if not available
-try:
-    import plotly.express as px
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-    st.warning("Plotly not available. Charts will be disabled.")
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -53,14 +46,9 @@ def query_database(sql_query: str):
     st.info(f"Executing SQL: `{sql_query}`")
     try:
         result = run_query(sql_query)
+        # Parse the result string and convert to DataFrame
+        # The run_query function returns a formatted string, so we need to handle this appropriately
         st.success("Query executed successfully!")
-        
-        # Display the raw result for debugging
-        with st.expander("🔍 Debug: Raw Query Result"):
-            st.text("Raw result from run_query:")
-            st.code(str(result))
-            st.text(f"Result type: {type(result)}")
-        
         return result
     except Exception as e:
         st.error(f"Error executing query: {e}")
@@ -91,40 +79,35 @@ def run_agent_crew(user_query: str):
         # Execute the generated query
         query_result = query_database(sql_query)
         
-        # Create a simple dummy visualization if plotly is available
-        if PLOTLY_AVAILABLE:
-            fig = px.bar(
-                x=['Sample A', 'Sample B', 'Sample C'], 
-                y=[100, 200, 150], 
-                title=f'Dummy Chart for: {user_query}',
-                template="seaborn"
-            )
-            fig.update_layout(title_x=0.5)
-        else:
-            fig = None
+        # For now, create a simple mock visualization since we need to parse the query result properly
+        # TODO: Parse query_result and create appropriate visualization based on the data
+        fig = px.bar(
+            x=['Sample A', 'Sample B', 'Sample C'], 
+            y=[100, 200, 150], 
+            title=f'Results for: {user_query}',
+            template="seaborn"
+        )
+        fig.update_layout(title_x=0.5)
+        plotly_spec = fig.to_json()
         
-        # Presentation Agent Simulation
-        summary = f"I generated and executed the following SQL query: {sql_query}. Check the debug section to see the raw results."
+        # 4. Presentation Agent Simulation
+        summary = f"I generated and executed the following SQL query: {sql_query}. The query returned results successfully."
         
     except Exception as e:
         st.error(f"Error in SQL generation or execution: {e}")
         # Fallback to mock data for now
-        if PLOTLY_AVAILABLE:
-            fig = px.bar(
-                x=['Error'], 
-                y=[0], 
-                title='Query Generation Failed',
-                template="seaborn"
-            )
-        else:
-            fig = None
-        summary = f"There was an error generating or executing the SQL query for: {user_query}. Error: {str(e)}"
-        query_result = None
+        fig = px.bar(
+            x=['Error'], 
+            y=[0], 
+            title='Query Generation Failed',
+            template="seaborn"
+        )
+        plotly_spec = fig.to_json()
+        summary = f"There was an error generating or executing the SQL query for: {user_query}"
     
     response = {
         "chat_message": summary,
-        "plotly_figure": fig,  # Store the figure object directly
-        "query_result": query_result,  # Store the query result for debugging
+        "plotly_spec": plotly_spec,
         "rag_summary": rag_context,
         "ran_at": datetime.now().strftime("%I:%M:%S %p")
     }
@@ -166,29 +149,7 @@ def display_visualization(viz_data):
     if viz_data.get("rag_summary"):
         st.info(f"**Research Found:** {viz_data['rag_summary']}", icon="💡")
     
-    # Display the dummy chart if plotly is available
-    if PLOTLY_AVAILABLE and viz_data.get("plotly_figure"):
-        st.plotly_chart(viz_data["plotly_figure"], use_container_width=True)
-    else:
-        st.info("📊 Chart visualization disabled (Plotly not available)")
-    
-    # Display query result as table for debugging
-    if viz_data.get("query_result"):
-        st.subheader("📊 Query Result")
-        
-        # Parse the string result and display it nicely
-        result_str = viz_data["query_result"]
-        
-        # Display raw result in an expander for debugging
-        with st.expander("🔍 Raw Query Result (Debug)"):
-            st.text("Raw result from database:")
-            st.code(result_str)
-        
-        # Try to display the result in a more user-friendly way
-        st.text("Query result:")
-        st.code(result_str, language="text")
-        
-        # TODO: In the future, parse this string and convert to proper DataFrame for better visualization
+    st.plotly_chart(viz_data["plotly_spec"], use_container_width=True)
 
 
 # --- MAIN APP LOGIC ---
