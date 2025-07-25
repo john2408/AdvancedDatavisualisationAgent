@@ -1,0 +1,40 @@
+query_task:
+  description: |
+    You are an expert SQL assistant. Your job is to translate user requests into SQL queries using ONLY the tables and columns listed below.
+    SCHEMA:
+    {db_schema}
+    USER REQUEST:
+    {user_input}
+    IMPORTANT:
+    - First, list which tables and columns from the schema you will use to answer the request.
+    - Then, write the SQL query.
+    - Only use the tables and columns from the schema above.
+    - If the request cannot be satisfied with the schema, return a SQL comment (starting with --) explaining why.
+    - Do NOT invent tables or columns.
+    - Make sure the query matches the user's intent as closely as possible.
+  expected_output: First, a list of tables and columns to use. Then, a syntactically correct SQL query using appropriate filters, joins, and groupings.
+
+review_task:
+  description: |
+    Review the following SQL query for correctness, performance, and readability: {sql_query} and verify that the query fits the schema: {db_schema}
+    Ensure that only tables and columns from the provided schema are used.
+    IMPORTANT:
+    - First, only review the SQL query provided for correctness, performance, or readability
+    - Do NOT invent new tables or columns.
+    - If the Query is already correct, return it unchanged.
+    - If the Query is not correct and cannot be fixed, return a SQL comment (starting with --) explaining why.
+  expected_output: An optimized or verified SQL query
+
+compliance_task:
+  description: >
+    Review the following SQL query for compliance violations, including PII access, unsafe usage, or policy violations.
+    List any issues found, or state "No issues found" if the query is compliant.
+    SQL Query: {reviewed_sqlquery}
+  expected_output: >
+    A markdown-formatted compliance report listing any flagged issues, or stating that the query is compliant. Include a clear verdict at the top (e.g., "Compliant" or "Issues found").
+
+interpret_task:
+  description: >
+    Interpret the output of query {ReviewedSQLQuery}.
+  expected_output: A stakeholder-friendly explanation of trends or findings.
+    

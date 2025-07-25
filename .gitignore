@@ -1,1 +1,4 @@
 .venv
+data/data.csv
+.DS_Store
+data/market_share.sqlite

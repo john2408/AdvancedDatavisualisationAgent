@@ -9,7 +9,10 @@ An intelligent data visualization assistant built with Streamlit that allows use
 - **Natural Language Queries**: Ask questions about your data in plain English
 - **Real-time Visualization**: Automatic chart generation based on your queries
 - **Interactive Chat Interface**: Conversational AI assistant for data exploration
-- **Supabase Integration**: Direct connection to your star schema database
+- **Voice Input Support**: Record voice queries using built-in microphone
+- **Star Schema Database**: Built-in SQLite database with vehicle market share analytics
+- **Advanced Analytics**: Pre-built analytics utilities for market research
+- **Data Export**: Export analysis results to CSV format
 - **Responsive Design**: Modern, clean interface optimized for data analysis
 - **Modular Architecture**: Well-organized codebase for easy maintenance and extension
 
@@ -20,10 +23,12 @@ AdvancedDatavisualisationAgent/
 ├── 📁 backend/                    # Backend logic and services
 │   └── __init__.py
 ├── 📁 docs/                       # Documentation and assets
-│   └── Frontend.png               # UI preview image
+│   ├── Frontend.png               # UI preview image
+│   └── DATA_MODEL.md              # Star schema documentation
 ├── 📁 frontend/                   # Frontend components and styling
 │   ├── __init__.py
 │   ├── utils.py                   # CSS loading utilities
+│   ├── simple_audio.py           # Voice input component
 │   └── 📁 style/                  # Modular CSS files
 │       ├── README.md              # CSS documentation
 │       ├── base.css               # Base layout and typography
@@ -31,10 +36,16 @@ AdvancedDatavisualisationAgent/
 │       ├── chat.css               # Chat interface styles
 │       ├── components.css         # UI components (buttons, etc.)
 │       └── main.css               # Main CSS file
+├── 📁 scripts/                    # Database and analytics scripts
+│   ├── create_market_share_database.py  # Database creation script
+│   ├── database_utils.py          # Analytics utilities
+│   ├── app_integration.py         # Streamlit integration
+│   └── requirements.txt           # Database dependencies
 ├── 📁 tests/                      # Test files
 │   └── __init__.py
 ├── 📁 visual_agent/               # Core visualization agent logic
 │   └── __init__.py
+├── market_share.sqlite            # SQLite database (created by scripts)
 ├── app.py                         # Main Streamlit application
 ├── pyproject.toml                 # Poetry configuration
 ├── poetry.lock                    # Locked dependencies
@@ -44,9 +55,9 @@ AdvancedDatavisualisationAgent/
 ## 🛠️ Technologies Used
 
 - **[Streamlit](https://streamlit.io/)** - Web application framework
+- **[SQLite](https://sqlite.org/)** - Built-in analytical database
 - **[Plotly](https://plotly.com/python/)** - Interactive visualization library
 - **[Pandas](https://pandas.pydata.org/)** - Data manipulation and analysis
-- **[Supabase](https://supabase.com/)** - Database backend (planned integration)
 - **[Poetry](https://python-poetry.org/)** - Dependency management
 - **CSS3** - Custom styling for modern UI
 
@@ -81,7 +92,17 @@ poetry install
 poetry shell
 ```
 
-### 4. Run the Application
+### 4. Set Up the Database
+
+```bash
+# Create and populate the market share database
+python scripts/create_market_share_database.py
+
+# Test the analytics utilities (optional)
+python scripts/database_utils.py
+```
+
+### 5. Run the Application
 
 ```bash
 streamlit run app.py
@@ -94,25 +115,29 @@ The application will open in your browser at `http://localhost:8501`
 ### Getting Started
 
 1. **Launch the App**: The interface consists of a sidebar chat panel and a main visualization area
-2. **Ask Questions**: Use the chat input or click one of the suggested prompts:
-   - "Show sales by product"
-   - "Monthly trends 2024"
-   - "Top performing regions"
+2. **Ask Questions**: Use the chat input, voice recording, or click one of the suggested prompts:
+   - "Show me top brands by market share"
+   - "What are the fuel type trends?"
+   - "Compare luxury vs economy brands"
+   - "Show quarterly performance"
 3. **View Results**: The AI agent will process your query and display interactive visualizations
 
 ### Sample Queries
 
 Try asking questions like:
-- "What are the top-selling products this quarter?"
-- "Show me sales trends by region"
-- "Compare performance across different time periods"
-- "Which products have declining sales?"
+- "What are the top-selling vehicle brands?"
+- "Show me market share trends by fuel type"
+- "Compare electric vs gasoline vehicle sales"
+- "Which models are performing best for Toyota?"
+- "What's the quarterly revenue breakdown?"
+- "Show transmission preferences by brand"
 
 ## 🎨 UI Components
 
 ### Sidebar Chat Interface
 - **Chat History**: Displays conversation with timestamps
 - **Input Box**: Natural language query input with black border styling
+- **Voice Input**: Record audio queries using the microphone button
 - **Real-time Updates**: Immediate response to user queries
 
 ### Main Visualization Area
@@ -126,7 +151,56 @@ Try asking questions like:
 - **Modern Aesthetics**: Clean, professional appearance
 - **Color-coded Elements**: Intuitive visual hierarchy
 
-## 🔧 Configuration
+## �️ Database & Analytics
+
+### Market Share Database
+
+The application includes a comprehensive SQLite database with vehicle market share data:
+
+- **Star Schema Design**: Optimized for analytical queries
+- **Dimension Tables**: Brands, Models, Fuel Types, Transmissions, Time
+- **Fact Table**: Vehicle Market Share with units sold, revenue, and market share percentages
+- **Sample Data**: Pre-populated with realistic automotive industry data
+
+### Analytics Capabilities
+
+The `scripts/` directory contains powerful analytics utilities:
+
+#### Database Creation
+```bash
+python scripts/create_market_share_database.py
+```
+Creates the complete database schema and populates it with sample data.
+
+#### Analytics Utilities
+```bash
+python scripts/database_utils.py
+```
+Provides various analytical functions:
+- Top brands by market share
+- Market share trends over time
+- Fuel type analysis
+- Model performance metrics
+- Quarterly summaries
+- Geographic analysis by country
+
+#### Streamlit Integration
+```python
+from scripts.app_integration import MarketShareIntegration
+
+integration = MarketShareIntegration()
+chart_data = integration.get_chart_data_for_streamlit()
+```
+
+### Data Export
+
+Export your analysis results:
+- Full market share data to CSV
+- Brand performance summaries
+- Fuel type analysis reports
+- Custom filtered datasets
+
+## �🔧 Configuration
 
 ### Environment Setup
 
