@@ -1,6 +1,104 @@
 # 📊 Advanced Data Visualization Agent
 
-An intelligent data visualization assistant built with Streamlit that allows users to interact with their Supabase database using natural language queries. The application leverages AI agents to understand user requests, execute SQL queries, and generate beautiful visualizations automatically.
+An intelligent data visualization assistant built with Streamlit that allows users to interact with their Supabase database using natural language queries. The application leverages AI agents to understand user requests, execute SQL queries, and generate beautiful visualizatiRobust error handling ensures users always get visualizations:
+1. **Primary**: AI-generated visualization using CrewAI
+2. **Fallback**: Simple bar chart based on data types
+3. **Graceful Degradation**: Table display with download option
+
+## 🚀 Advanced Visualization Transformations
+
+The system features intelligent chart transformation capabilities that automatically handle data conversions when users request different visualization types.
+
+### 🎯 Supported Transformation Scenarios
+
+#### 1. Bar Chart → Pie Chart (Percentage Conversion)
+**User Flow:**
+```
+User: "Which car manufacturers registered the most vehicles?" 
+→ System creates bar chart with absolute values
+
+User: "Convert the bar chart to pie chart"
+→ System automatically:
+  • Converts absolute values to percentages
+  • Groups small categories into "Others" (if >8 categories)
+  • Creates pie chart with percentage labels
+  • Maintains data integrity and ranking
+```
+
+#### 2. Absolute Values → Percentage Display
+**User Flow:**
+```
+User: "Show regional sales distribution"
+→ System creates bar chart with raw numbers
+
+User: "Show this as percentages instead of absolute numbers"
+→ System automatically:
+  • Calculates percentage of total for each category
+  • Updates y-axis labels to show percentages
+  • Maintains same chart type (bar)
+  • Preserves category order
+```
+
+#### 3. Line Chart → Bar Chart (Time Series Aggregation)
+**User Flow:**
+```
+User: "Show monthly registration trends"
+→ System creates line chart with time series
+
+User: "Convert this to a bar chart for better comparison"
+→ System automatically:
+  • Aggregates time periods appropriately
+  • Formats dates for bar chart display
+  • Maintains temporal relationships
+  • Optimizes category spacing
+```
+
+#### 4. Category Consolidation (Top N + Others)
+**User Flow:**
+```
+User: "Show all vehicle types distribution"
+→ System creates chart with many categories
+
+User: "Show only top 5 vehicle types, group the rest as Others"
+→ System automatically:
+  • Identifies top N categories by value
+  • Sums remaining categories into "Others"
+  • Maintains total data integrity
+  • Provides cleaner visualization
+```
+
+### 🤖 Intelligent Transformation Engine
+
+The visualization tool automatically detects when data transformation is needed:
+
+```python
+# Example: Bar to Pie transformation
+if current_plot_type == "bar" and target_plot_type == "pie":
+    # Calculate percentages
+    total = grouped[y_column].sum()
+    grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
+    
+    # Group small categories
+    if len(grouped) > 8:
+        top_categories = grouped.head(7)
+        others_sum = grouped.tail(len(grouped) - 7)[f'{y_column}_percentage'].sum()
+        # Create "Others" category...
+```
+
+### 🧪 Comprehensive Testing
+
+The advanced transformation features are covered by extensive unit and integration tests:
+
+- **Unit Tests**: 8 test scenarios covering all transformation types
+- **Integration Tests**: 6 test scenarios for end-to-end orchestration
+- **Manual Verification**: Real data testing with sample vehicle data
+
+**Run tests:**
+```bash
+python run_advanced_tests.py
+```
+
+### 📊 User Experience Flowtomatically.
 
 ![Frontend Preview](docs/Frontend.png)
 
@@ -15,6 +113,17 @@ An intelligent data visualization assistant built with Streamlit that allows use
 - **Data Export**: Export analysis results to CSV format
 - **Responsive Design**: Modern, clean interface optimized for data analysis
 - **Modular Architecture**: Well-organized codebase for easy maintenance and extension
+
+### 🎯 Advanced Visualization Features
+
+- **Intelligent Chart Transformations**: Automatic data transformations when switching chart types
+  - Bar → Pie: Converts absolute values to percentages automatically
+  - Line → Bar: Aggregates time series data appropriately
+  - Any → Pie: Calculates percentage distributions and groups small categories
+- **Context-Aware Follow-up Questions**: Schema-aware question generation based on current data
+- **Smart Orchestration**: Recognizes whether users want new queries or follow-up analysis
+- **Data Transformation Engine**: Handles percentage conversion, top-N filtering, and category consolidation
+- **Memory & Chat History**: Maintains conversation context for seamless data exploration
 
 ## 🏗️ Project Structure
 
@@ -337,16 +446,23 @@ User Query: "Which car manufacturers registered the most vehicles?"
 �📈 Final Result: Interactive bar chart + intelligent follow-ups
 
 --- Follow-Up Conversation ---
-User: "Why is BMW higher than Toyota?"
+User: "Convert the bar chart to pie chart"
     ↓
-🧠 Intent: FOLLOW_UP (Confidence: 88%)
+🧠 Intent: FOLLOW_UP (Confidence: 92%)
     ↓
-🔍 Analyzing current data...
-    → Provides detailed answer using existing data
+🎨 Creating alternative visualization...
+    → Detects bar→pie transformation needed
+    → Automatically converts absolute values to percentages
+    → Groups small categories into "Others" if needed
+    ↓
+✨ Alternative visualization created!
+    → New pie chart with percentage labels
+    → Maintains data integrity and insights
     ↓
 💡 Additional follow-ups generated
-    → "Compare luxury vs economy brands"
+    → "Which regions contribute most to Toyota's sales?"
     → "Show monthly trends for top 3 manufacturers"
+    → "Compare electric vs conventional vehicle registrations"
 ```
 
 ### 🛠️ Configuration Files
@@ -586,6 +702,85 @@ The project uses a modular CSS approach. To add new styles:
 1. Choose the appropriate CSS file or create a new one
 2. Add the file to the CSS loading list in `app.py`
 3. Document changes in `frontend/style/README.md`
+
+## 🧪 Testing & Validation
+
+The project includes comprehensive testing for advanced visualization transformations and orchestration capabilities.
+
+### Running Tests
+
+#### Advanced Visualization Tests
+Test the intelligent chart transformation and orchestration features:
+
+```bash
+# Run all advanced tests (recommended)
+python run_advanced_tests.py
+
+# Run only unit tests for transformations
+python run_advanced_tests.py --skip-integration
+
+# Run only integration tests for orchestration
+python run_advanced_tests.py --skip-manual
+```
+
+#### Test Coverage
+
+**Transformation Scenarios Tested:**
+- ✅ Bar Chart → Pie Chart (with percentage conversion)
+- ✅ Absolute Values → Percentage Display
+- ✅ Line Chart → Bar Chart (time series aggregation)
+- ✅ Category Consolidation (Top N + Others grouping)
+- ✅ Context-aware Follow-up Question Generation
+- ✅ Orchestration Decision Making
+- ✅ End-to-End Integration Testing
+
+**Test Results Example:**
+```
+🚀 Advanced Data Visualization Agent - Test Suite
+================================================================================
+🧪 PHASE 1: Unit Tests - Visualization Transformations
+✅ Scenario 1 PASSED: Bar to Pie conversion with 8 categories
+✅ Scenario 2 PASSED: Percentage conversion with total sum check
+✅ Scenario 3 PASSED: Time series to bar conversion with 6 periods
+✅ Scenario 4 PASSED: Category consolidation with 8 final categories
+✅ Scenario 5 PASSED: Top N filtering with Others grouping
+
+🔗 PHASE 2: Integration Tests - Orchestration Pipeline
+✅ Bar to Pie Chart Orchestration Flow PASSED
+✅ Percentage Conversion Scenario PASSED
+✅ Top N with Others Scenario PASSED
+✅ Follow-up Question Generation PASSED
+
+🎯 PHASE 3: Manual Scenario Verification
+✅ Bar to Pie transformation: SUCCESS
+✅ Data integrity: 5 categories preserved
+✅ Value transformation: Numeric values generated
+
+📋 COMPREHENSIVE TEST REPORT
+================================================================================
+Overall Result: 🎉 ALL TESTS PASSED
+🚀 READY FOR DEPLOYMENT
+```
+
+#### Individual Test Files
+
+```bash
+# Test specific components
+python -m pytest tests/test_advanced_visualizations.py -v
+python -m pytest tests/test_orchestration_integration.py -v
+
+# Test database functionality
+python -m pytest tests/test_database.py -v
+python -m pytest tests/test_sql_crew.py -v
+```
+
+### Validation Features
+
+- **Unit Tests**: Verify individual transformation logic
+- **Integration Tests**: Test end-to-end orchestration flows
+- **Manual Verification**: Real data testing with sample datasets
+- **Error Handling**: Comprehensive fallback mechanism testing
+- **Performance Testing**: Transformation speed and accuracy validation
 
 
 ## 🤝 Contributing

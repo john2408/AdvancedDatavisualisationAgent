@@ -148,9 +148,25 @@ alternative_visualization_task:
     1. Uses the same data but with a different chart type
     2. Highlights different aspects of the data
     3. Provides alternative insights
+    4. AUTOMATICALLY HANDLES DATA TRANSFORMATIONS when switching chart types
     
-    Use the DataFrame Visualization Tool to create the new plot specification.
-  expected_output: A new visualization specification with different chart type and perspective on the same data.
+    IMPORTANT TRANSFORMATION RULES:
+    - Bar chart → Pie chart: Convert absolute values to percentages, ensure single value per category
+    - Line chart → Bar chart: Aggregate time series data appropriately
+    - Scatter plot → Line chart: Sort data by x-axis for proper line connection
+    - Any chart → Pie chart: Calculate percentages of total, limit to top categories if many exist
+    - Stacked chart → Grouped chart: Restructure data grouping appropriately
+    
+    COMMON TRANSFORMATION SCENARIOS:
+    1. "Convert to pie chart" - Always calculate percentages, use only categorical and one numeric column
+    2. "Show as percentages" - Transform absolute values to percentage of total
+    3. "Change to time series" - Ensure proper date/time sorting and line connectivity
+    4. "Make it a comparison chart" - Group or stack data for comparative analysis
+    5. "Simplify the chart" - Aggregate small categories into "Others" category
+    
+    Analyze the user request to determine if data transformation is needed and apply it before visualization.
+    Use the DataFrame Visualization Tool with appropriate data preprocessing.
+  expected_output: A new visualization specification with different chart type, proper data transformations, and enhanced perspective on the same data.
 
 follow_up_questions_task:
   description: |

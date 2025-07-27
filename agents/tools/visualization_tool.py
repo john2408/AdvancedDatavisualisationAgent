@@ -18,6 +18,8 @@ class VisualizationInput(BaseModel):
     color_column: str = Field(default="", description="Column to use for color grouping")
     title: str = Field(default="", description="Plot title")
     aggregation: str = Field(default="sum", description="Aggregation method for grouped data: sum, count, mean, max, min")
+    transformation: str = Field(default="", description="Data transformation: 'percentage', 'normalize', 'top_n', 'group_others'")
+    current_chart_type: str = Field(default="", description="Current chart type for transformation context")
 
 
 
@@ -27,7 +29,8 @@ class DataFrameVisualizationTool(BaseTool):
     args_schema: Type[BaseModel] = VisualizationInput
 
     def _run(self, dataframe_json: str, plot_type: str, x_column: str = "", y_column: str = "", 
-             color_column: str = "", title: str = "", aggregation: str = "sum") -> str:
+             color_column: str = "", title: str = "", aggregation: str = "sum", 
+             transformation: str = "", current_chart_type: str = "") -> str:
         """
         Creates visualizations from DataFrame data and returns JSON plot specification.
         
@@ -39,6 +42,8 @@ class DataFrameVisualizationTool(BaseTool):
             color_column: Column for color grouping
             title: Plot title
             aggregation: Aggregation method for grouped data
+            transformation: Data transformation to apply
+            current_chart_type: Current chart type for transformation context
             
         Returns:
             JSON string with plot specification
@@ -51,14 +56,121 @@ class DataFrameVisualizationTool(BaseTool):
             if df.empty:
                 return json.dumps({"error": "DataFrame is empty"})
             
+            # Apply intelligent transformations based on chart type conversion
+            df_transformed = self._apply_intelligent_transformations(
+                df, plot_type, current_chart_type, x_column, y_column, transformation
+            )
+            
             # Generate plot specification based on plot type
-            plot_spec = self._generate_plot_spec(df, plot_type, x_column, y_column, 
+            plot_spec = self._generate_plot_spec(df_transformed, plot_type, x_column, y_column, 
                                                 color_column, title, aggregation)
             
             return json.dumps(plot_spec, indent=2)
             
         except Exception as e:
             return json.dumps({"error": f"Error creating visualization: {str(e)}"})
+
+    def _apply_intelligent_transformations(self, df: pd.DataFrame, target_plot_type: str, 
+                                         current_plot_type: str, x_column: str, y_column: str, 
+                                         transformation: str) -> pd.DataFrame:
+        """Apply intelligent data transformations based on chart type conversion."""
+        df_transformed = df.copy()
+        
+        try:
+            # Scenario 1: Bar chart to Pie chart - Convert to percentages
+            if current_plot_type == "bar" and target_plot_type == "pie":
+                if x_column and y_column:
+                    # Group by category and sum values
+                    grouped = df_transformed.groupby(x_column)[y_column].sum().reset_index()
+                    # Calculate percentages
+                    total = grouped[y_column].sum()
+                    grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
+                    grouped = grouped.sort_values(f'{y_column}_percentage', ascending=False)
+                    
+                    # Limit to top 8 categories, group rest as "Others"
+                    if len(grouped) > 8:
+                        top_categories = grouped.head(7)
+                        others_sum = grouped.tail(len(grouped) - 7)[f'{y_column}_percentage'].sum()
+                        others_row = pd.DataFrame({
+                            x_column: ['Others'],
+                            y_column: [grouped.tail(len(grouped) - 7)[y_column].sum()],
+                            f'{y_column}_percentage': [others_sum]
+                        })
+                        grouped = pd.concat([top_categories, others_row], ignore_index=True)
+                    
+                    return grouped
+            
+            # Scenario 2: Any chart to Pie - Automatic percentage conversion
+            elif target_plot_type == "pie" and x_column and y_column:
+                # Group by category and sum values
+                grouped = df_transformed.groupby(x_column)[y_column].sum().reset_index()
+                # Calculate percentages
+                total = grouped[y_column].sum()
+                grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
+                grouped = grouped.sort_values(f'{y_column}_percentage', ascending=False)
+                
+                # Limit to top categories for better readability
+                if len(grouped) > 10:
+                    top_categories = grouped.head(9)
+                    others_sum = grouped.tail(len(grouped) - 9)[f'{y_column}_percentage'].sum()
+                    others_row = pd.DataFrame({
+                        x_column: ['Others'],
+                        y_column: [grouped.tail(len(grouped) - 9)[y_column].sum()],
+                        f'{y_column}_percentage': [others_sum]
+                    })
+                    grouped = pd.concat([top_categories, others_row], ignore_index=True)
+                
+                return grouped
+            
+            # Scenario 3: Line to Bar - Aggregate time series appropriately
+            elif current_plot_type == "line" and target_plot_type == "bar":
+                if x_column and y_column:
+                    # If x_column is time-like, aggregate by larger time periods
+                    if df_transformed[x_column].dtype in ['datetime64[ns]', 'object']:
+                        try:
+                            df_transformed[x_column] = pd.to_datetime(df_transformed[x_column])
+                            # Group by month or quarter for better bar chart representation
+                            df_transformed['period'] = df_transformed[x_column].dt.to_period('M')
+                            grouped = df_transformed.groupby('period')[y_column].sum().reset_index()
+                            grouped['period'] = grouped['period'].astype(str)
+                            grouped.rename(columns={'period': x_column}, inplace=True)
+                            return grouped
+                        except:
+                            pass
+            
+            # Scenario 4: Explicit percentage transformation
+            elif transformation == "percentage" and y_column:
+                if x_column:
+                    grouped = df_transformed.groupby(x_column)[y_column].sum().reset_index()
+                    total = grouped[y_column].sum()
+                    grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
+                    return grouped
+            
+            # Scenario 5: Top N transformation with Others grouping
+            elif transformation.startswith("top_") and x_column and y_column:
+                try:
+                    n = int(transformation.split("_")[1])
+                    grouped = df_transformed.groupby(x_column)[y_column].sum().reset_index()
+                    grouped = grouped.sort_values(y_column, ascending=False)
+                    
+                    if len(grouped) > n:
+                        top_n = grouped.head(n-1)
+                        others_sum = grouped.tail(len(grouped) - (n-1))[y_column].sum()
+                        others_row = pd.DataFrame({
+                            x_column: ['Others'],
+                            y_column: [others_sum]
+                        })
+                        grouped = pd.concat([top_n, others_row], ignore_index=True)
+                    
+                    return grouped
+                except:
+                    pass
+            
+            return df_transformed
+            
+        except Exception as e:
+            # If transformation fails, return original data
+            return df
 
     def _generate_plot_spec(self, df: pd.DataFrame, plot_type: str, x_column: str, 
                            y_column: str, color_column: str, title: str, aggregation: str) -> Dict[str, Any]:
@@ -205,11 +317,32 @@ class DataFrameVisualizationTool(BaseTool):
 
     def _create_pie_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
         """Create pie chart specification."""
+        # Check if we have percentage data from transformations
+        percentage_col = f'{y_column}_percentage'
+        
+        # If we have percentage data, use it for better pie chart representation
+        labels = data.get("labels", [])
+        values = data.get("values", [])
+        
+        # Create hover text that shows both absolute values and percentages
+        if percentage_col in str(data) or "percentage" in y_column.lower():
+            hover_template = "Category: %{label}<br>Value: %{value}<br>Percentage: %{percent}<extra></extra>"
+        else:
+            hover_template = "Category: %{label}<br>Value: %{value}<br>Percentage: %{percent}<extra></extra>"
+        
         return {
             "type": "pie",
-            "data": data,
+            "data": {
+                "labels": labels,
+                "values": values,
+                "hovertemplate": hover_template,
+                "textinfo": "label+percent",
+                "textposition": "auto"
+            },
             "layout": {
-                "title": title or f"Distribution of {y_column} by {x_column}"
+                "title": title or f"Distribution of {y_column} by {x_column}",
+                "showlegend": True,
+                "font": {"size": 12}
             },
             "config": {"responsive": True}
         }

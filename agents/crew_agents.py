@@ -40,6 +40,7 @@ class VisualizationJSON(BaseModel):
     color_column: str = Field(default="", description="Column for color grouping")
     title: str = Field(..., description="Title of the plot")
     aggregation: str = Field(default="sum", description="Aggregation method")
+    transformation: str = Field(default="", description="Data transformation applied")
     plot_spec: str = Field(..., description="JSON specification for the plot")
 
 class DataAnalysisReport(BaseModel):
