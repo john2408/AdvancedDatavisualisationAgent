@@ -4,15 +4,9 @@ import time
 from datetime import datetime
 from frontend.utils import load_multiple_css
 from agents.sql_crew import sql_generator_crew, sql_reviewer_crew
-from utils.db_simulator import get_structured_schema, run_query
-
-# Try to import plotly, but handle gracefully if not available
-try:
-    import plotly.express as px
-    PLOTLY_AVAILABLE = True
-except ImportError:
-    PLOTLY_AVAILABLE = False
-    st.warning("Plotly not available. Charts will be disabled.")
+from backend.sql_utils import get_structured_schema, run_query
+import plotly.express as px
+from omegaconf import OmegaConf
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -31,23 +25,19 @@ css_files = [
 ]
 load_multiple_css(css_files)
 
-# --- DATABASE CONFIGURATION ---
-DB_PATH = "data/sample_db.sqlite"
+# --- LOAD CONFIGURATION ---
+config = OmegaConf.load("config.yaml")
+DB_PATH = config.db_path
+db_schema_user = config.db_schema_user
+db_schema_agent = config.db_schema_agent
 
 # Cache the schema for performance
 @st.cache_data(show_spinner=False)
-def load_schema():
-    return get_structured_schema(DB_PATH)
+def load_schema_user():
+    return db_schema_user
 
 
 # --- BACKEND FUNCTIONS ---
-
-def connect_to_supabase():
-    """Placeholder for initializing the Supabase client."""
-    # In a real app, this would use st.secrets to get credentials
-    # and return a Supabase client object.
-    return {"status": "connected"}
-
 def query_database(sql_query: str):
     """Execute SQL query against the sample SQLite database."""
     st.info(f"Executing SQL: `{sql_query}`")
@@ -58,7 +48,7 @@ def query_database(sql_query: str):
         # Display the raw result for debugging
         with st.expander("🔍 Debug: Raw Query Result"):
             st.text("Raw result from run_query:")
-            st.code(str(result))
+            st.markdown(f"<pre style='background-color: white; color: black; padding: 10px; border-radius: 5px; border: 1px solid #ccc;'>{str(result)}</pre>", unsafe_allow_html=True)
             st.text(f"Result type: {type(result)}")
         
         return result
@@ -73,7 +63,7 @@ def get_rag_context(query: str):
         return "Recent internal analysis shows that Competitor Z's new model launch has impacted sales of 'Vehicle C' in the North region."
     return None
 
-def run_agent_crew(user_query: str):
+def generate_sql_crew(user_query: str):
     """
     Main function for running the CrewAI process with SQL generation and review.
     This integrates both the SQL generator and reviewer agents.
@@ -83,11 +73,13 @@ def run_agent_crew(user_query: str):
 
     # 2. SQL Generation Agent - Generate initial SQL
     try:
-        db_schema = load_schema()
+        db_schema = db_schema_agent
         
         # Step 1: Generate SQL using the generator agent
         st.info("🤖 Generating initial SQL query...")
-        gen_output = sql_generator_crew.kickoff(inputs={"user_input": user_query, "db_schema": db_schema})
+        gen_output = sql_generator_crew.kickoff(inputs={"user_input": 
+                                                        user_query, 
+                                                        "db_schema": db_schema})
         initial_sql = gen_output.pydantic.sqlquery
         st.info(f"📝 Initial SQL Query: {initial_sql}")
         
@@ -115,37 +107,25 @@ def run_agent_crew(user_query: str):
         # Step 3: Execute the reviewed query
         query_result = query_database(reviewed_sql)
         
-        # Create a simple dummy visualization if plotly is available
-        if PLOTLY_AVAILABLE:
-            fig = px.bar(
-                x=['Sample A', 'Sample B', 'Sample C'], 
-                y=[100, 200, 150], 
-                title=f'Dummy Chart for: {user_query}',
-                template="seaborn"
-            )
-            fig.update_layout(title_x=0.5)
-        else:
-            fig = None
+
         
         # Presentation Agent Simulation
         summary = f"I generated an initial SQL query, reviewed it with GPT-4o, and executed the final query: {reviewed_sql}. Check the debug section to see the results."
         
     except Exception as e:
         st.error(f"Error in SQL generation or review: {e}")
-        # Fallback to mock data for now
-        if PLOTLY_AVAILABLE:
-            fig = px.bar(
-                x=['Error'], 
-                y=[0], 
-                title='Query Generation/Review Failed',
-                template="seaborn"
-            )
-        else:
-            fig = None
         summary = f"There was an error generating or reviewing the SQL query for: {user_query}. Error: {str(e)}"
         query_result = None
         reviewed_sql = None
     
+    fig = px.bar(
+        x=['Sample A', 'Sample B', 'Sample C'], 
+        y=[100, 200, 150], 
+        title=f'Dummy Chart for: {user_query}',
+        template="seaborn"
+    )
+    fig.update_layout(title_x=0.5)
+
     response = {
         "chat_message": summary,
         "plotly_figure": fig,  # Store the figure object directly
@@ -172,20 +152,22 @@ def display_welcome_message():
     
     # Add database schema information
     with st.expander("📋 View Database Schema"):
-        db_schema = load_schema()
-        st.code(db_schema, language="text")
+        db_schema = load_schema_user()
+        # Custom HTML/CSS for white background and black text
+        st.markdown(db_schema
+        )
     
     st.write("") # Spacer
     cols = st.columns([1, 1, 1, 1.5]) # Adjust column ratios for centering
     with cols[0]:
-        if st.button("Show sales by product"):
-            st.session_state.run_query = "Show me the sales by product"
+        if st.button("Which car manufacturers have the highest market share in the UK?"):
+            st.session_state.run_query = "Which car manufacturers have the highest market share in the UK?"
     with cols[1]:
-        if st.button("Monthly trends 2024"):
-            st.session_state.run_query = "What are the monthly trends for 2024?"
+        if st.button("What percentage of the market do electric vehicles represent?"):
+            st.session_state.run_query = "What percentage of the market do electric vehicles represent?"
     with cols[2]:
-        if st.button("Top performing regions"):
-            st.session_state.run_query = "Which regions are performing the best?"
+        if st.button("Which months had the highest vehicle registrations?"):
+            st.session_state.run_query = "Which months had the highest vehicle registrations?"
 
 def display_visualization(viz_data):
     """Displays the chart and summaries in the main panel."""
@@ -195,13 +177,7 @@ def display_visualization(viz_data):
     # Display the final reviewed SQL query prominently
     if viz_data.get("reviewed_sql"):
         st.subheader("🎯 Final SQL Query (Reviewed by GPT-4o)")
-        st.code(viz_data["reviewed_sql"], language="sql")
-    
-    # Display the dummy chart if plotly is available
-    if PLOTLY_AVAILABLE and viz_data.get("plotly_figure"):
-        st.plotly_chart(viz_data["plotly_figure"], use_container_width=True)
-    else:
-        st.info("📊 Chart visualization disabled (Plotly not available)")
+        st.markdown(f"<pre style='background-color: white; color: black; padding: 10px; border-radius: 5px; border: 1px solid #ccc;'><code>{viz_data['reviewed_sql']}</code></pre>", unsafe_allow_html=True)
     
     # Display query result as table for debugging
     if viz_data.get("query_result"):
@@ -282,7 +258,7 @@ if st.session_state.run_query:
 if st.session_state.messages[-1]["role"] == "user":
     with st.spinner("Generating SQL query, reviewing with GPT-4o, and analyzing your request..."):
         # Run the agent crew
-        visualization_data = run_agent_crew(st.session_state.messages[-1]["content"])
+        visualization_data = generate_sql_crew(st.session_state.messages[-1]["content"])
         
         # Store the visualization to be displayed in the main panel
         st.session_state.last_visualization = visualization_data

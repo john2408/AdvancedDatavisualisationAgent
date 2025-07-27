@@ -23,7 +23,6 @@ agents_config = configs['agents']
 tasks_config = configs['tasks']
 
 
-
 class SQLQuery(BaseModel):
     sqlquery: str = Field(..., description="The raw sql query for the user input")
 
