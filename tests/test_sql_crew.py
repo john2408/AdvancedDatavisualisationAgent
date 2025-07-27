@@ -9,7 +9,7 @@ import sys
 # Add the project root to the path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from agents.sql_crew import sql_generator_crew, sql_reviewer_crew, sql_compliance_crew
+from agents.crew_agents import sql_generator_crew, sql_reviewer_crew, sql_compliance_crew
 from utils.db_simulator import get_structured_schema
 
 

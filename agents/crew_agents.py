@@ -47,6 +47,20 @@ class DataAnalysisReport(BaseModel):
     recommended_visualizations: List[str] = Field(..., description="List of recommended visualization types")
     key_findings: List[str] = Field(..., description="Key findings from the data")
 
+class OrchestrationDecision(BaseModel):
+    action_type: str = Field(..., description="Either 'new_query' or 'follow_up'")
+    reasoning: str = Field(..., description="Explanation for the decision")
+    confidence: float = Field(..., description="Confidence level between 0.0 and 1.0")
+
+class DataQuestionAnswer(BaseModel):
+    answer: str = Field(..., description="Comprehensive answer to the user's question about the data")
+    referenced_data_points: List[str] = Field(..., description="Specific data points referenced in the answer")
+    insights: List[str] = Field(..., description="Key insights derived from the data")
+
+class FollowUpQuestions(BaseModel):
+    questions: List[str] = Field(..., description="List of relevant follow-up questions")
+    categories: List[str] = Field(..., description="Categories of the follow-up questions (e.g., 'trends', 'comparisons')")
+
 # Creating Agents
 query_generator_agent = Agent(
   config=agents_config['query_generator_agent']
@@ -67,6 +81,10 @@ data_analyst_agent = Agent(
 visualization_agent = Agent(
   config=agents_config['visualization_agent'],
   tools=[DataFrameVisualizationTool()]
+)
+
+orchestration_agent = Agent(
+  config=agents_config['orchestration_agent']
 )
 
 # Creating Tasks
@@ -102,6 +120,30 @@ visualization_task = Task(
   output_pydantic=VisualizationJSON
 )
 
+orchestration_task = Task(
+  config=tasks_config['orchestration_task'],
+  agent=orchestration_agent,
+  output_pydantic=OrchestrationDecision
+)
+
+data_question_answering_task = Task(
+  config=tasks_config['data_question_answering_task'],
+  agent=orchestration_agent,
+  output_pydantic=DataQuestionAnswer
+)
+
+alternative_visualization_task = Task(
+  config=tasks_config['alternative_visualization_task'],
+  agent=visualization_agent,
+  output_pydantic=VisualizationJSON
+)
+
+follow_up_questions_task = Task(
+  config=tasks_config['follow_up_questions_task'],
+  agent=orchestration_agent,
+  output_pydantic=FollowUpQuestions
+)
+
 # Creating Crew objects for import
 sql_generator_crew = Crew(
     agents=[query_generator_agent],
@@ -124,5 +166,29 @@ sql_compliance_crew = Crew(
 data_visualization_crew = Crew(
     agents=[data_analyst_agent, visualization_agent],
     tasks=[data_analysis_task, visualization_task],
+    verbose=True
+)
+
+orchestration_crew = Crew(
+    agents=[orchestration_agent],
+    tasks=[orchestration_task],
+    verbose=True
+)
+
+data_question_crew = Crew(
+    agents=[orchestration_agent],
+    tasks=[data_question_answering_task],
+    verbose=True
+)
+
+alternative_viz_crew = Crew(
+    agents=[visualization_agent],
+    tasks=[alternative_visualization_task],
+    verbose=True
+)
+
+follow_up_crew = Crew(
+    agents=[orchestration_agent],
+    tasks=[follow_up_questions_task],
     verbose=True
 )

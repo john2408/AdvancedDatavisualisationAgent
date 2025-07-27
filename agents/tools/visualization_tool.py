@@ -7,7 +7,6 @@ from typing import Type, Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 import plotly.graph_objects as go
-import plotly.express as px
 
 
 class VisualizationInput(BaseModel):
