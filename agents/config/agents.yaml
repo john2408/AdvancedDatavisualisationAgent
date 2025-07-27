@@ -9,8 +9,6 @@ query_generator_agent:
   model: openai/gpt-4o
   temperature: 0.2
 
-
-
 query_reviewer_agent:
   role: SQL Code Reviewer
   goal: Critically evaluate SQL for correctness, performance, and clarity
@@ -21,7 +19,6 @@ query_reviewer_agent:
   verbose: True
   model: openai/gpt-4o
   temperature: 0.2
-
 
 compliance_checker_agent:
   role: Data Privacy and Governance Officer
@@ -34,6 +31,29 @@ compliance_checker_agent:
   model: openai/gpt-4o-mini
   temperature: 0.2
 
+data_analyst_agent:
+  role: Senior Data Analyst and Insights Expert
+  goal: Analyze structured data and provide actionable insights and visualization recommendations
+  backstory: >
+        You are an expert data analyst who can quickly understand data patterns, identify key insights, and recommend
+        the most effective visualization approaches. You understand different chart types and when to use them based on
+        data characteristics and business questions.
+  allow_delegation: False
+  verbose: True
+  model: openai/gpt-4o
+  temperature: 0.3
+
+visualization_agent:
+  role: Data Visualization Specialist
+  goal: Create the most appropriate and insightful visualizations based on data analysis recommendations
+  backstory: >
+        You are a visualization expert who specializes in creating clear, compelling, and informative charts and graphs.
+        You understand which visualization types work best for different data types and analytical questions. You can
+        automatically select appropriate columns and chart types based on the data structure and analytical goals.
+  allow_delegation: False
+  verbose: True
+  model: openai/gpt-4o
+  temperature: 0.2
 
 result_interpreter_agent:
   role: Business Analyst

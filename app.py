@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
 import time
+import json
 from datetime import datetime
 from frontend.utils import load_multiple_css
-from agents.sql_crew import sql_generator_crew, sql_reviewer_crew
+from agents.crew_agents import sql_generator_crew, sql_reviewer_crew, data_visualization_crew
 from backend.sql_utils import get_structured_schema, run_query
 import plotly.express as px
+import plotly.graph_objects as go
 from omegaconf import OmegaConf
 
 # --- PAGE CONFIGURATION ---
@@ -39,19 +41,26 @@ def load_schema_user():
 
 # --- BACKEND FUNCTIONS ---
 def query_database(sql_query: str):
-    """Execute SQL query against the sample SQLite database."""
+    """Execute SQL query against the SQLite database and return DataFrame."""
     st.info(f"Executing SQL: `{sql_query}`")
     try:
-        result = run_query(sql_query)
+        result_df = run_query(sql_query, DB_PATH)
+        
+        # Check if we got an error DataFrame
+        if "Error" in result_df.columns:
+            st.error(f"Error executing query: {result_df['Error'].iloc[0]}")
+            return None
+        
         st.success("Query executed successfully!")
         
         # Display the raw result for debugging
         with st.expander("🔍 Debug: Raw Query Result"):
-            st.text("Raw result from run_query:")
-            st.markdown(f"<pre style='background-color: white; color: black; padding: 10px; border-radius: 5px; border: 1px solid #ccc;'>{str(result)}</pre>", unsafe_allow_html=True)
-            st.text(f"Result type: {type(result)}")
+            st.text("Raw DataFrame info:")
+            st.text(f"Shape: {result_df.shape}")
+            st.text(f"Columns: {list(result_df.columns)}")
+            st.dataframe(result_df)
         
-        return result
+        return result_df
     except Exception as e:
         st.error(f"Error executing query: {e}")
         return None
@@ -63,10 +72,110 @@ def get_rag_context(query: str):
         return "Recent internal analysis shows that Competitor Z's new model launch has impacted sales of 'Vehicle C' in the North region."
     return None
 
+def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
+    """Create a Plotly figure from JSON specification and DataFrame."""
+    try:
+        plot_spec = json.loads(plot_spec_json)
+        
+        if "error" in plot_spec:
+            st.error(f"Plot specification error: {plot_spec['error']}")
+            return None
+        
+        plot_type = plot_spec.get("type")
+        data = plot_spec.get("data", {})
+        layout = plot_spec.get("layout", {})
+        
+        if not data:
+            st.warning("No data found in plot specification")
+            return None
+        
+        fig = None
+        
+        if plot_type == "bar":
+            if "color" in data and data["color"]:
+                # Grouped bar chart
+                df_plot = pd.DataFrame({
+                    "x": data["x"],
+                    "y": data["y"],
+                    "color": data["color"]
+                })
+                fig = px.bar(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+            else:
+                # Simple bar chart
+                fig = px.bar(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                
+        elif plot_type == "line":
+            if "color" in data and data["color"]:
+                df_plot = pd.DataFrame({
+                    "x": data["x"],
+                    "y": data["y"],
+                    "color": data["color"]
+                })
+                fig = px.line(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+            else:
+                fig = px.line(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                
+        elif plot_type == "scatter":
+            if "color" in data and data["color"]:
+                df_plot = pd.DataFrame({
+                    "x": data["x"],
+                    "y": data["y"],
+                    "color": data["color"]
+                })
+                fig = px.scatter(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+            else:
+                fig = px.scatter(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                
+        elif plot_type == "pie":
+            if "values" in data and "labels" in data:
+                fig = px.pie(values=data["values"], names=data["labels"], title=layout.get("title"))
+            
+        elif plot_type == "histogram":
+            if "x" in data:
+                fig = px.histogram(x=data["x"], title=layout.get("title"))
+            
+        elif plot_type == "box":
+            if "y" in data:
+                fig = px.box(y=data["y"], title=layout.get("title"))
+            elif "x" in data:
+                fig = px.box(y=data["x"], title=layout.get("title"))
+                
+        elif plot_type == "heatmap":
+            if "z" in data and "x" in data and "y" in data:
+                fig = px.imshow(
+                    z=data["z"], 
+                    x=data["x"], 
+                    y=data["y"], 
+                    title=layout.get("title"),
+                    text_auto=True
+                )
+        
+        if fig:
+            # Apply any additional layout configurations
+            if layout.get("xaxis", {}).get("title"):
+                fig.update_xaxes(title_text=layout["xaxis"]["title"])
+            if layout.get("yaxis", {}).get("title"):
+                fig.update_yaxes(title_text=layout["yaxis"]["title"])
+                
+            # Set responsive layout
+            fig.update_layout(
+                height=500,
+                showlegend=layout.get("showlegend", True)
+            )
+                
+        return fig
+        
+    except json.JSONDecodeError as e:
+        st.error(f"Error parsing plot JSON: {e}")
+        return None
+    except Exception as e:
+        st.error(f"Error creating plot from JSON: {e}")
+        return None
+
 def generate_sql_crew(user_query: str):
     """
-    Main function for running the CrewAI process with SQL generation and review.
-    This integrates both the SQL generator and reviewer agents.
+    Main function for running the CrewAI process with SQL generation, review, and visualization.
+    This integrates the SQL generator, reviewer, and visualization agents.
     """
     # 1. Planner & Research Agent Simulation
     rag_context = get_rag_context(user_query)
@@ -107,25 +216,90 @@ def generate_sql_crew(user_query: str):
         # Step 3: Execute the reviewed query
         query_result = query_database(reviewed_sql)
         
-
+        # Step 4: Generate visualization if we have valid results
+        fig = None
+        viz_summary = ""
+        
+        if query_result is not None and isinstance(query_result, pd.DataFrame) and not query_result.empty:
+            if "Error" not in query_result.columns:
+                st.info("🎨 Generating visualization...")
+                
+                # Prepare data for visualization crew
+                dataframe_json = query_result.to_json(orient='records')
+                columns_info = list(query_result.columns)
+                dtypes_info = query_result.dtypes.to_dict()
+                sample_data = query_result.head(3).to_dict('records')
+                
+                # Convert dtypes to string representation
+                dtypes_str = {col: str(dtype) for col, dtype in dtypes_info.items()}
+                
+                viz_inputs = {
+                    "dataframe_json": dataframe_json,
+                    "columns": ", ".join(columns_info),
+                    "shape": f"{query_result.shape[0]} rows × {query_result.shape[1]} columns",
+                    "dtypes": str(dtypes_str),
+                    "sample_data": str(sample_data),
+                    "user_question": user_query,
+                    "analysis": f"Data analysis for: {user_query}. The query returned {len(query_result)} rows with columns: {', '.join(columns_info)}."
+                }
+                
+                try:
+                    # Run the visualization crew
+                    viz_output = data_visualization_crew.kickoff(inputs=viz_inputs)
+                    
+                    # Extract the plot specification
+                    if hasattr(viz_output, 'pydantic') and hasattr(viz_output.pydantic, 'plot_spec'):
+                        plot_spec = viz_output.pydantic.plot_spec
+                        viz_summary = f"Created {viz_output.pydantic.plot_type} chart: {viz_output.pydantic.title}"
+                        
+                        # Create the actual Plotly figure
+                        fig = create_plotly_from_json(plot_spec, query_result)
+                        
+                        if fig:
+                            st.success("✨ Visualization created successfully!")
+                        else:
+                            st.warning("Failed to create visualization from plot specification")
+                    else:
+                        st.warning("Visualization crew completed but returned unexpected format")
+                    
+                except Exception as viz_error:
+                    st.warning(f"Could not generate visualization: {viz_error}")
+                    viz_summary = "Visualization generation failed, but data is available in table format."
+                    
+                    # Create a simple fallback visualization based on the data
+                    try:
+                        if len(query_result.columns) >= 2:
+                            # Try to create a simple bar chart with the first two columns
+                            first_col = query_result.columns[0]
+                            second_col = query_result.columns[1]
+                            
+                            # Check if we have appropriate data types
+                            if (query_result[first_col].dtype == 'object' or 
+                                str(query_result[first_col].dtype).startswith('string')) and \
+                               (query_result[second_col].dtype in ['int64', 'float64'] or 
+                                str(query_result[second_col].dtype).startswith('int') or 
+                                str(query_result[second_col].dtype).startswith('float')):
+                                
+                                fig = px.bar(query_result.head(10), x=first_col, y=second_col, 
+                                           title=f"{second_col} by {first_col}")
+                                viz_summary = f"Created fallback bar chart: {second_col} by {first_col}"
+                                st.info("✨ Created fallback visualization!")
+                    except Exception as fallback_error:
+                        st.warning(f"Fallback visualization also failed: {fallback_error}")
         
         # Presentation Agent Simulation
-        summary = f"I generated an initial SQL query, reviewed it with GPT-4o, and executed the final query: {reviewed_sql}. Check the debug section to see the results."
+        if viz_summary:
+            summary = f"I generated and reviewed the SQL query, executed it successfully, and created a visualization. {viz_summary}"
+        else:
+            summary = f"I generated an initial SQL query, reviewed it with GPT-4o, and executed the final query: {reviewed_sql}. Check the results below."
         
     except Exception as e:
         st.error(f"Error in SQL generation or review: {e}")
         summary = f"There was an error generating or reviewing the SQL query for: {user_query}. Error: {str(e)}"
         query_result = None
         reviewed_sql = None
+        fig = None
     
-    fig = px.bar(
-        x=['Sample A', 'Sample B', 'Sample C'], 
-        y=[100, 200, 150], 
-        title=f'Dummy Chart for: {user_query}',
-        template="seaborn"
-    )
-    fig.update_layout(title_x=0.5)
-
     response = {
         "chat_message": summary,
         "plotly_figure": fig,  # Store the figure object directly
@@ -144,7 +318,7 @@ def display_welcome_message():
         <div class="welcome-container">
             <h2 style="text-align: center; color: #1F2937 !important;">📊 Ready to Visualize Your Data</h2>
             <p style="text-align: center; color: #6B7280 !important; font-size: 1.1rem;">
-                Ask questions about your sales data in the chat, and I'll create
+                Ask questions about your vehicle registration data in the chat, and I'll create
                 beautiful visualizations for you using AI-generated SQL queries.
             </p>
         </div>
@@ -160,11 +334,11 @@ def display_welcome_message():
     st.write("") # Spacer
     cols = st.columns([1, 1, 1, 1.5]) # Adjust column ratios for centering
     with cols[0]:
-        if st.button("Which car manufacturers have the highest market share in the UK?"):
-            st.session_state.run_query = "Which car manufacturers have the highest market share in the UK?"
+        if st.button("Which car manufacturers registered the most vehicles?"):
+            st.session_state.run_query = "Which car manufacturers registered the most vehicles?"
     with cols[1]:
-        if st.button("What percentage of the market do electric vehicles represent?"):
-            st.session_state.run_query = "What percentage of the market do electric vehicles represent?"
+        if st.button("How many electric vehicles were registered?"):
+            st.session_state.run_query = "How many electric vehicles were registered?"
     with cols[2]:
         if st.button("Which months had the highest vehicle registrations?"):
             st.session_state.run_query = "Which months had the highest vehicle registrations?"
@@ -177,25 +351,75 @@ def display_visualization(viz_data):
     # Display the final reviewed SQL query prominently
     if viz_data.get("reviewed_sql"):
         st.subheader("🎯 Final SQL Query (Reviewed by GPT-4o)")
-        st.markdown(f"<pre style='background-color: white; color: black; padding: 10px; border-radius: 5px; border: 1px solid #ccc;'><code>{viz_data['reviewed_sql']}</code></pre>", unsafe_allow_html=True)
+        st.code(viz_data['reviewed_sql'], language="sql")
     
-    # Display query result as table for debugging
-    if viz_data.get("query_result"):
-        st.subheader("📊 Query Result")
+    # Display query result as nicely formatted table
+    if viz_data.get("query_result") is not None:
+        query_result = viz_data["query_result"]
         
-        # Parse the string result and display it nicely
-        result_str = viz_data["query_result"]
+        # Check if we have a valid DataFrame
+        if isinstance(query_result, pd.DataFrame) and not query_result.empty:
+            # Check if it's an error DataFrame
+            if "Error" in query_result.columns:
+                st.error("❌ Query Error")
+                st.error(query_result["Error"].iloc[0])
+            else:
+                # Display successful results
+                st.subheader("📊 Query Results")
+                
+                # Show summary statistics
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Rows", len(query_result))
+                with col2:
+                    st.metric("Columns", len(query_result.columns))
+                with col3:
+                    if len(query_result.select_dtypes(include=['number']).columns) > 0:
+                        # If there are numeric columns, show a sum of the first numeric column
+                        numeric_col = query_result.select_dtypes(include=['number']).columns[0]
+                        total_value = query_result[numeric_col].sum()
+                        st.metric(f"Total {numeric_col}", f"{total_value:,.0f}")
+                
+                # Display the formatted table
+                st.dataframe(
+                    query_result,
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+                # Optional: Add download button for the data
+                csv_data = query_result.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv_data,
+                    file_name=f"query_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+                
+                # Add spacing before visualization
+                st.write("")
+                st.write("---")
+        else:
+            st.warning("No data returned from query")
+    
+    # Display plotly figure if available - THIS COMES AFTER THE TABLE
+    if viz_data.get("plotly_figure"):
+        st.subheader("📈 Data Visualization")
         
-        # Display raw result in an expander for debugging
-        with st.expander("🔍 Raw Query Result (Debug)"):
-            st.text("Raw result from database:")
-            st.code(result_str)
-        
-        # Try to display the result in a more user-friendly way
-        st.text("Query result:")
-        st.code(result_str, language="text")
-        
-        # TODO: In the future, parse this string and convert to proper DataFrame for better visualization
+        # Display the figure
+        try:
+            st.plotly_chart(viz_data["plotly_figure"], use_container_width=True)
+            st.success("✅ Visualization displayed successfully!")
+        except Exception as e:
+            st.error(f"Error displaying visualization: {e}")
+            
+        # Add some spacing
+        st.write("")
+    else:
+        # Show a message if no visualization was generated
+        if viz_data.get("query_result") is not None and isinstance(viz_data["query_result"], pd.DataFrame) and not viz_data["query_result"].empty:
+            if "Error" not in viz_data["query_result"].columns:
+                st.info("💡 No visualization was generated for this query. The data is available in the table above.")
 
 
 # --- MAIN APP LOGIC ---

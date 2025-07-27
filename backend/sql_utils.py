@@ -2,13 +2,15 @@ import sqlite3
 import pandas as pd
 
 def run_query(query, db_path: str) -> pd.DataFrame:
+    """Execute SQL query and return pandas DataFrame"""
     try:
         conn = sqlite3.connect(db_path)
         df = pd.read_sql_query(query, conn)
         conn.close()
-        return df.head().to_string(index=False)
+        return df
     except Exception as e:
-        return f"Query failed: {e}"
+        # Return an empty DataFrame with error information
+        return pd.DataFrame({"Error": [f"Query failed: {e}"]})
 
 def get_db_schema(db_path: str) -> str:
     conn = sqlite3.connect(db_path)

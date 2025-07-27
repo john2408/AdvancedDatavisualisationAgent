@@ -10,100 +10,243 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 
-class CSVVisualizationInput(BaseModel):
-    """Input for CSV Visualization Tool."""
-    file_path: str = Field(..., description="Path to the CSV file to visualize")
-    plot_type: str = Field(..., description="Type of plot: 'histogram', 'scatter', 'boxplot', 'correlation_heatmap'")
+class VisualizationInput(BaseModel):
+    """Input for DataFrame Visualization Tool."""
+    dataframe_json: str = Field(..., description="JSON representation of the pandas DataFrame to visualize")
+    plot_type: str = Field(..., description="Type of plot: 'bar', 'line', 'scatter', 'histogram', 'pie', 'heatmap', 'boxplot'")
     x_column: str = Field(default="", description="X-axis column name")
     y_column: str = Field(default="", description="Y-axis column name")
+    color_column: str = Field(default="", description="Column to use for color grouping")
     title: str = Field(default="", description="Plot title")
+    aggregation: str = Field(default="sum", description="Aggregation method for grouped data: sum, count, mean, max, min")
 
 
 
-class CSVVisualizationTool(BaseTool):
-    name: str = "CSV Visualization Tool"
-    description: str = "Creates visualizations from CSV data and saves them as HTML files."
-    args_schema: Type[BaseModel] = CSVVisualizationInput
+class DataFrameVisualizationTool(BaseTool):
+    name: str = "DataFrame Visualization Tool"
+    description: str = "Creates visualizations from pandas DataFrame data and returns JSON formatted plot specifications."
+    args_schema: Type[BaseModel] = VisualizationInput
 
-    def _run(self, file_path: str, plot_type: str, x_column: str = "", y_column: str = "", title: str = "") -> str:
+    def _run(self, dataframe_json: str, plot_type: str, x_column: str = "", y_column: str = "", 
+             color_column: str = "", title: str = "", aggregation: str = "sum") -> str:
         """
-        Creates visualizations from CSV data.
+        Creates visualizations from DataFrame data and returns JSON plot specification.
         
         Args:
-            file_path: Path to the CSV file
+            dataframe_json: JSON representation of pandas DataFrame
             plot_type: Type of plot to create
             x_column: X-axis column name
             y_column: Y-axis column name
+            color_column: Column for color grouping
             title: Plot title
+            aggregation: Aggregation method for grouped data
             
         Returns:
-            String with visualization creation status
+            JSON string with plot specification
         """
         try:
-            if not os.path.exists(file_path):
-                return f"Error: File '{file_path}' not found."
+            # Parse JSON back to DataFrame
+            df_dict = json.loads(dataframe_json)
+            df = pd.DataFrame(df_dict)
             
-            # Read the CSV file
-            df = pd.read_csv(file_path)
+            if df.empty:
+                return json.dumps({"error": "DataFrame is empty"})
             
-            # Create output directory if it doesn't exist
-            os.makedirs("output", exist_ok=True)
+            # Generate plot specification based on plot type
+            plot_spec = self._generate_plot_spec(df, plot_type, x_column, y_column, 
+                                                color_column, title, aggregation)
             
-            fig = None
-            
-            if plot_type == "histogram":
-                if not x_column or x_column not in df.columns:
-                    return f"Error: Valid x_column required for histogram. Available columns: {list(df.columns)}"
-                
-                fig = px.histogram(df, x=x_column, title=title or f"Histogram of {x_column}")
-                
-            elif plot_type == "scatter":
-                if not x_column or x_column not in df.columns:
-                    return f"Error: Valid x_column required for scatter plot. Available columns: {list(df.columns)}"
-                if not y_column or y_column not in df.columns:
-                    return f"Error: Valid y_column required for scatter plot. Available columns: {list(df.columns)}"
-                
-                fig = px.scatter(df, x=x_column, y=y_column, title=title or f"Scatter plot: {x_column} vs {y_column}")
-                
-            elif plot_type == "boxplot":
-                if not x_column or x_column not in df.columns:
-                    return f"Error: Valid x_column required for boxplot. Available columns: {list(df.columns)}"
-                
-                fig = px.box(df, y=x_column, title=title or f"Boxplot of {x_column}")
-                
-            elif plot_type == "correlation_heatmap":
-                numeric_df = df.select_dtypes(include=[np.number])
-                if numeric_df.empty:
-                    return "Error: No numeric columns found for correlation heatmap."
-                
-                corr_matrix = numeric_df.corr()
-                fig = px.imshow(corr_matrix, 
-                               text_auto=True,
-                               aspect="auto",
-                               title=title or "Correlation Heatmap")
-                
-            else:
-                return f"Error: Unknown plot type '{plot_type}'. Available types: histogram, scatter, boxplot, correlation_heatmap"
-            
-            if fig:
-                # Save as HTML
-                output_file = f"output/csv_visualization_{plot_type}.html"
-                fig.write_html(output_file)
-                
-                # Also save plot data as JSON for potential further processing
-                plot_data = {
-                    "plot_type": plot_type,
-                    "x_column": x_column,
-                    "y_column": y_column,
-                    "title": title,
-                    "data_shape": df.shape,
-                    "file_path": file_path
-                }
-                
-                with open("output/csv_visualization.json", "w") as f:
-                    json.dump(plot_data, f, indent=2)
-                
-                return f"Visualization created successfully and saved as {output_file}"
+            return json.dumps(plot_spec, indent=2)
             
         except Exception as e:
-            return f"Error creating visualization: {str(e)}"
+            return json.dumps({"error": f"Error creating visualization: {str(e)}"})
+
+    def _generate_plot_spec(self, df: pd.DataFrame, plot_type: str, x_column: str, 
+                           y_column: str, color_column: str, title: str, aggregation: str) -> Dict[str, Any]:
+        """Generate plot specification dictionary."""
+        
+        # Get column information
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+        categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        
+        # Auto-select columns if not provided
+        if not x_column and categorical_columns:
+            x_column = categorical_columns[0]
+        if not y_column and numeric_columns:
+            y_column = numeric_columns[0]
+        
+        # Prepare data based on plot type
+        plot_data = self._prepare_plot_data(df, plot_type, x_column, y_column, color_column, aggregation)
+        
+        # Generate plot specification
+        if plot_type == "bar":
+            return self._create_bar_spec(plot_data, x_column, y_column, color_column, title)
+        elif plot_type == "line":
+            return self._create_line_spec(plot_data, x_column, y_column, color_column, title)
+        elif plot_type == "scatter":
+            return self._create_scatter_spec(plot_data, x_column, y_column, color_column, title)
+        elif plot_type == "pie":
+            return self._create_pie_spec(plot_data, x_column, y_column, title)
+        elif plot_type == "histogram":
+            return self._create_histogram_spec(plot_data, x_column, title)
+        elif plot_type == "boxplot":
+            return self._create_boxplot_spec(plot_data, x_column, y_column, title)
+        elif plot_type == "heatmap":
+            return self._create_heatmap_spec(plot_data, title)
+        else:
+            return {"error": f"Unknown plot type: {plot_type}"}
+
+    def _prepare_plot_data(self, df: pd.DataFrame, plot_type: str, x_column: str, 
+                          y_column: str, color_column: str, aggregation: str) -> Dict[str, Any]:
+        """Prepare data for plotting based on plot type and aggregation."""
+        
+        if plot_type == "heatmap":
+            # For heatmap, use correlation matrix of numeric columns
+            numeric_df = df.select_dtypes(include=[np.number])
+            if not numeric_df.empty:
+                corr_matrix = numeric_df.corr()
+                return {
+                    "z": corr_matrix.values.tolist(),
+                    "x": corr_matrix.columns.tolist(),
+                    "y": corr_matrix.index.tolist()
+                }
+            else:
+                return {"error": "No numeric columns for heatmap"}
+        
+        elif plot_type in ["bar", "line"] and x_column and y_column:
+            # Group and aggregate data
+            if color_column and color_column in df.columns:
+                # Check if aggregation is needed
+                if aggregation and aggregation.strip():
+                    grouped = df.groupby([x_column, color_column])[y_column].agg(aggregation).reset_index()
+                else:
+                    # Use data directly without aggregation
+                    grouped = df[[x_column, y_column, color_column]]
+                return {
+                    "x": grouped[x_column].tolist(),
+                    "y": grouped[y_column].tolist(),
+                    "color": grouped[color_column].tolist()
+                }
+            else:
+                # Check if aggregation is needed
+                if aggregation and aggregation.strip():
+                    grouped = df.groupby(x_column)[y_column].agg(aggregation).reset_index()
+                else:
+                    # Use data directly without aggregation
+                    grouped = df[[x_column, y_column]]
+                return {
+                    "x": grouped[x_column].tolist(),
+                    "y": grouped[y_column].tolist()
+                }
+        
+        elif plot_type == "pie" and x_column and y_column:
+            # Aggregate data for pie chart
+            if aggregation and aggregation.strip():
+                grouped = df.groupby(x_column)[y_column].agg(aggregation).reset_index()
+            else:
+                # Use data directly without aggregation
+                grouped = df[[x_column, y_column]]
+            return {
+                "labels": grouped[x_column].tolist(),
+                "values": grouped[y_column].tolist()
+            }
+        
+        else:
+            # For scatter, histogram, boxplot - use raw data
+            result = {}
+            if x_column and x_column in df.columns:
+                result["x"] = df[x_column].tolist()
+            if y_column and y_column in df.columns:
+                result["y"] = df[y_column].tolist()
+            if color_column and color_column in df.columns:
+                result["color"] = df[color_column].tolist()
+            return result
+
+    def _create_bar_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+        """Create bar chart specification."""
+        return {
+            "type": "bar",
+            "data": data,
+            "layout": {
+                "title": title or f"{y_column} by {x_column}",
+                "xaxis": {"title": x_column},
+                "yaxis": {"title": y_column},
+                "showlegend": bool(color_column)
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_line_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+        """Create line chart specification."""
+        return {
+            "type": "line",
+            "data": data,
+            "layout": {
+                "title": title or f"{y_column} over {x_column}",
+                "xaxis": {"title": x_column},
+                "yaxis": {"title": y_column},
+                "showlegend": bool(color_column)
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_scatter_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+        """Create scatter plot specification."""
+        return {
+            "type": "scatter",
+            "data": data,
+            "layout": {
+                "title": title or f"{y_column} vs {x_column}",
+                "xaxis": {"title": x_column},
+                "yaxis": {"title": y_column},
+                "showlegend": bool(color_column)
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_pie_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
+        """Create pie chart specification."""
+        return {
+            "type": "pie",
+            "data": data,
+            "layout": {
+                "title": title or f"Distribution of {y_column} by {x_column}"
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_histogram_spec(self, data: Dict, x_column: str, title: str) -> Dict[str, Any]:
+        """Create histogram specification."""
+        return {
+            "type": "histogram",
+            "data": data,
+            "layout": {
+                "title": title or f"Distribution of {x_column}",
+                "xaxis": {"title": x_column},
+                "yaxis": {"title": "Frequency"}
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_boxplot_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
+        """Create boxplot specification."""
+        return {
+            "type": "box",
+            "data": data,
+            "layout": {
+                "title": title or f"Distribution of {y_column or x_column}",
+                "yaxis": {"title": y_column or x_column}
+            },
+            "config": {"responsive": True}
+        }
+
+    def _create_heatmap_spec(self, data: Dict, title: str) -> Dict[str, Any]:
+        """Create heatmap specification."""
+        return {
+            "type": "heatmap",
+            "data": data,
+            "layout": {
+                "title": title or "Correlation Heatmap"
+            },
+            "config": {"responsive": True}
+        }
