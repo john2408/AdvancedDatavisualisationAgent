@@ -2,3 +2,7 @@
 data/data.csv
 .DS_Store
 data/market_share.sqlite
+
+# Ignore Python bytecode and cache directories
+__pycache__/
+*.pyc
