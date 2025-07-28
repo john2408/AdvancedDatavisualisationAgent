@@ -3,6 +3,10 @@
 data/data.csv
 .DS_Store
 data/market_share.sqlite
+node_modules/*
+node_modules_/*
+js_frontend/node_modules/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
