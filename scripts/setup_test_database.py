@@ -160,7 +160,7 @@ def create_tables(conn) -> None:
 def insert_test_data(conn) -> None:
     """Insert test data into the star schema tables.
     
-    This function populates all dimension and fact tables with sample data:
+    This function populates all dimension and fact tables with comprehensive sample data:
     
     Sample Data Overview:
     - Time: First quarter of 2023 (Jan-Mar)
@@ -168,21 +168,18 @@ def insert_test_data(conn) -> None:
     - Vehicles: Electric Sedan, Hybrid SUV, Gasoline Compact
     - Geography: Germany, France, England with major cities
     
-    Market Share Data:
-    - Country level: 25% market share (250 out of 1000 vehicles)
-    - District level: 20% market share (100 out of 500 vehicles)
+    Market Share Patterns:
+    - Luxury brands (BMW, Mercedes) have higher shares in wealthy districts
+    - Mass market (Toyota) leads in overall volume
+    - Electric vehicles show growth in urban areas
+    - Hybrid SUVs popular across all regions
+    - Regional variations reflect local preferences
     
     Args:
         conn: psycopg2 database connection object
-    
-    Note:
-        - Uses ON CONFLICT clauses to handle duplicate insertions
-        - Maintains referential integrity in fact tables
-        - Provides realistic but simplified test scenarios
     """
     with conn.cursor() as cur:
-        # Insert DimTime test data
-        # First quarter of 2023 for initial testing
+        # Insert DimTime test data - First quarter of 2023
         cur.execute("""
         INSERT INTO DimTime (time_key, year_report, month_report, year_month, quarter, year_quarter)
         VALUES 
@@ -193,7 +190,6 @@ def insert_test_data(conn) -> None:
         """)
         
         # Insert DimOEM test data
-        # Mix of luxury and mass market manufacturers
         cur.execute("""
         INSERT INTO DimOEM (oem_name, oem_category, country_origin)
         VALUES 
@@ -201,20 +197,22 @@ def insert_test_data(conn) -> None:
             ('Toyota', 'Mass Market', 'Japan'),
             ('Mercedes-Benz', 'Luxury', 'Germany')
         ON CONFLICT (oem_name) DO NOTHING
+        RETURNING oem_key, oem_name;
         """)
+        oems = {row[1]: row[0] for row in cur.fetchall()}
         
         # Insert DimVehicle test data
-        # Different combinations of body types and fuel types
         cur.execute("""
         INSERT INTO DimVehicle (body_type, fuel_type, vehicle_desc)
         VALUES 
             ('SEDAN', 'ELECTRIC', 'SEDAN ELECTRIC'),
             ('SUV', 'HYBRID', 'SUV HYBRID'),
             ('COMPACT', 'GASOLINE', 'COMPACT GASOLINE')
+        RETURNING vehicle_key, vehicle_desc;
         """)
+        vehicles = {row[1]: row[0] for row in cur.fetchall()}
         
         # Insert DimGeographyCountry test data
-        # Major European markets
         cur.execute("""
         INSERT INTO DimGeographyCountry (country_name, country_code)
         VALUES 
@@ -222,10 +220,11 @@ def insert_test_data(conn) -> None:
             ('France', 'FRA'),
             ('England', 'GBR')
         ON CONFLICT (country_name) DO NOTHING
+        RETURNING geography_country_key, country_name;
         """)
+        countries = {row[1]: row[0] for row in cur.fetchall()}
         
         # Insert DimGeographyDistrict test data
-        # Major cities in each country
         cur.execute("""
         INSERT INTO DimGeographyDistrict (
             country_name, country_code, region_name, 
@@ -235,46 +234,107 @@ def insert_test_data(conn) -> None:
             ('Germany', 'DEU', 'Bavaria', '80331', 'Munich', 'Germany/Bavaria/Munich'),
             ('France', 'FRA', 'Ile-de-France', '75001', 'Paris', 'France/Ile-de-France/Paris'),
             ('England', 'GBR', 'Greater London', 'SW1A 1AA', 'London', 'England/Greater London/London')
+        RETURNING geography_district_key, district_town_name;
         """)
+        districts = {row[1]: row[0] for row in cur.fetchall()}
         
-        # Get the keys for our fact table insertions
-        cur.execute("SELECT time_key FROM DimTime LIMIT 1")
-        time_key = cur.fetchone()[0]
+        # Market share data patterns:
+        # - Luxury brands stronger in wealthy cities
+        # - Mass market leads in volume
+        # - Electric vehicles popular in urban areas
+        # - Hybrid SUVs have consistent demand
+        market_share_data = [
+            # January 2023 - Country Level
+            # Germany
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'Germany', 2000, 400, 0.20),        # 20% luxury EV
+            (202301, 'BMW', 'SUV HYBRID', 'Germany', 3000, 450, 0.15),            # 15% luxury hybrid
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'Germany', 2000, 360, 0.18), # 18% luxury EV
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'Germany', 3000, 390, 0.13),    # 13% luxury hybrid
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'Germany', 5000, 1500, 0.30),    # 30% mass market
+            (202301, 'Toyota', 'SUV HYBRID', 'Germany', 3000, 900, 0.30),           # 30% mass market hybrid
+            
+            # France
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'France', 1800, 270, 0.15),
+            (202301, 'BMW', 'SUV HYBRID', 'France', 2500, 375, 0.15),
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'France', 1800, 252, 0.14),
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'France', 2500, 325, 0.13),
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'France', 4500, 1575, 0.35),
+            (202301, 'Toyota', 'SUV HYBRID', 'France', 2500, 875, 0.35),
+            
+            # England
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'England', 2200, 440, 0.20),
+            (202301, 'BMW', 'SUV HYBRID', 'England', 2800, 448, 0.16),
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'England', 2200, 418, 0.19),
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'England', 2800, 420, 0.15),
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'England', 4800, 1248, 0.26),
+            (202301, 'Toyota', 'SUV HYBRID', 'England', 2800, 784, 0.28),
+        ]
         
-        cur.execute("SELECT oem_key FROM DimOEM LIMIT 1")
-        oem_key = cur.fetchone()[0]
+        # Insert country-level market share data
+        for time_key, oem, vehicle, country, total, oem_total, share in market_share_data:
+            cur.execute("""
+            INSERT INTO FactMarketShareCountry (
+                time_key, oem_key, vehicle_key, geography_country_key,
+                total_vehicles_country, total_vehicles_country_oem, market_share_country
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                time_key,
+                oems[oem],
+                vehicles[vehicle],
+                countries[country],
+                total,
+                oem_total,
+                share
+            ))
         
-        cur.execute("SELECT vehicle_key FROM DimVehicle LIMIT 1")
-        vehicle_key = cur.fetchone()[0]
+        # District-level market share data (50% of country volume for capital cities)
+        district_share_data = [
+            # Munich - Higher luxury share
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'Munich', 1000, 240, 0.24),        # 24% luxury EV
+            (202301, 'BMW', 'SUV HYBRID', 'Munich', 1500, 270, 0.18),            # 18% luxury hybrid
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'Munich', 1000, 220, 0.22),
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'Munich', 1500, 255, 0.17),
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'Munich', 2500, 625, 0.25),
+            (202301, 'Toyota', 'SUV HYBRID', 'Munich', 1500, 360, 0.24),
+            
+            # Paris - Strong EV adoption
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'Paris', 900, 180, 0.20),
+            (202301, 'BMW', 'SUV HYBRID', 'Paris', 1250, 225, 0.18),
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'Paris', 900, 171, 0.19),
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'Paris', 1250, 200, 0.16),
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'Paris', 2250, 675, 0.30),
+            (202301, 'Toyota', 'SUV HYBRID', 'Paris', 1250, 400, 0.32),
+            
+            # London - Balanced market
+            (202301, 'BMW', 'SEDAN ELECTRIC', 'London', 1100, 242, 0.22),
+            (202301, 'BMW', 'SUV HYBRID', 'London', 1400, 252, 0.18),
+            (202301, 'Mercedes-Benz', 'SEDAN ELECTRIC', 'London', 1100, 231, 0.21),
+            (202301, 'Mercedes-Benz', 'SUV HYBRID', 'London', 1400, 238, 0.17),
+            (202301, 'Toyota', 'COMPACT GASOLINE', 'London', 2400, 648, 0.27),
+            (202301, 'Toyota', 'SUV HYBRID', 'London', 1400, 434, 0.31),
+        ]
         
-        cur.execute("SELECT geography_country_key FROM DimGeographyCountry LIMIT 1")
-        geography_country_key = cur.fetchone()[0]
-        
-        cur.execute("SELECT geography_district_key FROM DimGeographyDistrict LIMIT 1")
-        geography_district_key = cur.fetchone()[0]
-        
-        # Insert FactMarketShareCountry test data
-        # Example: 25% market share (250 out of 1000 vehicles)
-        cur.execute("""
-        INSERT INTO FactMarketShareCountry (
-            time_key, oem_key, vehicle_key, geography_country_key,
-            total_vehicles_country, total_vehicles_country_oem, market_share_country
-        )
-        VALUES (%s, %s, %s, %s, 1000, 250, 0.25)
-        """, (time_key, oem_key, vehicle_key, geography_country_key))
-        
-        # Insert FactMarketShareDistrict test data
-        # Example: 20% market share (100 out of 500 vehicles)
-        cur.execute("""
-        INSERT INTO FactMarketShareDistrict (
-            time_key, oem_key, vehicle_key, geography_district_key,
-            total_vehicles_district, total_vehicles_district_oem, market_share_district
-        )
-        VALUES (%s, %s, %s, %s, 500, 100, 0.20)
-        """, (time_key, oem_key, vehicle_key, geography_district_key))
+        # Insert district-level market share data
+        for time_key, oem, vehicle, district, total, oem_total, share in district_share_data:
+            cur.execute("""
+            INSERT INTO FactMarketShareDistrict (
+                time_key, oem_key, vehicle_key, geography_district_key,
+                total_vehicles_district, total_vehicles_district_oem, market_share_district
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                time_key,
+                oems[oem],
+                vehicles[vehicle],
+                districts[district],
+                total,
+                oem_total,
+                share
+            ))
         
         conn.commit()
-        logging.info("Inserted test data successfully")
+        logging.info("Inserted comprehensive test data successfully")
 
 def test_queries(conn) -> None:
     """Run test queries to verify the data and demonstrate typical analytics.
