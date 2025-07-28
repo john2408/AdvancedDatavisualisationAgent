@@ -3,20 +3,33 @@ from elasticsearch import Elasticsearch
 from typing import List, Dict, Any
 from cachetools import TTLCache, keys
 from functools import wraps
+import json
 
 from backend.core.config import get_settings
 
 # Cache for search results (TTL: 1 hour)
 _cache = TTLCache(maxsize=100, ttl=3600)
 
+def make_hashable(value):
+    """Convert a value to a hashable type."""
+    if isinstance(value, (list, tuple)):
+        return tuple(make_hashable(x) for x in value)
+    elif isinstance(value, dict):
+        return tuple(sorted((k, make_hashable(v)) for k, v in value.items()))
+    elif isinstance(value, (str, int, float, bool, type(None))):
+        return value
+    return str(value)
+
 def cache_result(func):
     """Cache decorator that handles unhashable arguments."""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # Convert lists to tuples in args and kwargs for hashing
-        args = tuple(tuple(arg) if isinstance(arg, list) else arg for arg in args)
-        kwargs = {k: tuple(v) if isinstance(v, list) else v for k, v in kwargs.items()}
-        key = keys.hashkey(func.__name__, args, kwargs)
+        # Make all arguments hashable
+        hashable_args = tuple(make_hashable(arg) for arg in args)
+        hashable_kwargs = {k: make_hashable(v) for k, v in kwargs.items()}
+        
+        # Create a unique key for the cache
+        key = (func.__name__, hashable_args, tuple(sorted(hashable_kwargs.items())))
         
         if key not in _cache:
             _cache[key] = func(*args, **kwargs)
