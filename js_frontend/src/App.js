@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiSend, FiMic, FiDatabase, FiBarChart3 } from 'react-icons/fi';
+import { FiSend, FiMic, FiDatabase, FiBarChart } from 'react-icons/fi';
 import Plot from 'react-plotly.js';
 import { agentAPI } from './api';
 

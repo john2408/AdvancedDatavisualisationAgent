@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  fastapi-backend:
+    build: 
+      context: ./js_backend
+      dockerfile: Dockerfile
+    container_name: data-viz-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app:/app/js_backend
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./agents:/app/agents:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - data-viz-network
+
+  react-frontend:
+    build:
+      context: ./js_frontend
+      dockerfile: Dockerfile
+    container_name: data-viz-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - fastapi-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - data-viz-network
+
+networks:
+  data-viz-network:
+    driver: bridge
+
+volumes:
+  backend_data:
+  frontend_data:
