@@ -64,17 +64,21 @@ data_analysis_task:
 
 visualization_task:
   description: |
-    Create the best visualization for the analyzed data based on the recommendations from the data analyst.
+    Create the best visualization for the analyzed data based on the provided analysis recommendations.
     
-    DATA ANALYSIS CONTEXT: {analysis}
+    DATA ANALYSIS: {analysis}
+    RECOMMENDED VISUALIZATIONS: {recommended_visualizations}
+    KEY FINDINGS: {key_findings}
     DATAFRAME JSON: {dataframe_json}
+    USER QUESTION: {user_question}
     
     Your task:
-    1. Choose the most appropriate visualization type from: bar, line, scatter, pie, histogram, boxplot, heatmap
-    2. Select the best columns for x-axis, y-axis, and color grouping
-    3. Determine appropriate aggregation method if needed (sum, count, mean, max, min)
-    4. Create a clear and descriptive title
-    5. Use the DataFrame Visualization Tool to generate the plot specification
+    1. Review the data analysis and recommendations provided
+    2. Choose the most appropriate visualization type from: bar, line, scatter, pie, histogram, boxplot, heatmap
+    3. Select the best columns for x-axis, y-axis, and color grouping based on the analysis
+    4. Determine appropriate aggregation method if needed (sum, count, mean, max, min)
+    5. Create a clear and descriptive title that reflects the user's question
+    6. Use the DataFrame Visualization Tool to generate the plot specification
     
     Guidelines for plot type selection:
     - Use BAR charts for: categorical comparisons, rankings, counts by category

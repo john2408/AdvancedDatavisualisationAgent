@@ -267,14 +267,27 @@ The analytics pipeline is organized into **5 intelligent steps**, each providing
   - Real-time feedback: "🔄 Executing SQL query... ✅ Retrieved X rows"
 
 #### Step 4: Intelligent Visualization 🎨
-- **Agents**: Data Analyst + Visualization Specialist
-- **Purpose**: Creates optimal visualizations based on data characteristics
+- **Step 4a - Data Analysis**: Data Analyst Agent (Separate Crew)
+- **Step 4b - Visualization Generation**: Visualization Specialist Agent (Separate Crew)
+- **Purpose**: Creates optimal visualizations based on comprehensive data analysis
+- **Performance Optimization**: Agents run in separate crews for improved speed and reliability
 - **Features**:
-  - AI-driven plot type selection (bar, line, scatter, pie, etc.)
-  - Automatic column mapping (x-axis, y-axis, color grouping)
-  - Smart aggregation method selection
-  - Fallback visualization for edge cases
-  - Real-time feedback: "🎨 Generating visualization... ✨ Created successfully!"
+  - **Data Analysis Phase**:
+    - Identifies data patterns, trends, and anomalies
+    - Recommends optimal visualization types
+    - Generates key insights and findings
+    - Real-time feedback: "📊 Analyzing data patterns..."
+  - **Visualization Generation Phase**:
+    - AI-driven plot type selection based on analysis recommendations
+    - Automatic column mapping (x-axis, y-axis, color grouping)
+    - Smart aggregation method selection
+    - Advanced transformation handling (bar→pie, percentage conversion)
+    - Real-time feedback: "🎨 Creating visualization... ✨ Created successfully!"
+  - **Performance Benefits**:
+    - Separated crews prevent agent interference
+    - Faster execution with parallel processing capability
+    - Improved reliability and error isolation
+    - Better resource utilization
 
 ### 🔧 Modular Function Architecture
 
@@ -355,14 +368,25 @@ sql_reviewer_crew = Crew(
 )
 ```
 
-#### Data Visualization Crew
+#### Data Analysis Crew (Performance Optimized)
 ```python
-data_visualization_crew = Crew(
-    agents=[data_analyst_agent, visualization_agent],
-    tasks=[data_analysis_task, visualization_task],
+data_analysis_crew = Crew(
+    agents=[data_analyst_agent],
+    tasks=[data_analysis_task],
     verbose=True
 )
 ```
+
+#### Data Visualization Crew (Performance Optimized)
+```python
+data_visualization_crew = Crew(
+    agents=[visualization_agent],
+    tasks=[visualization_task],
+    verbose=True
+)
+```
+
+**Performance Note**: Data analysis and visualization are now separated into individual crews to prevent agent interference and improve execution speed. This architecture change resulted in significantly faster processing times and better reliability.
 
 #### Follow-Up Question Crew
 ```python

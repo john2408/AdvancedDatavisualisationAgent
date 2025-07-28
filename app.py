@@ -7,6 +7,7 @@ from frontend.utils import load_multiple_css
 from agents.crew_agents import (
     sql_generator_crew, 
     sql_reviewer_crew, 
+    data_analysis_crew,
     data_visualization_crew,
     orchestration_crew,
     data_question_crew,
@@ -461,9 +462,10 @@ def step_3_execute_query(reviewed_sql: str) -> dict:
 def step_4_generate_visualization(query_result: pd.DataFrame, user_query: str) -> dict:
     """Step 4: Generate visualization if we have valid results."""
     try:
-        st.info("🎨 Generating visualization...")
+        # Step 4a: Data Analysis
+        st.info("📊 Analyzing data patterns...")
         
-        # Prepare data for visualization crew
+        # Prepare data for analysis crew
         dataframe_json = query_result.to_json(orient='records')
         columns_info = list(query_result.columns)
         dtypes_info = query_result.dtypes.to_dict()
@@ -472,14 +474,30 @@ def step_4_generate_visualization(query_result: pd.DataFrame, user_query: str) -
         # Convert dtypes to string representation
         dtypes_str = {col: str(dtype) for col, dtype in dtypes_info.items()}
         
-        viz_inputs = {
-            "dataframe_json": dataframe_json,
+        analysis_inputs = {
             "columns": ", ".join(columns_info),
             "shape": f"{query_result.shape[0]} rows × {query_result.shape[1]} columns",
             "dtypes": str(dtypes_str),
             "sample_data": str(sample_data),
-            "user_question": user_query,
-            "analysis": f"Data analysis for: {user_query}. The query returned {len(query_result)} rows with columns: {', '.join(columns_info)}."
+            "user_question": user_query
+        }
+        
+        # Run data analysis crew
+        analysis_output = data_analysis_crew.kickoff(inputs=analysis_inputs)
+        analysis_result = analysis_output.pydantic
+        
+        st.success(f"📋 Data analysis completed: {len(analysis_result.key_findings)} key findings")
+        
+        # Step 4b: Visualization Generation
+        st.info("🎨 Creating visualization...")
+        
+        # Prepare data for visualization crew with analysis context
+        viz_inputs = {
+            "dataframe_json": dataframe_json,
+            "analysis": analysis_result.analysis,
+            "recommended_visualizations": ", ".join(analysis_result.recommended_visualizations),
+            "key_findings": ", ".join(analysis_result.key_findings),
+            "user_question": user_query
         }
         
         try:
@@ -500,6 +518,8 @@ def step_4_generate_visualization(query_result: pd.DataFrame, user_query: str) -
                         "success": True,
                         "figure": fig,
                         "summary": viz_summary,
+                        "analysis": analysis_result.analysis,
+                        "key_findings": analysis_result.key_findings,
                         "error": None
                     }
                 else:
@@ -609,7 +629,7 @@ def analyst_agents_flow(user_query: str):
             answer_result = answer_data_question(
                 user_query,
                 current_data_context["query_result"],
-                current_data_context.get("summary", ""),
+                current_data_context.get("analysis", current_data_context.get("summary", "")),
                 current_data_context.get("chart_info", {})
             )
             response["chat_message"] = answer_result["answer"]
@@ -621,7 +641,7 @@ def analyst_agents_flow(user_query: str):
         
         # Generate follow-up questions
         follow_up_result = generate_follow_up_questions(
-            current_data_context.get("summary", ""),
+            current_data_context.get("analysis", current_data_context.get("summary", "")),
             user_query,
             current_data_context.get("insights", []),
             db_schema_agent
@@ -670,26 +690,28 @@ def analyst_agents_flow(user_query: str):
             "reviewed_sql": sql_review_result["reviewed_sql"],
             "original_query": user_query,
             "summary": viz_result.get("summary", ""),
+            "analysis": viz_result.get("analysis", ""),
             "chart_info": {
                 "plot_type": viz_result.get("plot_type", "unknown"),
                 "title": viz_result.get("title", ""),
             },
-            "insights": viz_result.get("insights", []),
+            "insights": viz_result.get("key_findings", []),
             "created_at": datetime.now().isoformat()
         }
         
         # Generate follow-up questions for new data
         follow_up_result = generate_follow_up_questions(
-            viz_result.get("summary", ""),
+            viz_result.get("analysis", viz_result.get("summary", "")),
             user_query,
-            viz_result.get("insights", []),
+            viz_result.get("key_findings", []),
             db_schema_agent
         )
         response["follow_up_questions"] = follow_up_result["questions"]
         
         # Create final summary message
         if viz_result["success"]:
-            response["chat_message"] = f"I successfully generated and reviewed the SQL query, executed it, and created a visualization. {viz_result['summary']}"
+            analysis_info = f" The data analysis revealed {len(viz_result.get('key_findings', []))} key insights." if viz_result.get('key_findings') else ""
+            response["chat_message"] = f"I successfully analyzed your data, generated and reviewed the SQL query, and created a visualization. {viz_result['summary']}{analysis_info}"
         else:
             response["chat_message"] = f"I generated and executed the SQL query successfully. {viz_result['summary']} Check the results in the table below."
     

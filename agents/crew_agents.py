@@ -117,7 +117,6 @@ data_analysis_task = Task(
 visualization_task = Task(
   config=tasks_config['visualization_task'],
   agent=visualization_agent,
-  context=[data_analysis_task],
   output_pydantic=VisualizationJSON
 )
 
@@ -164,9 +163,15 @@ sql_compliance_crew = Crew(
     verbose=True
 )
 
+data_analysis_crew = Crew(
+    agents=[data_analyst_agent],
+    tasks=[data_analysis_task],
+    verbose=True
+)
+
 data_visualization_crew = Crew(
-    agents=[data_analyst_agent, visualization_agent],
-    tasks=[data_analysis_task, visualization_task],
+    agents=[visualization_agent],
+    tasks=[visualization_task],
     verbose=True
 )
 
