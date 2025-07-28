@@ -1,5 +1,12 @@
-# Minimal FastAPI Dependencies for Docker testing
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
+# FastAPI and dependencies - using versions compatible with CrewAI
+fastapi==0.115.9
+uvicorn[standard]==0.32.0
+pydantic>=2.8.0,<3.0.0
 python-multipart==0.0.6
+
+# CrewAI and dependencies for agent execution
+crewai==0.148.0
+omegaconf==2.3.0
+pyyaml==6.0.1
+pandas==2.2.2
+plotly==5.22.0

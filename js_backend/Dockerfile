@@ -22,6 +22,10 @@ COPY js_backend/main.py .
 # Copy the config file from parent directory
 COPY config.yaml .
 
+# Copy agents and backend directories for CrewAI functionality
+COPY agents/ ./agents/
+COPY backend/ ./backend/
+
 # Expose port
 EXPOSE 8000
 

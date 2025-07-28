@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
-import { agentAPI, getDatabaseSchema } from './api';
+import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualization from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
