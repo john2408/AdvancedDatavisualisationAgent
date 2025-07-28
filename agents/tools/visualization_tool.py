@@ -280,9 +280,14 @@ class DataFrameVisualizationTool(BaseTool):
             "data": data,
             "layout": {
                 "title": title or f"{y_column} by {x_column}",
-                "xaxis": {"title": x_column},
-                "yaxis": {"title": y_column},
-                "showlegend": bool(color_column)
+                "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "yaxis": {"title": y_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "showlegend": bool(color_column),
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"},
+                "colorway": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
             },
             "config": {"responsive": True}
         }
@@ -294,9 +299,14 @@ class DataFrameVisualizationTool(BaseTool):
             "data": data,
             "layout": {
                 "title": title or f"{y_column} over {x_column}",
-                "xaxis": {"title": x_column},
-                "yaxis": {"title": y_column},
-                "showlegend": bool(color_column)
+                "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "yaxis": {"title": y_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "showlegend": bool(color_column),
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"},
+                "colorway": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
             },
             "config": {"responsive": True}
         }
@@ -308,9 +318,14 @@ class DataFrameVisualizationTool(BaseTool):
             "data": data,
             "layout": {
                 "title": title or f"{y_column} vs {x_column}",
-                "xaxis": {"title": x_column},
-                "yaxis": {"title": y_column},
-                "showlegend": bool(color_column)
+                "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "yaxis": {"title": y_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "showlegend": bool(color_column),
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"},
+                "colorway": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
             },
             "config": {"responsive": True}
         }
@@ -337,12 +352,18 @@ class DataFrameVisualizationTool(BaseTool):
                 "values": values,
                 "hovertemplate": hover_template,
                 "textinfo": "label+percent",
-                "textposition": "auto"
+                "textposition": "auto",
+                "marker": {
+                    "colors": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+                }
             },
             "layout": {
                 "title": title or f"Distribution of {y_column} by {x_column}",
                 "showlegend": True,
-                "font": {"size": 12}
+                "font": {"size": 12, "color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "title_font": {"size": 16, "color": "#1f1f1f"}
             },
             "config": {"responsive": True}
         }
@@ -354,8 +375,13 @@ class DataFrameVisualizationTool(BaseTool):
             "data": data,
             "layout": {
                 "title": title or f"Distribution of {x_column}",
-                "xaxis": {"title": x_column},
-                "yaxis": {"title": "Frequency"}
+                "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "yaxis": {"title": "Frequency", "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"},
+                "colorway": ["#1f77b4"]
             },
             "config": {"responsive": True}
         }
@@ -367,7 +393,13 @@ class DataFrameVisualizationTool(BaseTool):
             "data": data,
             "layout": {
                 "title": title or f"Distribution of {y_column or x_column}",
-                "yaxis": {"title": y_column or x_column}
+                "yaxis": {"title": y_column or x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "xaxis": {"title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"},
+                "colorway": ["#1f77b4"]
             },
             "config": {"responsive": True}
         }
@@ -378,7 +410,11 @@ class DataFrameVisualizationTool(BaseTool):
             "type": "heatmap",
             "data": data,
             "layout": {
-                "title": title or "Correlation Heatmap"
+                "title": title or "Correlation Heatmap",
+                "plot_bgcolor": "white",
+                "paper_bgcolor": "white",
+                "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
+                "title_font": {"size": 16, "color": "#1f1f1f"}
             },
             "config": {"responsive": True}
         }

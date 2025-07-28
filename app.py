@@ -15,6 +15,7 @@ from agents.crew_agents import (
     follow_up_crew
 )
 from backend.sql_utils import get_structured_schema, run_query
+from frontend.plotly_styles import apply_white_theme_styling
 import plotly.express as px
 import plotly.graph_objects as go
 from omegaconf import OmegaConf
@@ -81,6 +82,7 @@ def get_rag_context(query: str):
         return "Recent internal analysis shows that Competitor Z's new model launch has impacted sales of 'Vehicle C' in the North region."
     return None
 
+
 def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
     """Create a Plotly figure from JSON specification and DataFrame."""
     try:
@@ -108,10 +110,12 @@ def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
                     "y": data["y"],
                     "color": data["color"]
                 })
-                fig = px.bar(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+                fig = px.bar(df_plot, x="x", y="y", color="color", title=layout.get("title"),
+                           color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
             else:
                 # Simple bar chart
-                fig = px.bar(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                fig = px.bar(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
+                           color_discrete_sequence=["#1f77b4"])
                 
         elif plot_type == "line":
             if "color" in data and data["color"]:
@@ -120,9 +124,11 @@ def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
                     "y": data["y"],
                     "color": data["color"]
                 })
-                fig = px.line(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+                fig = px.line(df_plot, x="x", y="y", color="color", title=layout.get("title"),
+                            color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
             else:
-                fig = px.line(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                fig = px.line(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
+                            color_discrete_sequence=["#1f77b4"])
                 
         elif plot_type == "scatter":
             if "color" in data and data["color"]:
@@ -131,23 +137,29 @@ def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
                     "y": data["y"],
                     "color": data["color"]
                 })
-                fig = px.scatter(df_plot, x="x", y="y", color="color", title=layout.get("title"))
+                fig = px.scatter(df_plot, x="x", y="y", color="color", title=layout.get("title"),
+                               color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
             else:
-                fig = px.scatter(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"))
+                fig = px.scatter(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
+                               color_discrete_sequence=["#1f77b4"])
                 
         elif plot_type == "pie":
             if "values" in data and "labels" in data:
-                fig = px.pie(values=data["values"], names=data["labels"], title=layout.get("title"))
+                fig = px.pie(values=data["values"], names=data["labels"], title=layout.get("title"),
+                           color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
             
         elif plot_type == "histogram":
             if "x" in data:
-                fig = px.histogram(x=data["x"], title=layout.get("title"))
+                fig = px.histogram(x=data["x"], title=layout.get("title"),
+                                 color_discrete_sequence=["#1f77b4"])
             
         elif plot_type == "box":
             if "y" in data:
-                fig = px.box(y=data["y"], title=layout.get("title"))
+                fig = px.box(y=data["y"], title=layout.get("title"),
+                           color_discrete_sequence=["#1f77b4"])
             elif "x" in data:
-                fig = px.box(y=data["x"], title=layout.get("title"))
+                fig = px.box(y=data["x"], title=layout.get("title"),
+                           color_discrete_sequence=["#1f77b4"])
                 
         elif plot_type == "heatmap":
             if "z" in data and "x" in data and "y" in data:
@@ -156,17 +168,21 @@ def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
                     x=data["x"], 
                     y=data["y"], 
                     title=layout.get("title"),
-                    text_auto=True
+                    text_auto=True,
+                    color_continuous_scale="RdBu_r"
                 )
         
         if fig:
-            # Apply any additional layout configurations
+            # Apply any additional layout configurations from plot spec
             if layout.get("xaxis", {}).get("title"):
                 fig.update_xaxes(title_text=layout["xaxis"]["title"])
             if layout.get("yaxis", {}).get("title"):
                 fig.update_yaxes(title_text=layout["yaxis"]["title"])
                 
-            # Set responsive layout
+            # Apply white theme styling
+            fig = apply_white_theme_styling(fig)
+                
+            # Set responsive layout and height
             fig.update_layout(
                 height=500,
                 showlegend=layout.get("showlegend", True)
@@ -364,7 +380,7 @@ def step_1_generate_sql(user_query: str) -> dict:
         initial_sql = gen_output.pydantic.sqlquery
         
         st.success(f"📝 Initial SQL Query Generated!")
-        st.code(initial_sql, language="sql")
+        display_sql_code(initial_sql)
         
         return {
             "success": True,
@@ -398,10 +414,10 @@ def step_2_review_sql(initial_sql: str) -> dict:
                 col1, col2 = st.columns(2)
                 with col1:
                     st.text("Original SQL:")
-                    st.code(initial_sql, language="sql")
+                    display_sql_code(initial_sql)
                 with col2:
                     st.text("Reviewed SQL:")
-                    st.code(reviewed_sql, language="sql")
+                    display_sql_code(reviewed_sql)
         else:
             st.success("✅ SQL query approved by reviewer (no changes needed)")
         
@@ -558,7 +574,12 @@ def step_4_fallback_visualization(query_result: pd.DataFrame) -> dict:
                 str(query_result[second_col].dtype).startswith('float')):
                 
                 fig = px.bar(query_result.head(10), x=first_col, y=second_col, 
-                           title=f"{second_col} by {first_col}")
+                           title=f"{second_col} by {first_col}",
+                           color_discrete_sequence=["#1f77b4"])
+                
+                # Apply white theme styling
+                fig = apply_white_theme_styling(fig)
+                
                 viz_summary = f"Created fallback bar chart: {second_col} by {first_col}"
                 st.info("✨ Created fallback visualization!")
                 
@@ -722,6 +743,24 @@ def analyst_agents_flow(user_query: str):
 
 # --- UI HELPER FUNCTIONS ---
 
+def display_sql_code(sql_query: str):
+    """Display SQL code with white background and black text styling."""
+    st.markdown(f"""
+    <div style="background-color: white; border: 1px solid #e1e5e9; border-radius: 0.25rem; padding: 1rem; margin: 0.5rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <pre style="margin: 0; color: black; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 14px; line-height: 1.4;">{sql_query}</pre>
+    </div>
+    """, unsafe_allow_html=True)
+
+def display_dashboard_metric(title: str, value: str, col_obj):
+    """Display a dashboard-style metric box with white background and black text."""
+    with col_obj:
+        st.markdown(f"""
+        <div style="background-color: white; border: 1px solid #e1e5e9; border-radius: 0.25rem; padding: 1rem; margin: 0.25rem 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;">
+            <h2 style="margin: 0; color: #1F2937; font-size: 1.5rem; font-weight: 600;">{value}</h2>
+            <p style="margin: 0.25rem 0 0 0; color: #6B7280; font-size: 0.875rem; font-weight: 500;">{title}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
 def display_welcome_message():
     """Displays the initial message in the main panel."""
     st.markdown("""
@@ -761,7 +800,7 @@ def display_visualization(viz_data):
     # Display the final reviewed SQL query prominently
     if viz_data.get("reviewed_sql"):
         st.subheader("🎯 Final SQL Query (Reviewed by GPT-4o)")
-        st.code(viz_data['reviewed_sql'], language="sql")
+        display_sql_code(viz_data['reviewed_sql'])
     
     # Display query result as nicely formatted table
     if viz_data.get("query_result") is not None:
@@ -777,18 +816,18 @@ def display_visualization(viz_data):
                 # Display successful results
                 st.subheader("📊 Query Results")
                 
-                # Show summary statistics
+                # Show summary statistics with dashboard-style metrics
                 col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Total Rows", len(query_result))
-                with col2:
-                    st.metric("Columns", len(query_result.columns))
-                with col3:
-                    if len(query_result.select_dtypes(include=['number']).columns) > 0:
-                        # If there are numeric columns, show a sum of the first numeric column
-                        numeric_col = query_result.select_dtypes(include=['number']).columns[0]
-                        total_value = query_result[numeric_col].sum()
-                        st.metric(f"Total {numeric_col}", f"{total_value:,.0f}")
+                display_dashboard_metric("Total Rows", f"{len(query_result):,}", col1)
+                display_dashboard_metric("Columns", str(len(query_result.columns)), col2)
+                
+                if len(query_result.select_dtypes(include=['number']).columns) > 0:
+                    # If there are numeric columns, show a sum of the first numeric column
+                    numeric_col = query_result.select_dtypes(include=['number']).columns[0]
+                    total_value = query_result[numeric_col].sum()
+                    display_dashboard_metric(f"Total {numeric_col}", f"{total_value:,.0f}", col3)
+                else:
+                    display_dashboard_metric("Data Type", "Text/Mixed", col3)
                 
                 # Display the formatted table
                 st.dataframe(
