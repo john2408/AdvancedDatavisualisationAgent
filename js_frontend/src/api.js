@@ -12,44 +12,23 @@ const api = axios.create({
 
 // Agent API calls
 export const agentAPI = {
+  // Health Check
+  healthCheck: async () => {
+    const response = await api.get('/health');
+    return response.data;
+  },
+
+  // Get Database Schema
+  getDatabaseSchema: async () => {
+    const response = await api.get('/config/schema');
+    return response.data;
+  },
+
   // SQL Generator Agent
   generateSQL: async (userInput, dbSchema) => {
     const response = await api.post('/agents/sql-generator', {
       user_input: userInput,
       db_schema: dbSchema
-    });
-    return response.data;
-  },
-
-  // SQL Reviewer Agent
-  reviewSQL: async (sqlQuery, dbSchema) => {
-    const response = await api.post('/agents/sql-reviewer', {
-      sql_query: sqlQuery,
-      db_schema: dbSchema
-    });
-    return response.data;
-  },
-
-  // Data Analysis Agent
-  analyzeData: async (columns, shape, dtypes, sampleData, userQuestion) => {
-    const response = await api.post('/agents/data-analysis', {
-      columns,
-      shape,
-      dtypes,
-      sample_data: sampleData,
-      user_question: userQuestion
-    });
-    return response.data;
-  },
-
-  // Visualization Agent
-  createVisualization: async (dataframeJson, userQuestion, recommendedViz, analysisSummary, keyFindings) => {
-    const response = await api.post('/agents/visualization', {
-      dataframe_json: dataframeJson,
-      user_question: userQuestion,
-      recommended_visualizations: recommendedViz,
-      analysis_summary: analysisSummary,
-      key_findings: keyFindings
     });
     return response.data;
   },
@@ -64,49 +43,114 @@ export const agentAPI = {
     return response.data;
   },
 
-  // Data Question Agent
-  answerDataQuestion: async (userQuestion, currentData, dataSummary, chartInfo) => {
-    const response = await api.post('/agents/data-question', {
-      user_question: userQuestion,
-      current_data: currentData,
-      data_summary: dataSummary,
-      chart_info: chartInfo
-    });
-    return response.data;
+  // Mock implementations for missing endpoints
+  reviewSQL: async (sqlQuery, dbSchema) => {
+    // Mock implementation until backend endpoint is available
+    return {
+      success: true,
+      data: {
+        reviewed_sqlquery: sqlQuery,
+        agent_type: "sql_reviewer",
+        mode: "mock"
+      }
+    };
   },
 
-  // Alternative Visualization Agent
-  createAlternativeVisualization: async (userRequest, currentData, currentChartType) => {
-    const response = await api.post('/agents/alternative-visualization', {
-      user_request: userRequest,
-      current_data: currentData,
-      current_chart_type: currentChartType
-    });
-    return response.data;
+  analyzeData: async (columns, shape, dtypes, sampleData, userQuestion) => {
+    // Mock implementation
+    return {
+      success: true,
+      data: {
+        analysis: "Mock data analysis: The data shows interesting patterns.",
+        recommended_visualizations: ["bar", "pie"],
+        key_findings: ["Top manufacturer is Toyota", "Electric vehicles are growing"],
+        agent_type: "data_analyzer",
+        mode: "mock"
+      }
+    };
   },
 
-  // Follow-up Questions Agent
+  createVisualization: async (dataframeJson, userQuestion, recommendedViz, analysis, keyFindings) => {
+    // Mock implementation
+    const mockPlotSpec = {
+      type: "bar",
+      data: {
+        x: ["Toyota", "Honda", "Ford", "BMW"],
+        y: [150, 120, 100, 80]
+      },
+      layout: {
+        title: "Vehicle Count by Manufacturer",
+        xaxis: { title: "Manufacturer" },
+        yaxis: { title: "Count" }
+      }
+    };
+
+    return {
+      success: true,
+      data: {
+        plot_spec: JSON.stringify(mockPlotSpec),
+        plot_type: "bar",
+        title: "Vehicle Count by Manufacturer",
+        agent_type: "visualization_creator",
+        mode: "mock"
+      }
+    };
+  },
+
   generateFollowUpQuestions: async (dataAnalysis, originalQuery, dataInsights, dbSchema) => {
-    const response = await api.post('/agents/follow-up-questions', {
-      data_analysis: dataAnalysis,
-      original_query: originalQuery,
-      data_insights: dataInsights,
-      db_schema: dbSchema
-    });
-    return response.data;
+    // Mock implementation
+    return {
+      success: true,
+      data: {
+        questions: [
+          "Which manufacturer has the highest growth rate?",
+          "Show me the trend over the last 12 months",
+          "How do electric vehicle registrations compare to gasoline?",
+          "What are the seasonal patterns in registrations?"
+        ],
+        categories: ["trends", "comparisons", "insights"],
+        agent_type: "follow_up_generator",
+        mode: "mock"
+      }
+    };
   },
 
-  // Health check
-  healthCheck: async () => {
-    const response = await api.get('/health');
-    return response.data;
+  createAlternativeVisualization: async (userRequest, currentData, currentChartType) => {
+    // Mock implementation for alternative visualization
+    const mockPlotSpec = {
+      type: "pie",
+      data: {
+        labels: ["Toyota", "Honda", "Ford", "BMW"],
+        values: [150, 120, 100, 80]
+      },
+      layout: {
+        title: "Market Share by Manufacturer"
+      }
+    };
+
+    return {
+      success: true,
+      data: {
+        plot_spec: JSON.stringify(mockPlotSpec),
+        plot_type: "pie",
+        title: "Market Share by Manufacturer",
+        agent_type: "alternative_visualization",
+        mode: "mock"
+      }
+    };
   },
 
-  // List all available agents
-  listAgents: async () => {
-    const response = await api.get('/agents/list');
-    return response.data;
+  answerDataQuestion: async (userQuestion, currentData, dataSummary, chartInfo) => {
+    // Mock implementation for data questions
+    return {
+      success: true,
+      data: {
+        answer: "Based on your current data, Toyota leads with 150 registrations, followed by Honda with 120. This represents a significant market dominance by Japanese manufacturers.",
+        referenced_data_points: ["Toyota: 150", "Honda: 120"],
+        insights: ["Japanese manufacturers dominate", "Top 2 brands account for 60% of market"],
+        agent_type: "data_question_answerer",
+        mode: "mock"
+      }
+    };
   }
 };
-
-export default api;

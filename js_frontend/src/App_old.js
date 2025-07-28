@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
-import { agentAPI, getDatabaseSchema } from './api';
+import { FiSend, FiMic, FiDatabase, FiBarChart } from 'react-icons/fi';
+import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualization from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
-import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import {
   ResponsiveContainer,
   ResponsiveSidebar,
@@ -24,6 +23,7 @@ import {
   ResponsiveButton,
   ResponsiveFollowUpButton,
   ResponsiveLoadingSpinner,
+  ResponsiveFlexContainer,
   media
 } from './styles/ResponsiveLayout';
 
@@ -124,6 +124,29 @@ const MetricCard = styled(ResponsiveCard)`
   }
 `;
 
+const SQLCodeBlock = styled.div`
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow-x: auto;
+  
+  pre {
+    margin: 0;
+    color: black;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    
+    ${media.mobile} {
+      font-size: 12px;
+    }
+  }
+`;
+
 const WelcomeContainer = styled.div`
   text-align: center;
   padding: 3rem 2rem;
@@ -145,7 +168,6 @@ const FollowUpContainer = styled.div`
     }
   }
 `;
-
 function App() {
   const [messages, setMessages] = useState([
     {
@@ -162,24 +184,15 @@ function App() {
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
   const [apiStatus, setApiStatus] = useState('checking');
   
-  // Database schema state
-  const [dbSchema, setDbSchema] = useState({
-    agent: '',
-    user: '',
-    path: ''
-  });
-  const [schemaLoaded, setSchemaLoaded] = useState(false);
-  
   // Pipeline state management
   const [currentStep, setCurrentStep] = useState(null);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [orchestrationData, setOrchestrationData] = useState(null);
   const [pipelineVisible, setPipelineVisible] = useState(false);
 
-  // Check API health and load schema on component mount
+  // Check API health on component mount
   useEffect(() => {
     checkAPIHealth();
-    loadDatabaseSchema();
   }, []);
 
   const checkAPIHealth = async () => {
@@ -189,34 +202,6 @@ function App() {
     } catch (error) {
       setApiStatus('disconnected');
       console.error('API connection failed:', error);
-    }
-  };
-
-  const loadDatabaseSchema = async () => {
-    try {
-      const schemaData = await agentAPI.getDatabaseSchema();
-      setDbSchema({
-        agent: schemaData.db_schema_agent || '',
-        user: schemaData.db_schema_user || '',
-        path: schemaData.db_path || ''
-      });
-      setSchemaLoaded(true);
-    } catch (error) {
-      console.error('Failed to load database schema:', error);
-      // Set fallback schema
-      setDbSchema({
-        agent: `
-          Tables: vehicles, manufacturers, registrations, regions, time_periods
-          Key relationships: 
-          - vehicles.manufacturer_id -> manufacturers.id
-          - registrations.vehicle_id -> vehicles.id
-          - registrations.region_id -> regions.id
-          - registrations.time_period_id -> time_periods.id
-        `,
-        user: 'Vehicle registration database with manufacturers, vehicle types, and regional data.',
-        path: 'data/registered_vehicles.sqlite'
-      });
-      setSchemaLoaded(true);
     }
   };
 
@@ -244,6 +229,183 @@ function App() {
   const completePipelineStep = (stepId) => {
     setCompletedSteps(prev => [...prev, stepId]);
     setCurrentStep(null);
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isLoading) return;
+    
+    const userMessage = inputValue;
+    setInputValue('');
+    addMessage('user', userMessage);
+    setIsLoading(true);
+    resetPipelineState();
+
+    try {
+      // Step 0: Orchestrate intent (Enhanced Pipeline Architecture)
+      updatePipelineStep('orchestration');
+      addMessage('assistant', '🧠 Understanding your intent...');
+      
+      const orchestrationResult = await agentAPI.orchestrateIntent(
+        userMessage,
+        JSON.stringify(messages.slice(-5)),
+        JSON.stringify(currentData || {})
+      );
+
+      if (orchestrationResult.success) {
+        const { action_type, confidence, reasoning } = orchestrationResult.data;
+        
+        // Store orchestration data for UI
+        setOrchestrationData({
+          actionType: action_type,
+          confidence: confidence,
+          reasoning: reasoning,
+          conversationHistory: messages.slice(-5),
+          currentDataContext: currentData || {}
+        });
+        
+        completePipelineStep('orchestration');
+        addMessage('assistant', `🎯 Intent: ${action_type.toUpperCase()} (Confidence: ${Math.round(confidence * 100)}%)`);
+
+        if (action_type === 'follow_up' && currentData) {
+          // Handle follow-up question with existing data
+          await handleFollowUpQuestion(userMessage);
+        } else {
+          // Handle new query with full pipeline
+          await handleNewQueryPipeline(userMessage);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing request:', error);
+      addMessage('assistant', 'Sorry, I encountered an error processing your request. Please make sure the backend server is running.');
+      resetPipelineState();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNewQueryPipeline = async (userMessage) => {
+    try {
+      // Mock database schema (in real app, this would come from your config)
+      const dbSchema = `
+        Tables: vehicles, manufacturers, registrations, regions, time_periods
+        Key relationships: 
+        - vehicles.manufacturer_id -> manufacturers.id
+        - registrations.vehicle_id -> vehicles.id
+        - registrations.region_id -> regions.id
+        - registrations.time_period_id -> time_periods.id
+      `;
+
+      // Step 1: Generate SQL
+      updatePipelineStep('sql_generation');
+      addMessage('assistant', '🤖 Generating SQL query...');
+      
+      const sqlResult = await agentAPI.generateSQL(userMessage, dbSchema);
+      
+      if (!sqlResult.success) {
+        throw new Error('SQL generation failed');
+      }
+
+      const initialSQL = sqlResult.data.sqlquery;
+      completePipelineStep('sql_generation');
+      addMessage('assistant', `📝 Generated SQL Query:`);
+      
+      // Step 2: Review SQL
+      updatePipelineStep('sql_review');
+      addMessage('assistant', '🔍 Reviewing SQL with GPT-4o verifier...');
+      
+      const reviewResult = await agentAPI.reviewSQL(initialSQL, dbSchema);
+      
+      if (!reviewResult.success) {
+        throw new Error('SQL review failed');
+      }
+
+      const reviewedSQL = reviewResult.data.reviewed_sqlquery;
+      const wasChanged = initialSQL.trim() !== reviewedSQL.trim();
+      
+      completePipelineStep('sql_review');
+      
+      if (wasChanged) {
+        addMessage('assistant', '✅ SQL optimized and improved');
+      } else {
+        addMessage('assistant', '✅ SQL validated - no changes needed');
+      }
+
+      // Step 3: Execute Query
+      updatePipelineStep('query_execution');
+      addMessage('assistant', '🔄 Executing SQL query...');
+      
+      // Mock query execution with more realistic data
+      const mockData = generateMockData(userMessage);
+      
+      setCurrentData(mockData);
+      completePipelineStep('query_execution');
+      addMessage('assistant', `✅ Retrieved ${mockData.length} rows successfully`);
+
+      // Step 4: Data Analysis & Visualization
+      updatePipelineStep('data_analysis');
+      await performDataAnalysisAndVisualization(mockData, userMessage, dbSchema);
+      
+      completePipelineStep('data_analysis');
+
+    } catch (error) {
+      console.error('Error in new query pipeline:', error);
+      addMessage('assistant', 'Sorry, I encountered an error processing your query.');
+      resetPipelineState();
+    }
+  };
+
+  const performDataAnalysisAndVisualization = async (data, userMessage, dbSchema) => {
+    try {
+      // Step 4a: Analyze data
+      addMessage('assistant', '📊 Analyzing data patterns...');
+      
+      const analysisResult = await agentAPI.analyzeData(
+        Object.keys(data[0] || {}).join(', '),
+        `${data.length} rows × ${Object.keys(data[0] || {}).length} columns`,
+        JSON.stringify(Object.keys(data[0] || {}).reduce((acc, key) => ({ ...acc, [key]: 'string' }), {})),
+        JSON.stringify(data.slice(0, 3)),
+        userMessage
+      );
+
+      if (analysisResult.success) {
+        // Step 4b: Create visualization
+        addMessage('assistant', '🎨 Creating visualization...');
+        
+        const vizResult = await agentAPI.createVisualization(
+          JSON.stringify(data),
+          userMessage,
+          analysisResult.data.recommended_visualizations.join(', '),
+          analysisResult.data.analysis,
+          analysisResult.data.key_findings
+        );
+
+        if (vizResult.success) {
+          const plotSpec = JSON.parse(vizResult.data.plot_spec);
+          setCurrentVisualization(plotSpec);
+          addMessage('assistant', '✨ Visualization created successfully!');
+
+          // Generate follow-up questions
+          const followUpResult = await agentAPI.generateFollowUpQuestions(
+            analysisResult.data.analysis,
+            userMessage,
+            analysisResult.data.key_findings.join(', '),
+            dbSchema
+          );
+
+          if (followUpResult.success) {
+            setFollowUpQuestions(followUpResult.data.questions);
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Error in data analysis:', error);
+      addMessage('assistant', 'Created basic visualization due to analysis error.');
+      
+      // Fallback to simple visualization
+      const fallbackViz = createFallbackVisualization(data);
+      setCurrentVisualization(fallbackViz);
+    }
   };
 
   const generateMockData = (userMessage) => {
@@ -302,133 +464,11 @@ function App() {
       }
     };
   };
-
-  const performDataAnalysisAndVisualization = async (data, userMessage, dbSchema) => {
-    try {
-      // Step 4a: Analyze data
-      addMessage('assistant', '📊 Analyzing data patterns...');
-      
-      const analysisResult = await agentAPI.analyzeData(
-        Object.keys(data[0] || {}).join(', '),
-        `${data.length} rows × ${Object.keys(data[0] || {}).length} columns`,
-        JSON.stringify(Object.keys(data[0] || {}).reduce((acc, key) => ({ ...acc, [key]: 'string' }), {})),
-        JSON.stringify(data.slice(0, 3)),
-        userMessage
-      );
-
-      if (analysisResult.success) {
-        // Step 4b: Create visualization
-        addMessage('assistant', '🎨 Creating visualization...');
-        
-        const vizResult = await agentAPI.createVisualization(
-          JSON.stringify(data),
-          userMessage,
-          analysisResult.data.recommended_visualizations.join(', '),
-          analysisResult.data.analysis,
-          analysisResult.data.key_findings
-        );
-
-        if (vizResult.success) {
-          const plotSpec = JSON.parse(vizResult.data.plot_spec);
-          setCurrentVisualization(plotSpec);
-          addMessage('assistant', '✨ Visualization created successfully!');
-
-          // Generate follow-up questions
-          const followUpResult = await agentAPI.generateFollowUpQuestions(
-            analysisResult.data.analysis,
-            userMessage,
-            analysisResult.data.key_findings.join(', '),
-            dbSchema
-          );
-
-          if (followUpResult.success) {
-            setFollowUpQuestions(followUpResult.data.questions);
           }
         }
       }
 
-    } catch (error) {
-      console.error('Error in data analysis:', error);
-      addMessage('assistant', 'Created basic visualization due to analysis error.');
-      
-      // Fallback to simple visualization
-      const fallbackViz = createFallbackVisualization(data);
-      setCurrentVisualization(fallbackViz);
-    }
-  };
-
-  const handleNewQueryPipeline = async (userMessage) => {
-    try {
-      // Use loaded database schema
-      const dbSchemaForAgent = dbSchema.agent || `
-        Tables: vehicles, manufacturers, registrations, regions, time_periods
-        Key relationships: 
-        - vehicles.manufacturer_id -> manufacturers.id
-        - registrations.vehicle_id -> vehicles.id
-        - registrations.region_id -> regions.id
-        - registrations.time_period_id -> time_periods.id
-      `;
-
-      // Step 1: Generate SQL
-      updatePipelineStep('sql_generation');
-      addMessage('assistant', '🤖 Generating SQL query...');
-      
-      const sqlResult = await agentAPI.generateSQL(userMessage, dbSchemaForAgent);
-      
-      if (!sqlResult.success) {
-        throw new Error('SQL generation failed');
-      }
-
-      const initialSQL = sqlResult.data.sqlquery;
-      completePipelineStep('sql_generation');
-      addMessage('assistant', `📝 Generated SQL Query`);
-      
-      // Step 2: Review SQL
-      updatePipelineStep('sql_review');
-      addMessage('assistant', '🔍 Reviewing SQL with GPT-4o verifier...');
-      
-      const reviewResult = await agentAPI.reviewSQL(initialSQL, dbSchemaForAgent);
-      
-      if (!reviewResult.success) {
-        throw new Error('SQL review failed');
-      }
-
-      const reviewedSQL = reviewResult.data.reviewed_sqlquery;
-      const wasChanged = initialSQL.trim() !== reviewedSQL.trim();
-      
-      completePipelineStep('sql_review');
-      
-      if (wasChanged) {
-        addMessage('assistant', '✅ SQL optimized and improved');
-      } else {
-        addMessage('assistant', '✅ SQL validated - no changes needed');
-      }
-
-      // Step 3: Execute Query
-      updatePipelineStep('query_execution');
-      addMessage('assistant', '🔄 Executing SQL query...');
-      
-      // Mock query execution with realistic data
-      const mockData = generateMockData(userMessage);
-      
-      setCurrentData(mockData);
-      completePipelineStep('query_execution');
-      addMessage('assistant', `✅ Retrieved ${mockData.length} rows successfully`);
-
-      // Step 4: Data Analysis & Visualization
-      updatePipelineStep('data_analysis');
-      await performDataAnalysisAndVisualization(mockData, userMessage, dbSchemaForAgent);
-      
-      completePipelineStep('data_analysis');
-
-    } catch (error) {
-      console.error('Error in new query pipeline:', error);
-      addMessage('assistant', 'Sorry, I encountered an error processing your query.');
-      resetPipelineState();
-    }
-  };
-
-  const handleFollowUpQuestion = async (userMessage) => {
+    const handleFollowUpQuestion = async (userMessage) => {
     try {
       if (userMessage.toLowerCase().includes('convert') || 
           userMessage.toLowerCase().includes('change to') ||
@@ -463,58 +503,6 @@ function App() {
     } catch (error) {
       console.error('Error in follow-up flow:', error);
       addMessage('assistant', 'Sorry, I encountered an error with your follow-up question.');
-    }
-  };
-
-  const handleSend = async () => {
-    if (!inputValue.trim() || isLoading) return;
-    
-    const userMessage = inputValue;
-    setInputValue('');
-    addMessage('user', userMessage);
-    setIsLoading(true);
-    resetPipelineState();
-
-    try {
-      // Step 0: Orchestrate intent (Enhanced Pipeline Architecture)
-      updatePipelineStep('orchestration');
-      addMessage('assistant', '🧠 Understanding your intent...');
-      
-      const orchestrationResult = await agentAPI.orchestrateIntent(
-        userMessage,
-        JSON.stringify(messages.slice(-5)),
-        JSON.stringify(currentData || {})
-      );
-
-      if (orchestrationResult.success) {
-        const { action_type, confidence, reasoning } = orchestrationResult.data;
-        
-        // Store orchestration data for UI
-        setOrchestrationData({
-          actionType: action_type,
-          confidence: confidence,
-          reasoning: reasoning,
-          conversationHistory: messages.slice(-5),
-          currentDataContext: currentData || {}
-        });
-        
-        completePipelineStep('orchestration');
-        addMessage('assistant', `🎯 Intent: ${action_type.toUpperCase()} (Confidence: ${Math.round(confidence * 100)}%)`);
-
-        if (action_type === 'follow_up' && currentData) {
-          // Handle follow-up question with existing data
-          await handleFollowUpQuestion(userMessage);
-        } else {
-          // Handle new query with full pipeline
-          await handleNewQueryPipeline(userMessage);
-        }
-      }
-    } catch (error) {
-      console.error('Error processing request:', error);
-      addMessage('assistant', 'Sorry, I encountered an error processing your request. Please make sure the backend server is running.');
-      resetPipelineState();
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -700,13 +688,6 @@ function App() {
               Ask questions about your vehicle registration data in the chat, and I'll create
               beautiful visualizations for you using AI-generated SQL queries and advanced pipeline architecture.
             </ResponsiveText>
-            
-            <DatabaseSchemaViewer 
-              schema={dbSchema?.user || dbSchema?.agent || 'Loading schema...'} 
-              isLoading={!schemaLoaded}
-              title="📋 Database Schema"
-            />
-            
             <ResponsiveWelcomeButtons>
               <ResponsiveButton onClick={() => setInputValue("Which car manufacturers registered the most vehicles?")}>
                 🏭 Top Manufacturers
@@ -722,6 +703,224 @@ function App() {
         )}
       </ResponsiveMainPanel>
     </ResponsiveContainer>
+  );
+}
+
+export default App;
+
+  const handleFollowUpQuestion = async (userMessage) => {
+    try {
+      if (userMessage.toLowerCase().includes('convert') || userMessage.toLowerCase().includes('change to')) {
+        // Handle visualization conversion
+        addMessage('assistant', '🎨 Creating alternative visualization...');
+        const altVizResult = await agentAPI.createAlternativeVisualization(
+          userMessage,
+          JSON.stringify(currentData),
+          currentVisualization?.type || 'bar'
+        );
+
+        if (altVizResult.success) {
+          const newPlotSpec = JSON.parse(altVizResult.data.plot_spec);
+          setCurrentVisualization(newPlotSpec);
+          addMessage('assistant', '✨ Alternative visualization created!');
+        }
+      } else {
+        // Handle data question
+        addMessage('assistant', '🔍 Analyzing current data to answer your question...');
+        const answerResult = await agentAPI.answerDataQuestion(
+          userMessage,
+          JSON.stringify(currentData),
+          'Current data summary',
+          JSON.stringify({ type: currentVisualization?.type || 'unknown' })
+        );
+
+        if (answerResult.success) {
+          addMessage('assistant', answerResult.data.answer);
+        }
+      }
+    } catch (error) {
+      console.error('Error in follow-up flow:', error);
+      addMessage('assistant', 'Sorry, I encountered an error with your follow-up question.');
+    }
+  };
+
+  const handleFollowUpClick = (question) => {
+    setInputValue(question);
+  };
+
+  const renderVisualization = () => {
+    if (!currentVisualization) return null;
+
+    const { type, data, layout } = currentVisualization;
+    
+    try {
+      let plotData = [];
+      
+      if (type === 'bar') {
+        plotData = [{
+          x: data.x,
+          y: data.y,
+          type: 'bar',
+          marker: { color: '#3b82f6' }
+        }];
+      } else if (type === 'pie') {
+        plotData = [{
+          labels: data.labels,
+          values: data.values,
+          type: 'pie'
+        }];
+      }
+
+      return (
+        <Plot
+          data={plotData}
+          layout={{
+            ...layout,
+            autosize: true,
+            margin: { l: 50, r: 50, t: 50, b: 50 }
+          }}
+          style={{ width: '100%', height: '400px' }}
+          config={{ responsive: true }}
+        />
+      );
+    } catch (error) {
+      console.error('Error rendering visualization:', error);
+      return <div>Error rendering visualization</div>;
+    }
+  };
+
+  return (
+    <AppContainer>
+      <Sidebar>
+        <SidebarHeader>
+          <h1>
+            <FiBarChart />
+            Visualization Agent
+          </h1>
+          <p>AI-powered SQL generation and visualization</p>
+          <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+            API Status: <span style={{ color: apiStatus === 'connected' ? '#10b981' : '#ef4444' }}>
+              {apiStatus === 'connected' ? '🟢 Connected' : '🔴 Disconnected'}
+            </span>
+          </div>
+        </SidebarHeader>
+        
+        <ChatContainer>
+          {messages.map((message, index) => (
+            <Message key={index} isUser={message.role === 'user'}>
+              {message.content}
+            </Message>
+          ))}
+          {isLoading && (
+            <LoadingSpinner>
+              Processing your request...
+            </LoadingSpinner>
+          )}
+        </ChatContainer>
+        
+        <InputContainer>
+          <InputWrapper>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Ask about your database..."
+              disabled={isLoading}
+            />
+            <Button variant="primary" onClick={handleSend} disabled={isLoading}>
+              <FiSend />
+            </Button>
+            <Button>
+              <FiMic />
+            </Button>
+          </InputWrapper>
+        </InputContainer>
+      </Sidebar>
+
+      <MainPanel>
+        <h1>Ask questions about your data in natural language</h1>
+        <hr />
+        
+        {currentVisualization ? (
+          <>
+            {currentData && (
+              <MetricsContainer>
+                <MetricCard>
+                  <h3>Total Records</h3>
+                  <p>{currentData.length}</p>
+                </MetricCard>
+                <MetricCard>
+                  <h3>Unique Values</h3>
+                  <p>{new Set(currentData.map(d => d.manufacturer)).size}</p>
+                </MetricCard>
+                <MetricCard>
+                  <h3>Top Performer</h3>
+                  <p>{currentData[0]?.manufacturer || 'N/A'}</p>
+                </MetricCard>
+              </MetricsContainer>
+            )}
+            
+            {currentData && (
+              <DataTable>
+                <table>
+                  <thead>
+                    <tr>
+                      {Object.keys(currentData[0] || {}).map(key => (
+                        <th key={key}>{key}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentData.map((row, index) => (
+                      <tr key={index}>
+                        {Object.values(row).map((value, i) => (
+                          <td key={i}>{value}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </DataTable>
+            )}
+            
+            {renderVisualization()}
+            
+            {followUpQuestions.length > 0 && (
+              <FollowUpContainer>
+                <h3>💡 Suggested follow-up questions:</h3>
+                {followUpQuestions.map((question, index) => (
+                  <FollowUpButton
+                    key={index}
+                    onClick={() => handleFollowUpClick(question)}
+                  >
+                    {question}
+                  </FollowUpButton>
+                ))}
+              </FollowUpContainer>
+            )}
+          </>
+        ) : (
+          <WelcomeContainer>
+            <h2>📊 Ready to Visualize Your Data</h2>
+            <p>
+              Ask questions about your vehicle registration data in the chat, and I'll create
+              beautiful visualizations for you using AI-generated SQL queries.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem', flexWrap: 'wrap' }}>
+              <Button onClick={() => setInputValue("Which car manufacturers registered the most vehicles?")}>
+                🏭 Top Manufacturers
+              </Button>
+              <Button onClick={() => setInputValue("How many electric vehicles were registered?")}>
+                � Electric Vehicles
+              </Button>
+              <Button onClick={() => setInputValue("Which months had the highest vehicle registrations?")}>
+                � Peak Months
+              </Button>
+            </div>
+          </WelcomeContainer>
+        )}
+      </MainPanel>
+    </AppContainer>
   );
 }
 

@@ -12,15 +12,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copy and install minimal requirements
-COPY js_backend/requirements.txt .
+COPY requirements_simple.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements_simple.txt
 
 # Copy the application
-COPY js_backend/main.py .
-
-# Copy the config file from parent directory
-COPY config.yaml .
+COPY main_simple.py main.py
 
 # Expose port
 EXPOSE 8000

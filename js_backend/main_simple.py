@@ -9,8 +9,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import json
 import traceback
-import yaml
-import os
 
 app = FastAPI(
     title="Advanced Data Visualization Agent API",
@@ -26,28 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Load configuration
-def load_config():
-    """Load configuration from config.yaml file"""
-    config_path = "/app/config.yaml"  # Docker path
-    if not os.path.exists(config_path):
-        config_path = "../config.yaml"  # Local development path
-        if not os.path.exists(config_path):
-            config_path = "config.yaml"  # Current directory
-    
-    try:
-        with open(config_path, 'r', encoding='utf-8') as file:
-            return yaml.safe_load(file)
-    except Exception as e:
-        print(f"Warning: Could not load config.yaml: {e}")
-        return {
-            "db_path": "data/registered_vehicles.sqlite",
-            "db_schema_agent": "Mock database schema for testing",
-            "db_schema_user": "Mock user-friendly schema for testing"
-        }
-
-config = load_config()
 
 # Request/Response Models
 class SQLGeneratorRequest(BaseModel):
@@ -65,19 +41,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "message": "FastAPI backend is running"}
-
-@app.get("/config/schema")
-async def get_database_schema():
-    """Get database schema for frontend"""
-    return {
-        "db_schema_agent": config.get("db_schema_agent", "Schema not available"),
-        "db_schema_user": config.get("db_schema_user", "User schema not available"),
-        "db_path": config.get("db_path", "data/registered_vehicles.sqlite")
-    }
-
-@app.post("/agents/sql-generator")
+    return {"status": "healthy", "service": "ai-agents-api"}
 
 @app.post("/agents/sql-generator", response_model=APIResponse)
 async def generate_sql(request: SQLGeneratorRequest):

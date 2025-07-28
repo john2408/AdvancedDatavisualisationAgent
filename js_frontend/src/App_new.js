@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
-import { agentAPI, getDatabaseSchema } from './api';
+import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualization from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
-import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import {
   ResponsiveContainer,
   ResponsiveSidebar,
@@ -162,24 +161,15 @@ function App() {
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
   const [apiStatus, setApiStatus] = useState('checking');
   
-  // Database schema state
-  const [dbSchema, setDbSchema] = useState({
-    agent: '',
-    user: '',
-    path: ''
-  });
-  const [schemaLoaded, setSchemaLoaded] = useState(false);
-  
   // Pipeline state management
   const [currentStep, setCurrentStep] = useState(null);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [orchestrationData, setOrchestrationData] = useState(null);
   const [pipelineVisible, setPipelineVisible] = useState(false);
 
-  // Check API health and load schema on component mount
+  // Check API health on component mount
   useEffect(() => {
     checkAPIHealth();
-    loadDatabaseSchema();
   }, []);
 
   const checkAPIHealth = async () => {
@@ -189,34 +179,6 @@ function App() {
     } catch (error) {
       setApiStatus('disconnected');
       console.error('API connection failed:', error);
-    }
-  };
-
-  const loadDatabaseSchema = async () => {
-    try {
-      const schemaData = await agentAPI.getDatabaseSchema();
-      setDbSchema({
-        agent: schemaData.db_schema_agent || '',
-        user: schemaData.db_schema_user || '',
-        path: schemaData.db_path || ''
-      });
-      setSchemaLoaded(true);
-    } catch (error) {
-      console.error('Failed to load database schema:', error);
-      // Set fallback schema
-      setDbSchema({
-        agent: `
-          Tables: vehicles, manufacturers, registrations, regions, time_periods
-          Key relationships: 
-          - vehicles.manufacturer_id -> manufacturers.id
-          - registrations.vehicle_id -> vehicles.id
-          - registrations.region_id -> regions.id
-          - registrations.time_period_id -> time_periods.id
-        `,
-        user: 'Vehicle registration database with manufacturers, vehicle types, and regional data.',
-        path: 'data/registered_vehicles.sqlite'
-      });
-      setSchemaLoaded(true);
     }
   };
 
@@ -359,8 +321,8 @@ function App() {
 
   const handleNewQueryPipeline = async (userMessage) => {
     try {
-      // Use loaded database schema
-      const dbSchemaForAgent = dbSchema.agent || `
+      // Mock database schema
+      const dbSchema = `
         Tables: vehicles, manufacturers, registrations, regions, time_periods
         Key relationships: 
         - vehicles.manufacturer_id -> manufacturers.id
@@ -373,7 +335,7 @@ function App() {
       updatePipelineStep('sql_generation');
       addMessage('assistant', '🤖 Generating SQL query...');
       
-      const sqlResult = await agentAPI.generateSQL(userMessage, dbSchemaForAgent);
+      const sqlResult = await agentAPI.generateSQL(userMessage, dbSchema);
       
       if (!sqlResult.success) {
         throw new Error('SQL generation failed');
@@ -387,7 +349,7 @@ function App() {
       updatePipelineStep('sql_review');
       addMessage('assistant', '🔍 Reviewing SQL with GPT-4o verifier...');
       
-      const reviewResult = await agentAPI.reviewSQL(initialSQL, dbSchemaForAgent);
+      const reviewResult = await agentAPI.reviewSQL(initialSQL, dbSchema);
       
       if (!reviewResult.success) {
         throw new Error('SQL review failed');
@@ -417,7 +379,7 @@ function App() {
 
       // Step 4: Data Analysis & Visualization
       updatePipelineStep('data_analysis');
-      await performDataAnalysisAndVisualization(mockData, userMessage, dbSchemaForAgent);
+      await performDataAnalysisAndVisualization(mockData, userMessage, dbSchema);
       
       completePipelineStep('data_analysis');
 
@@ -700,13 +662,6 @@ function App() {
               Ask questions about your vehicle registration data in the chat, and I'll create
               beautiful visualizations for you using AI-generated SQL queries and advanced pipeline architecture.
             </ResponsiveText>
-            
-            <DatabaseSchemaViewer 
-              schema={dbSchema?.user || dbSchema?.agent || 'Loading schema...'} 
-              isLoading={!schemaLoaded}
-              title="📋 Database Schema"
-            />
-            
             <ResponsiveWelcomeButtons>
               <ResponsiveButton onClick={() => setInputValue("Which car manufacturers registered the most vehicles?")}>
                 🏭 Top Manufacturers
