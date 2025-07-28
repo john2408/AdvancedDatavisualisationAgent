@@ -246,44 +246,6 @@ function App() {
     setCurrentStep(null);
   };
 
-  const generateMockData = (userMessage) => {
-    const query = userMessage.toLowerCase();
-    
-    if (query.includes('manufacturer') || query.includes('brand')) {
-      return [
-        { manufacturer: 'Toyota', count: 150, market_share: 25.5 },
-        { manufacturer: 'Honda', count: 120, market_share: 20.4 },
-        { manufacturer: 'Ford', count: 100, market_share: 17.0 },
-        { manufacturer: 'BMW', count: 80, market_share: 13.6 },
-        { manufacturer: 'Mercedes', count: 70, market_share: 11.9 },
-        { manufacturer: 'Audi', count: 60, market_share: 10.2 }
-      ];
-    } else if (query.includes('month') || query.includes('time') || query.includes('trend')) {
-      return [
-        { month: 'Jan 2024', registrations: 1200, growth_rate: 5.2 },
-        { month: 'Feb 2024', registrations: 1350, growth_rate: 12.5 },
-        { month: 'Mar 2024', registrations: 1100, growth_rate: -18.5 },
-        { month: 'Apr 2024', registrations: 1450, growth_rate: 31.8 },
-        { month: 'May 2024', registrations: 1600, growth_rate: 10.3 },
-        { month: 'Jun 2024', registrations: 1750, growth_rate: 9.4 }
-      ];
-    } else if (query.includes('electric') || query.includes('ev')) {
-      return [
-        { vehicle_type: 'Electric', count: 85, percentage: 14.2 },
-        { vehicle_type: 'Hybrid', count: 120, percentage: 20.0 },
-        { vehicle_type: 'Gasoline', count: 350, percentage: 58.3 },
-        { vehicle_type: 'Diesel', count: 45, percentage: 7.5 }
-      ];
-    } else {
-      return [
-        { category: 'Category A', value: 42, trend: 'up' },
-        { category: 'Category B', value: 38, trend: 'stable' },
-        { category: 'Category C', value: 35, trend: 'down' },
-        { category: 'Category D', value: 28, trend: 'up' }
-      ];
-    }
-  };
-
   const createFallbackVisualization = (data) => {
     const keys = Object.keys(data[0] || {});
     const numericKey = keys.find(key => typeof data[0][key] === 'number');
@@ -329,8 +291,22 @@ function App() {
         );
 
         if (vizResult.success) {
+          // Convert backend visualization format to Plotly format
           const plotSpec = JSON.parse(vizResult.data.plot_spec);
-          setCurrentVisualization(plotSpec);
+          
+          // Ensure the plot has proper structure for PlotlyVisualization component
+          const processedViz = {
+            data: Array.isArray(plotSpec.data) ? plotSpec.data : [plotSpec.data],
+            layout: plotSpec.layout || {
+              title: vizResult.data.title || 'Data Visualization',
+              plot_bgcolor: 'white',
+              paper_bgcolor: 'white',
+              font: { color: 'black' }
+            },
+            type: vizResult.data.plot_type || 'bar'
+          };
+          
+          setCurrentVisualization(processedViz);
           addMessage('assistant', '✨ Visualization created successfully!');
 
           // Generate follow-up questions
@@ -338,7 +314,7 @@ function App() {
             analysisResult.data.analysis,
             userMessage,
             analysisResult.data.key_findings.join(', '),
-            dbSchema
+            dbSchema.agent
           );
 
           if (followUpResult.success) {
@@ -408,16 +384,23 @@ function App() {
       updatePipelineStep('query_execution');
       addMessage('assistant', '🔄 Executing SQL query...');
       
-      // Mock query execution with realistic data
-      const mockData = generateMockData(userMessage);
+      // Execute SQL query against the database
+      const executionResult = await agentAPI.executeSQL(reviewedSQL);
       
-      setCurrentData(mockData);
+      if (!executionResult.success) {
+        throw new Error('SQL execution failed');
+      }
+
+      const queryData = executionResult.data.results;
+      const metadata = executionResult.data.metadata;
+      
+      setCurrentData(queryData);
       completePipelineStep('query_execution');
-      addMessage('assistant', `✅ Retrieved ${mockData.length} rows successfully`);
+      addMessage('assistant', `✅ Retrieved ${metadata.row_count} rows successfully`);
 
       // Step 4: Data Analysis & Visualization
       updatePipelineStep('data_analysis');
-      await performDataAnalysisAndVisualization(mockData, userMessage, dbSchemaForAgent);
+      await performDataAnalysisAndVisualization(queryData, userMessage, dbSchemaForAgent);
       
       completePipelineStep('data_analysis');
 
@@ -442,8 +425,21 @@ function App() {
         );
 
         if (altVizResult.success) {
-          const newPlotSpec = JSON.parse(altVizResult.data.plot_spec);
-          setCurrentVisualization(newPlotSpec);
+          // Convert backend visualization format to Plotly format
+          const plotSpec = JSON.parse(altVizResult.data.plot_spec);
+          
+          const processedViz = {
+            data: Array.isArray(plotSpec.data) ? plotSpec.data : [plotSpec.data],
+            layout: plotSpec.layout || {
+              title: altVizResult.data.title || 'Alternative Visualization',
+              plot_bgcolor: 'white',
+              paper_bgcolor: 'white',
+              font: { color: 'black' }
+            },
+            type: altVizResult.data.plot_type || 'bar'
+          };
+          
+          setCurrentVisualization(processedViz);
           addMessage('assistant', '✨ Alternative visualization created!');
         }
       } else {

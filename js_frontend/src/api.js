@@ -70,220 +70,77 @@ export const agentAPI = {
     return response.data;
   },
 
-  // SQL Review Agent (Mock implementation for now - will need backend endpoint)
+  // SQL Review Agent - NOW REAL ENDPOINT
   reviewSQL: async (initialSQL, dbSchema) => {
-    // For now, return the same SQL with a small optimization
-    return {
-      success: true,
-      data: {
-        reviewed_sqlquery: initialSQL.includes('LIMIT') ? initialSQL : initialSQL.trim() + '\nLIMIT 100;',
-        review_notes: 'Added LIMIT for performance optimization',
-        was_optimized: !initialSQL.includes('LIMIT')
-      }
-    };
+    const response = await api.post('/agents/sql-reviewer', {
+      sql_query: initialSQL,
+      db_schema: dbSchema
+    });
+    return response.data;
   },
 
-  // Data Analysis Agent (Mock implementation for now - will need backend endpoint)
+  // Execute SQL Query - NEW REAL ENDPOINT
+  executeSQL: async (sqlQuery) => {
+    const response = await api.post('/agents/execute-sql', {
+      sql_query: sqlQuery
+    });
+    return response.data;
+  },
+
+  // Data Analysis Agent - NOW REAL ENDPOINT
   analyzeData: async (columns, shape, dtypes, sample_data, user_query) => {
-    return {
-      success: true,
-      data: {
-        recommended_visualizations: ['bar_chart', 'pie_chart'],
-        analysis: `Data contains ${columns.split(',').length} columns with numerical and categorical data suitable for comparative analysis.`,
-        key_findings: [
-          'Clear ranking visible in the data',
-          'Top categories dominate the distribution',
-          'Good candidate for both bar and pie chart visualizations'
-        ],
-        chart_recommendations: {
-          primary: 'bar_chart',
-          alternatives: ['pie_chart', 'horizontal_bar']
-        }
-      }
-    };
+    const response = await api.post('/agents/data-analysis', {
+      columns: columns,
+      shape: shape,
+      dtypes: dtypes,
+      sample_data: sample_data,
+      user_query: user_query
+    });
+    return response.data;
   },
 
-  // Visualization Creation Agent (Mock implementation for now - will need backend endpoint)
+  // Visualization Creation Agent - NOW REAL ENDPOINT
   createVisualization: async (data, user_query, recommended_viz, analysis, key_findings) => {
-    const parsedData = JSON.parse(data);
-    const firstRow = parsedData[0] || {};
-    const keys = Object.keys(firstRow);
-    
-    // Find categorical and numerical columns
-    const categoricalKey = keys.find(key => typeof firstRow[key] === 'string');
-    const numericalKey = keys.find(key => typeof firstRow[key] === 'number');
-    
-    const plotSpec = {
-      type: 'bar',
-      data: {
-        x: parsedData.map(d => d[categoricalKey]),
-        y: parsedData.map(d => d[numericalKey]),
-        type: 'bar',
-        marker: {
-          color: '#3b82f6'
-        }
-      },
-      layout: {
-        title: `${categoricalKey} vs ${numericalKey}`,
-        xaxis: { title: categoricalKey || 'Category' },
-        yaxis: { title: numericalKey || 'Value' },
-        plot_bgcolor: 'white',
-        paper_bgcolor: 'white',
-        font: { color: 'black' }
-      }
-    };
-
-    return {
-      success: true,
-      data: {
-        plot_spec: JSON.stringify(plotSpec),
-        chart_type: 'bar',
-        data_summary: `Generated visualization for ${parsedData.length} data points`
-      }
-    };
+    const response = await api.post('/agents/data-visualization', {
+      data: data,
+      user_query: user_query,
+      recommended_viz: recommended_viz,
+      analysis: analysis,
+      key_findings: key_findings
+    });
+    return response.data;
   },
 
-  // Follow-up Questions Generation (Mock implementation for now - will need backend endpoint)
+  // Follow-up Questions Generation - NOW REAL ENDPOINT
   generateFollowUpQuestions: async (analysis, original_query, key_findings, db_schema) => {
-    const questions = [
-      'How do these results compare across different time periods?',
-      'What are the regional variations in this data?',
-      'Can you break this down by additional categories?',
-      'Show me the trends over time for the top performers'
-    ];
-
-    // Customize questions based on query content
-    if (original_query.toLowerCase().includes('manufacturer')) {
-      questions.push('Which regions contribute most to the top manufacturers?');
-      questions.push('Compare electric vs conventional vehicle registrations');
-    }
-    if (original_query.toLowerCase().includes('electric')) {
-      questions.push('How do electric vehicle registrations vary by manufacturer?');
-      questions.push('What are the regional patterns for EV adoption?');
-    }
-
-    return {
-      success: true,
-      data: {
-        questions: questions.slice(0, 4), // Return top 4 questions
-        reasoning: 'Generated schema-aware follow-up questions based on current analysis'
-      }
-    };
+    const response = await api.post('/agents/follow-up-questions', {
+      analysis: analysis,
+      original_query: original_query,
+      key_findings: key_findings,
+      db_schema: db_schema
+    });
+    return response.data;
   },
 
-  // Alternative Visualization Creation (Mock implementation for now - will need backend endpoint)
+  // Alternative Visualization Creation - NOW REAL ENDPOINT
   createAlternativeVisualization: async (user_request, current_data, current_chart_type) => {
-    const parsedData = JSON.parse(current_data);
-    const firstRow = parsedData[0] || {};
-    const keys = Object.keys(firstRow);
-    
-    const categoricalKey = keys.find(key => typeof firstRow[key] === 'string');
-    const numericalKey = keys.find(key => typeof firstRow[key] === 'number');
-    
-    let plotSpec;
-    
-    // Determine target chart type from user request
-    if (user_request.toLowerCase().includes('pie')) {
-      plotSpec = {
-        type: 'pie',
-        data: {
-          labels: parsedData.map(d => d[categoricalKey]),
-          values: parsedData.map(d => d[numericalKey]),
-          type: 'pie',
-          textinfo: 'label+percent',
-          textposition: 'outside'
-        },
-        layout: {
-          title: `${categoricalKey} Distribution (%)`,
-          plot_bgcolor: 'white',
-          paper_bgcolor: 'white',
-          font: { color: 'black' }
-        }
-      };
-    } else if (user_request.toLowerCase().includes('line')) {
-      plotSpec = {
-        type: 'line',
-        data: {
-          x: parsedData.map(d => d[categoricalKey]),
-          y: parsedData.map(d => d[numericalKey]),
-          type: 'scatter',
-          mode: 'lines+markers',
-          line: { color: '#3b82f6' }
-        },
-        layout: {
-          title: `${categoricalKey} Trend`,
-          xaxis: { title: categoricalKey || 'Category' },
-          yaxis: { title: numericalKey || 'Value' },
-          plot_bgcolor: 'white',
-          paper_bgcolor: 'white',
-          font: { color: 'black' }
-        }
-      };
-    } else {
-      // Default to horizontal bar if no specific type requested
-      plotSpec = {
-        type: 'bar',
-        data: {
-          x: parsedData.map(d => d[numericalKey]),
-          y: parsedData.map(d => d[categoricalKey]),
-          type: 'bar',
-          orientation: 'h',
-          marker: { color: '#10b981' }
-        },
-        layout: {
-          title: `${categoricalKey} vs ${numericalKey} (Horizontal)`,
-          xaxis: { title: numericalKey || 'Value' },
-          yaxis: { title: categoricalKey || 'Category' },
-          plot_bgcolor: 'white',
-          paper_bgcolor: 'white',
-          font: { color: 'black' }
-        }
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        plot_spec: JSON.stringify(plotSpec),
-        transformation_applied: 'Chart type conversion',
-        chart_type: plotSpec.type
-      }
-    };
+    const response = await api.post('/agents/alternative-visualization', {
+      user_request: user_request,
+      current_data: current_data,
+      current_chart_type: current_chart_type
+    });
+    return response.data;
   },
 
-  // Data Question Answering (Mock implementation for now - will need backend endpoint)
+  // Data Question Answering - NOW REAL ENDPOINT
   answerDataQuestion: async (question, current_data, data_summary, current_visualization) => {
-    const parsedData = JSON.parse(current_data);
-    const dataLength = parsedData.length;
-    
-    // Generate basic insights based on the data
-    let answer = `Based on the current data with ${dataLength} records: `;
-    
-    if (question.toLowerCase().includes('top') || question.toLowerCase().includes('highest')) {
-      const firstRow = parsedData[0] || {};
-      const categoricalKey = Object.keys(firstRow).find(key => typeof firstRow[key] === 'string');
-      if (categoricalKey && firstRow[categoricalKey]) {
-        answer += `The top performer appears to be ${firstRow[categoricalKey]}.`;
-      }
-    } else if (question.toLowerCase().includes('total') || question.toLowerCase().includes('sum')) {
-      const firstRow = parsedData[0] || {};
-      const numericalKey = Object.keys(firstRow).find(key => typeof firstRow[key] === 'number');
-      if (numericalKey) {
-        const total = parsedData.reduce((sum, row) => sum + (row[numericalKey] || 0), 0);
-        answer += `The total ${numericalKey} across all categories is ${total.toLocaleString()}.`;
-      }
-    } else {
-      answer += `The data shows ${dataLength} categories with varying performance levels. The visualization provides a clear overview of the distribution.`;
-    }
-
-    return {
-      success: true,
-      data: {
-        answer: answer,
-        confidence: 0.85,
-        data_points_analyzed: dataLength
-      }
-    };
+    const response = await api.post('/agents/data-question', {
+      user_question: question,
+      current_data: current_data,
+      data_summary: data_summary,
+      chart_info: current_visualization
+    });
+    return response.data;
   },
 
 };
