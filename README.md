@@ -1,4 +1,57 @@
-# 📊 Advanced Data Visualization Agent
+# � Advanced Data Visualization Agent
+
+A full-stack AI-powered data visualization platform with **FastAPI backend** and **React frontend**, featuring advanced ETL pipelines, orchestrated CrewAI agents, and professional data visualization capabilities.
+
+## 🏗️ Architecture Overview
+
+### Backend (FastAPI)
+- **Location**: `js_backend/`
+- **Port**: 8000
+- **Features**: REST API endpoints exposing all CrewAI agents
+- **Documentation**: http://localhost:8000/docs
+
+### Frontend (React)
+- **Location**: `js_frontend/`
+- **Port**: 3000
+- **Features**: Modern UI replicating Streamlit functionality
+- **Tech Stack**: React, Styled Components, Plotly.js, Axios
+
+### Legacy (Streamlit)
+- **Location**: `app.py`
+- **Port**: 8501
+- **Status**: Available for reference/comparison
+
+## 🚀 Quick Start
+
+### Option 1: Full Stack (Recommended)
+```bash
+# Start both backend and frontend
+./start_fullstack.sh
+```
+
+This will start:
+- FastAPI backend on http://localhost:8000
+- React frontend on http://localhost:3000
+- Automatic health checks and process management
+
+### Option 2: Individual Services
+
+#### Backend Only
+```bash
+cd js_backend
+./start_server.sh
+```
+
+#### Frontend Only
+```bash
+cd js_frontend
+./start_frontend.sh
+```
+
+#### Legacy Streamlit
+```bash
+streamlit run app.py
+```dvanced Data Visualization Agent
 
 An intelligent data visualization assistant built with Streamlit that allows users to interact with their Supabase database using natural language queries. The application leverages AI agents to understand user requests, execute SQL queries, and generate beautiful visualizatiRobust error handling ensures users always get visualizations:
 1. **Primary**: AI-generated visualization using CrewAI
