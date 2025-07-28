@@ -14,43 +14,95 @@ The system features intelligent chart transformation capabilities that automatic
 #### 1. Bar Chart → Pie Chart (Percentage Conversion)
 **User Flow:**
 ```
-User: "Which car manufacturers registered the most vehicles?" 
-→ System creates bar chart with absolute values
+User Query: "Which car manufacturers registered the most vehicles?"
+    ↓
+🧠 Step 0: Understanding intent...
+    → Shows "🎯 Intent: NEW_QUERY (Confidence: 95%)"
+    ↓
+🤖 Step 1: Generating SQL... 
+    → Shows generated SQL code with professional styling
+    ↓  
+🔍 Step 2: Reviewing with GPT-4o...
+    → Shows optimization results/comparison
+    ↓
+🔄 Step 3: Executing query...
+    → Shows "✅ Retrieved 13 rows"
+    ↓
+📊 Step 4: Displaying formatted table
+    → Professional pandas DataFrame with dashboard-style metrics
+    → Shows key statistics: Total Records, Unique Values, Top Performer
+    ↓
+🎨 Step 5: Generating visualization...
+    → Shows "✨ Visualization created successfully!"
+    → Creates bar chart with white theme and black axis fonts
+    ↓
+💡 Step 6: Follow-up questions
+    → Shows 4 schema-aware clickable questions
+    ↓
+📈 Final Result: Interactive bar chart + intelligent follow-ups
 
+--- Follow-Up Conversation ---
 User: "Convert the bar chart to pie chart"
-→ System automatically:
-  • Converts absolute values to percentages
-  • Groups small categories into "Others" (if >8 categories)
-  • Creates pie chart with percentage labels
-  • Maintains data integrity and ranking
+    ↓
+🧠 Intent: FOLLOW_UP (Confidence: 92%)
+    ↓
+🎨 Creating alternative visualization...
+    → Detects chart conversion request
+    → Uses target_plot_type="pie" with transformation="to_pie"
+    → Automatically converts absolute values to percentages
+    → Groups small categories into "Others" if needed
+    ↓
+✨ Alternative visualization created!
+    → New pie chart with percentage labels and professional styling
+    → Maintains data integrity and insights
+    ↓
+
+User: "Normalize the stacked bar plot"
+    ↓
+🧠 Intent: FOLLOW_UP (Confidence: 95%)
+    ↓
+🎨 Creating normalized visualization...
+    → Applies transformation="normalize" parameter
+    → Converts absolute values to percentages within each category
+    → Updates y-axis to show 0-100% range with % suffix
+    → Each stack now sums to 100% per category
+    ↓
+✨ Normalized stacked bar chart created!
+    → Shows relative proportions while maintaining color grouping
+    ↓
+💡 Additional follow-ups generated
+    → "Which regions contribute most to Toyota's sales?"
+    → "Show monthly trends for top 3 manufacturers"
+    → "Compare electric vs conventional vehicle registrations"
 ```
 
-#### 2. Absolute Values → Percentage Display
+#### 2. Stacked Bar Chart Normalization
 **User Flow:**
 ```
-User: "Show regional sales distribution"
-→ System creates bar chart with raw numbers
+User: "Show vehicle registrations by month and manufacturer"
+→ System creates stacked bar chart with absolute values
 
-User: "Show this as percentages instead of absolute numbers"
+User: "Normalize the plot" or "show as percentages"
 → System automatically:
-  • Calculates percentage of total for each category
-  • Updates y-axis labels to show percentages
-  • Maintains same chart type (bar)
-  • Preserves category order
+  • Applies transformation="normalize" parameter
+  • Converts absolute values to percentages within each month (sums to 100%)
+  • Updates y-axis to show percentage scale with % suffix
+  • Maintains stacked visualization while showing relative proportions
+  • Preserves color grouping and legend
 ```
 
-#### 3. Line Chart → Bar Chart (Time Series Aggregation)
+#### 3. Advanced Chart Type Conversions
 **User Flow:**
 ```
-User: "Show monthly registration trends"
-→ System creates line chart with time series
+User: "Show quarterly sales trends"
+→ System creates appropriate chart (line/bar)
 
-User: "Convert this to a bar chart for better comparison"
+User: "Convert this to a scatter plot"
 → System automatically:
-  • Aggregates time periods appropriately
-  • Formats dates for bar chart display
-  • Maintains temporal relationships
-  • Optimizes category spacing
+  • Uses target_plot_type="scatter" with transformation="convert_chart_type"
+  • Adapts data structure for scatter plot requirements
+  • Maintains temporal/categorical relationships
+  • Applies appropriate styling and formatting
 ```
 
 #### 4. Category Consolidation (Top N + Others)
@@ -61,6 +113,7 @@ User: "Show all vehicle types distribution"
 
 User: "Show only top 5 vehicle types, group the rest as Others"
 → System automatically:
+  • Applies transformation="top_5" parameter
   • Identifies top N categories by value
   • Sums remaining categories into "Others"
   • Maintains total data integrity
@@ -69,33 +122,70 @@ User: "Show only top 5 vehicle types, group the rest as Others"
 
 ### 🤖 Intelligent Transformation Engine
 
-The visualization tool automatically detects when data transformation is needed:
+The visualization tool automatically detects when data transformation is needed using advanced parameter mapping:
 
 ```python
-# Example: Bar to Pie transformation
+# Example: Chart type conversion with target_plot_type parameter
+def _run(self, plot_type: str, target_plot_type: str = "", transformation: str = ""):
+    # Use target_plot_type if provided for chart conversion
+    effective_target_type = target_plot_type if target_plot_type else plot_type
+    
+    # Apply intelligent transformations
+    df_transformed = self._apply_intelligent_transformations(
+        df, effective_target_type, current_chart_type, transformation
+    )
+
+# Example: Normalization for stacked bar charts
+elif transformation == "normalize" and color_column:
+    # For stacked bar plots, normalize within each x-category
+    totals_per_x = df_transformed.groupby(x_column)[y_column].sum()
+    for x_val in df_normalized[x_column].unique():
+        total_for_x = totals_per_x[x_val]
+        df_normalized.loc[mask, y_column] = (
+            df_normalized.loc[mask, y_column] / total_for_x * 100
+        ).round(2)
+
+# Example: Bar to Pie transformation with target_plot_type
 if current_plot_type == "bar" and target_plot_type == "pie":
-    # Calculate percentages
+    # Calculate percentages and group small categories
     total = grouped[y_column].sum()
     grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
-    
-    # Group small categories
-    if len(grouped) > 8:
-        top_categories = grouped.head(7)
-        others_sum = grouped.tail(len(grouped) - 7)[f'{y_column}_percentage'].sum()
-        # Create "Others" category...
 ```
+
+**Key Features:**
+- **Parameter-Driven Transformations**: Uses `target_plot_type` parameter for explicit chart conversions
+- **Context-Aware Processing**: Considers `current_chart_type` for optimal transformation logic
+- **Smart Fallbacks**: Graceful handling when transformations aren't applicable
+- **Data Integrity**: Preserves mathematical relationships and totals during transformations
 
 ### 🧪 Comprehensive Testing
 
 The advanced transformation features are covered by extensive unit and integration tests:
 
-- **Unit Tests**: 8 test scenarios covering all transformation types
-- **Integration Tests**: 6 test scenarios for end-to-end orchestration
+- **Unit Tests**: 12+ test scenarios covering all transformation types including:
+  - Chart type conversions (bar→pie, line→bar, scatter→line)
+  - Normalization scenarios (stacked bar normalization, percentage conversion)
+  - Parameter validation (`target_plot_type`, `transformation`, `current_chart_type`)
+  - Data integrity verification (totals preservation, category grouping)
+- **Integration Tests**: 8+ test scenarios for end-to-end orchestration including:
+  - Full pipeline testing (SQL generation → execution → visualization)
+  - Intent recognition and routing (new query vs follow-up detection)
+  - Alternative visualization generation with chart conversions
+  - Follow-up question generation with schema awareness
 - **Manual Verification**: Real data testing with sample vehicle data
+- **Performance Testing**: Separated crew architecture validation
+- **Error Handling**: Graceful degradation and fallback mechanism testing
 
 **Run tests:**
 ```bash
+# Run comprehensive test suite
 python run_advanced_tests.py
+
+# Test specific transformation scenarios
+python test_target_plot_type.py
+
+# Test normalization functionality
+python test_normalization.py
 ```
 
 ### 📊 User Experience Flowtomatically.
@@ -116,14 +206,22 @@ python run_advanced_tests.py
 
 ### 🎯 Advanced Visualization Features
 
-- **Intelligent Chart Transformations**: Automatic data transformations when switching chart types
-  - Bar → Pie: Converts absolute values to percentages automatically
-  - Line → Bar: Aggregates time series data appropriately
-  - Any → Pie: Calculates percentage distributions and groups small categories
-- **Context-Aware Follow-up Questions**: Schema-aware question generation based on current data
-- **Smart Orchestration**: Recognizes whether users want new queries or follow-up analysis
-- **Data Transformation Engine**: Handles percentage conversion, top-N filtering, and category consolidation
+- **Intelligent Chart Transformations**: Advanced data transformations when switching chart types
+  - **Bar → Pie**: Converts absolute values to percentages automatically using `target_plot_type="pie"`
+  - **Stacked Bar Normalization**: Converts absolute values to percentages within groups using `transformation="normalize"`
+  - **Line → Bar**: Aggregates time series data appropriately with smart temporal handling
+  - **Any → Pie**: Calculates percentage distributions and groups small categories intelligently
+  - **Chart Type Conversions**: Seamless conversions between any chart types with `target_plot_type` parameter
+- **Context-Aware Follow-up Questions**: Schema-aware question generation based on current data and database structure
+- **Smart Orchestration**: Advanced intent recognition that distinguishes between new queries and follow-up analysis
+- **Data Transformation Engine**: Comprehensive transformation system handling:
+  - Percentage conversion and normalization
+  - Top-N filtering with "Others" category consolidation  
+  - Category grouping and data aggregation
+  - Time series formatting and aggregation
 - **Memory & Chat History**: Maintains conversation context for seamless data exploration
+- **Professional Styling**: Consistent white theme with black fonts across all visualizations
+- **Dashboard Metrics**: Business-style metric displays with formatted numbers and trend indicators
 
 ## 🏗️ Project Structure
 
@@ -418,11 +516,14 @@ alternative_viz_crew = Crew(
 ### 📊 Intelligent Visualization System
 
 #### DataFrameVisualizationTool
-The system includes a custom visualization tool that:
-- Accepts pandas DataFrames as JSON input
-- Generates Plotly-compatible JSON specifications
-- Supports multiple chart types with intelligent defaults
-- Handles both aggregated and raw data appropriately
+The system includes a custom visualization tool with advanced chart conversion capabilities:
+- **Multi-Parameter Architecture**: Supports `plot_type`, `target_plot_type`, `transformation`, and `current_chart_type` parameters
+- **Intelligent Chart Conversions**: Uses `target_plot_type` for seamless chart type transformations
+- **Smart Data Transformations**: Automatically handles data preprocessing when converting between chart types
+- **JSON Specification Output**: Generates Plotly-compatible JSON specifications with proper styling
+- **Normalization Engine**: Advanced normalization for stacked bar charts (converts to percentages within groups)
+- **Fallback Mechanisms**: Robust error handling with graceful degradation
+- **White Theme Integration**: Consistent professional styling with black fonts and white backgrounds
 
 #### Plot Type Selection Guidelines
 The AI agents follow sophisticated guidelines for choosing optimal visualizations:
@@ -602,22 +703,50 @@ The AI pipeline provides a seamless, intelligent analytics experience that trans
 ### Sample Queries
 
 Try asking questions like:
-- "What are the top-selling vehicle brands?"
-- "Show me market share trends by fuel type"
-- "Compare electric vs gasoline vehicle sales"
-- "Which models are performing best for Toyota?"
-- "What's the quarterly revenue breakdown?"
-- "Show transmission preferences by brand"
+- **Basic Analysis**: "What are the top-selling vehicle brands?"
+- **Market Trends**: "Show me market share trends by fuel type"
+- **Comparative Analysis**: "Compare electric vs gasoline vehicle sales"
+- **Specific Brand Focus**: "Which models are performing best for Toyota?"
+- **Time-based Analysis**: "What's the quarterly revenue breakdown?"
+- **Technical Specifications**: "Show transmission preferences by brand"
+
+**Chart Transformation Requests:**
+- **Type Conversions**: "Convert this to a pie chart" | "Change to a line chart" | "Make this a scatter plot"
+- **Normalization**: "Normalize the plot" | "Show as percentages" | "Convert to normalized stacked bars"
+- **Data Simplification**: "Show only top 5 categories" | "Group small categories as Others"
+- **Style Changes**: "Make this chart look more professional" | "Add trend lines"
 
 ## 🎨 UI Components
 
 ### Sidebar Chat Interface
-- **Chat History**: Displays conversation with timestamps
-- **Input Box**: Natural language query input with black border styling
-- **Voice Input**: Record audio queries using the microphone button
-- **Real-time Updates**: Immediate response to user queries
+- **Chat History**: Displays conversation with timestamps and role indicators
+- **Input Box**: Natural language query input with professional black border styling
+- **Voice Input**: Record audio queries using the microphone button (simple_audio.py)
+- **Real-time Updates**: Immediate response to user queries with step-by-step progress
+- **Professional Styling**: Consistent CSS theming with modular style files
 
 ### Main Visualization Area
+- **Dashboard Metrics**: Business-style metric cards showing key statistics
+  - Total Records count with formatting
+  - Unique Values identification  
+  - Top Performer highlighting with trend indicators
+- **Professional Data Tables**: Enhanced pandas DataFrame display with:
+  - White background and black text for readability
+  - Proper column formatting and alignment
+  - Export capabilities for further analysis
+- **Interactive Charts**: Plotly visualizations with:
+  - Consistent white theme and black axis fonts
+  - Professional color palette
+  - Responsive design for different screen sizes
+  - Hover tooltips and interactive elements
+- **Follow-up Questions**: Clickable question buttons that:
+  - Generate based on current data context
+  - Leverage database schema for intelligent suggestions
+  - Maintain conversation flow and context
+- **SQL Code Display**: Formatted SQL queries with:
+  - Syntax highlighting and professional presentation
+  - Before/after comparison for optimized queries
+  - Copy-to-clipboard functionality
 - **Welcome Screen**: Guided introduction with sample prompts
 - **Dynamic Charts**: Interactive Plotly visualizations
 - **Research Insights**: Contextual information from RAG pipeline
