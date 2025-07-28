@@ -384,4 +384,4 @@ describe('Real Pipeline Integration Test - Car Manufacturers Query', () => {
     console.log('- Visualization Type:', plotSpec.data[0].type);
     console.log('- Follow-up Questions:', followUp.data.questions.length);
   });
-});
+
