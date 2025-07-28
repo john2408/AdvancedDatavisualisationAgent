@@ -20,17 +20,30 @@ class VisualizationInput(BaseModel):
     aggregation: str = Field(default="sum", description="Aggregation method for grouped data: sum, count, mean, max, min")
     transformation: str = Field(default="", description="Data transformation: 'percentage', 'normalize', 'top_n', 'group_others'")
     current_chart_type: str = Field(default="", description="Current chart type for transformation context")
+    target_plot_type: str = Field(default="", description="Target chart type when converting from one chart type to another. Use only when user requests chart type conversion (e.g., 'convert to pie chart', 'change to bar chart')")
 
 
 
 class DataFrameVisualizationTool(BaseTool):
     name: str = "DataFrame Visualization Tool"
-    description: str = "Creates visualizations from pandas DataFrame data and returns JSON formatted plot specifications."
+    description: str = """Creates visualizations from pandas DataFrame data and returns JSON formatted plot specifications.
+    
+    IMPORTANT PARAMETER USAGE:
+    - plot_type: The main chart type to create (required)
+    - target_plot_type: Use ONLY when user requests converting from one chart type to another (e.g., 'convert to pie chart', 'change to bar chart')
+    - transformation: Specify data transformations needed (e.g., 'normalize', 'to_pie', 'convert_chart_type')
+    - current_chart_type: The existing chart type (for conversion context)
+    
+    EXAMPLES:
+    - New visualization: plot_type="bar" (target_plot_type not needed)
+    - Chart conversion: plot_type="bar", target_plot_type="pie", transformation="to_pie"
+    - Normalization: transformation="normalize" (works with any chart type)
+    """
     args_schema: Type[BaseModel] = VisualizationInput
 
     def _run(self, dataframe_json: str, plot_type: str, x_column: str = "", y_column: str = "", 
              color_column: str = "", title: str = "", aggregation: str = "sum", 
-             transformation: str = "", current_chart_type: str = "") -> str:
+             transformation: str = "", current_chart_type: str = "", target_plot_type: str = "") -> str:
         """
         Creates visualizations from DataFrame data and returns JSON plot specification.
         
@@ -44,6 +57,7 @@ class DataFrameVisualizationTool(BaseTool):
             aggregation: Aggregation method for grouped data
             transformation: Data transformation to apply
             current_chart_type: Current chart type for transformation context
+            target_plot_type: Target chart type when converting from one chart type to another
             
         Returns:
             JSON string with plot specification
@@ -56,13 +70,16 @@ class DataFrameVisualizationTool(BaseTool):
             if df.empty:
                 return json.dumps({"error": "DataFrame is empty"})
             
+            # Use target_plot_type if provided for chart conversion, otherwise use plot_type
+            effective_target_type = target_plot_type if target_plot_type else plot_type
+            
             # Apply intelligent transformations based on chart type conversion
             df_transformed = self._apply_intelligent_transformations(
-                df, plot_type, current_chart_type, x_column, y_column, transformation
+                df, effective_target_type, current_chart_type, x_column, y_column, color_column, transformation
             )
             
-            # Generate plot specification based on plot type
-            plot_spec = self._generate_plot_spec(df_transformed, plot_type, x_column, y_column, 
+            # Generate plot specification based on target plot type
+            plot_spec = self._generate_plot_spec(df_transformed, effective_target_type, x_column, y_column, 
                                                 color_column, title, aggregation)
             
             return json.dumps(plot_spec, indent=2)
@@ -72,7 +89,7 @@ class DataFrameVisualizationTool(BaseTool):
 
     def _apply_intelligent_transformations(self, df: pd.DataFrame, target_plot_type: str, 
                                          current_plot_type: str, x_column: str, y_column: str, 
-                                         transformation: str) -> pd.DataFrame:
+                                         color_column: str, transformation: str) -> pd.DataFrame:
         """Apply intelligent data transformations based on chart type conversion."""
         df_transformed = df.copy()
         
@@ -165,6 +182,54 @@ class DataFrameVisualizationTool(BaseTool):
                     return grouped
                 except:
                     pass
+            
+            # Scenario 6: Normalize stacked bar plot - Convert absolute values to percentages per group
+            elif (transformation == "normalize" or ("normalize" in transformation.lower() and transformation.lower() != "normalize")) and color_column:
+                if x_column and y_column and color_column:
+                    # For stacked bar plots with grouping, normalize within each x-category
+                    # Calculate the total for each x-category across all color groups
+                    totals_per_x = df_transformed.groupby(x_column)[y_column].sum()
+                    
+                    # Create normalized version
+                    df_normalized = df_transformed.copy()
+                    
+                    # Add percentage column
+                    df_normalized[f'{y_column}_normalized'] = 0.0
+                    
+                    for x_val in df_normalized[x_column].unique():
+                        mask = df_normalized[x_column] == x_val
+                        total_for_x = totals_per_x[x_val]
+                        if total_for_x > 0:
+                            df_normalized.loc[mask, f'{y_column}_normalized'] = (
+                                df_normalized.loc[mask, y_column] / total_for_x * 100
+                            ).round(2)
+                    
+                    # Replace the original y_column with normalized values
+                    df_normalized[y_column] = df_normalized[f'{y_column}_normalized']
+                    df_normalized = df_normalized.drop(columns=[f'{y_column}_normalized'])
+                    
+                    return df_normalized
+            
+            # Scenario 7: General normalization for any chart type
+            elif (transformation == "normalize" or ("normalize" in transformation.lower() and transformation.lower() != "normalize")) and x_column and y_column:
+                if color_column:
+                    # Multi-group normalization (for stacked/grouped charts)
+                    df_normalized = df_transformed.copy()
+                    total = df_normalized[y_column].sum()
+                    if total > 0:
+                        df_normalized[f'{y_column}_percentage'] = (df_normalized[y_column] / total * 100).round(2)
+                        df_normalized[y_column] = df_normalized[f'{y_column}_percentage']
+                        df_normalized = df_normalized.drop(columns=[f'{y_column}_percentage'])
+                    return df_normalized
+                else:
+                    # Single group normalization
+                    grouped = df_transformed.groupby(x_column)[y_column].sum().reset_index()
+                    total = grouped[y_column].sum()
+                    if total > 0:
+                        grouped[f'{y_column}_percentage'] = (grouped[y_column] / total * 100).round(2)
+                        grouped[y_column] = grouped[f'{y_column}_percentage']
+                        grouped = grouped.drop(columns=[f'{y_column}_percentage'])
+                    return grouped
             
             return df_transformed
             
@@ -275,13 +340,48 @@ class DataFrameVisualizationTool(BaseTool):
 
     def _create_bar_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
         """Create bar chart specification."""
+        
+        # Check if this is normalized data (values likely sum to 100 per group)
+        is_normalized = False
+        if "y" in data and color_column:
+            # Check if values are in percentage range and sum to ~100 per x-group
+            values = data.get("y", [])
+            if values and all(0 <= v <= 100 for v in values if v is not None):
+                is_normalized = True
+        
+        # Set appropriate y-axis title and range
+        y_title = y_column
+        y_axis_config = {
+            "title": y_title, 
+            "title_font": {"color": "#000000"}, 
+            "tickfont": {"color": "#000000"}
+        }
+        
+        if is_normalized and color_column:
+            y_title = f"{y_column} (%)"
+            y_axis_config = {
+                "title": y_title,
+                "title_font": {"color": "#000000"},
+                "tickfont": {"color": "#000000"},
+                "range": [0, 100],
+                "ticksuffix": "%"
+            }
+        
+        # Set appropriate chart mode for stacked bars
+        bar_mode = "group"  # default
+        if color_column and is_normalized:
+            bar_mode = "stack"  # normalized stacked
+        elif color_column:
+            bar_mode = "stack"  # regular stacked
+        
         return {
             "type": "bar",
             "data": data,
             "layout": {
                 "title": title or f"{y_column} by {x_column}",
                 "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
-                "yaxis": {"title": y_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
+                "yaxis": y_axis_config,
+                "barmode": bar_mode,
                 "showlegend": bool(color_column),
                 "plot_bgcolor": "white",
                 "paper_bgcolor": "white",

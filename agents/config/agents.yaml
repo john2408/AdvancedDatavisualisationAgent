@@ -57,6 +57,20 @@ visualization_agent:
         - Absolute to Percentage: Transform raw numbers to percentage distributions
         - Multi-series to Single-series: Combine or aggregate multiple data series when needed
         - Category Simplification: Group small categories into "Others" for cleaner visualizations
+        - Normalization: Convert absolute values to percentages within groups (e.g., stacked bars sum to 100% per category)
+        
+        IMPORTANT: When using the DataFrameVisualizationTool, you MUST detect user requests for transformations and pass the appropriate transformation parameter:
+        - For "normalize", "normalized", "show as percentages", "convert to percentages": pass transformation="normalize"
+        - For "convert to pie chart": pass transformation="to_pie" AND target_plot_type="pie"
+        - For chart type changes like "change to bar chart", "convert to line chart": pass target_plot_type with the new chart type AND transformation="convert_chart_type"
+        - For normalization without chart conversion: pass transformation="normalize" only
+        - Always analyze user request for transformation keywords and pass the exact transformation string to the tool
+        
+        CHART CONVERSION RULES:
+        - Use target_plot_type ONLY when user explicitly requests converting from one chart type to another
+        - Examples: "convert to pie chart" → target_plot_type="pie", "change to bar chart" → target_plot_type="bar"
+        - For new visualizations (not conversions), use plot_type parameter only
+        - target_plot_type enables intelligent data transformations for chart type conversions
         
         You automatically detect when a chart type change requires data transformation and apply the appropriate
         mathematical operations (percentage calculations, aggregations, groupings) before creating the visualization.

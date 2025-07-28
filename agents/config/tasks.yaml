@@ -161,15 +161,28 @@ alternative_visualization_task:
     - Any chart → Pie chart: Calculate percentages of total, limit to top categories if many exist
     - Stacked chart → Grouped chart: Restructure data grouping appropriately
     
-    COMMON TRANSFORMATION SCENARIOS:
-    1. "Convert to pie chart" - Always calculate percentages, use only categorical and one numeric column
-    2. "Show as percentages" - Transform absolute values to percentage of total
-    3. "Change to time series" - Ensure proper date/time sorting and line connectivity
-    4. "Make it a comparison chart" - Group or stack data for comparative analysis
-    5. "Simplify the chart" - Aggregate small categories into "Others" category
+    CRITICAL: When calling DataFrameVisualizationTool, you MUST analyze the user request and pass the transformation parameter:
     
-    Analyze the user request to determine if data transformation is needed and apply it before visualization.
-    Use the DataFrame Visualization Tool with appropriate data preprocessing.
+    TRANSFORMATION DETECTION AND PARAMETER MAPPING:
+    1. "Convert to pie chart" → transformation="to_pie" AND target_plot_type="pie"
+    2. "Show as percentages" → transformation="normalize"
+    3. "Change to time series" → transformation="to_line" AND target_plot_type="line"
+    4. "Make it a comparison chart" → transformation="convert_chart_type"
+    5. "Simplify the chart" → transformation="simplify"
+    6. "Normalize the plot", "normalize the data", "normalized" → transformation="normalize"
+    7. "Show normalized stacked bars" → transformation="normalize"
+    8. "Convert to bar chart" → transformation="convert_chart_type" AND target_plot_type="bar"
+    9. "Change to scatter plot" → transformation="convert_chart_type" AND target_plot_type="scatter"
+    
+    CHART CONVERSION PARAMETER RULES:
+    - Use target_plot_type parameter ONLY when user explicitly requests converting from one chart type to another
+    - Examples requiring target_plot_type: "convert to", "change to", "make it a [chart type]", "transform to"
+    - For new visualizations (not conversions), use plot_type parameter only
+    - target_plot_type enables intelligent data transformations for seamless chart type conversions
+    
+    MANDATORY: Always pass the transformation parameter when calling the tool. Analyze user request for these keywords.
+    
+    Use the DataFrame Visualization Tool with appropriate data preprocessing and transformation parameter.
   expected_output: A new visualization specification with different chart type, proper data transformations, and enhanced perspective on the same data.
 
 follow_up_questions_task:
