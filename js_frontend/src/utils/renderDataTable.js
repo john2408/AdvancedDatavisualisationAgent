@@ -125,14 +125,4 @@ export const DataTable = React.memo(({ data, options = {} }) => {
   }
 });
 
-/**
- * Legacy function version for backwards compatibility
- * @param {Array} data - Array of objects representing table rows
- * @param {Object} options - Optional configuration for table rendering
- * @returns {JSX.Element|null} - Rendered table component or null if no data
- */
-export const renderDataTable = (data, options = {}) => {
-  return <DataTable data={data} options={options} />;
-};
-
 export default DataTable;

@@ -26,12 +26,15 @@ const VizHeader = styled.div`
 const VizContent = styled.div`
   padding: 1rem;
   width: 100%;
+  min-height: 500px;
   height: 500px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
 `;
 
-const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
+const PlotlyVisualizationComp = ({ plotSpec, title, isLoading = false }) => {
   console.log('🔍 PlotlyVisualization received:', { 
     plotSpecType: typeof plotSpec,
     title, 
@@ -107,33 +110,89 @@ const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
       yLength: spec.data?.y?.length || 0
     });
 
-    // Create Plotly data - simplified approach based on your sample
-    const plotlyData = [{
-      x: spec.data.x || [],
-      y: spec.data.y || [],
-      type: spec.type || 'bar',
-      marker: { 
-        color: '#3b82f6'
-      },
-      name: spec.data.name || ''
-    }];
+    // Convert backend format to Plotly format
+    console.log('🔄 Converting backend format to Plotly');
+    let plotlyData, plotlyLayout;
 
-    // Create Plotly layout - minimal like your sample
-    const plotlyLayout = {
+    if (spec.data && Array.isArray(spec.data)) {
+      // Handle array of trace objects (Plotly format)
+      console.log('📊 Using direct Plotly traces format');
+      plotlyData = spec.data.map(trace => ({
+        ...trace,
+        marker: trace.marker || { color: '#3b82f6', line: { color: '#1f2937', width: 1 }},
+        hovertemplate: trace.hovertemplate || "<b>%{x}</b><br>Value: %{y}<extra></extra>"
+      }));
+    } else if (spec.data && spec.data.x && spec.data.y) {
+      // Handle single trace with x/y data
+      console.log('📊 Converting single trace format');
+      plotlyData = [{
+        x: spec.data.x,
+        y: spec.data.y,
+        type: spec.type || 'bar',
+        name: spec.data.name || '',
+        marker: { 
+          color: '#3b82f6',
+          line: { color: '#1f2937', width: 1 }
+        },
+        hovertemplate: "<b>%{x}</b><br>Value: %{y}<extra></extra>"
+      }];
+    } else {
+      // Fallback for any other format
+      console.log('⚠️ Using fallback data format');
+      plotlyData = [{
+        x: [],
+        y: [],
+        type: spec.type || 'bar',
+        name: '',
+        marker: { color: '#3b82f6' }
+      }];
+    }
+
+    console.log('📊 Final plotlyData:', plotlyData);
+
+    // Create layout
+    plotlyLayout = {
       title: title || spec.layout?.title || 'Data Visualization',
       autosize: true,
-      showlegend: false,
+      width: undefined, // Let it autosize
+      height: undefined, // Let it autosize
+      showlegend: plotlyData.length > 1,
       margin: { l: 60, r: 40, t: 80, b: 60 },
-      font: { color: '#1f2937' },
+      font: { color: '#1f2937', family: 'Arial, sans-serif' },
       paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#ffffff'
+      plot_bgcolor: '#ffffff',
+      xaxis: {
+        title: spec.layout?.xaxis?.title || '',
+        showgrid: true,
+        gridcolor: '#e5e7eb',
+        tickangle: plotlyData[0]?.x?.length > 5 ? -45 : 0
+      },
+      yaxis: {
+        title: spec.layout?.yaxis?.title || 'Value',
+        showgrid: true,
+        gridcolor: '#e5e7eb'
+      }
     };
 
-    // Minimal config like your sample
+    console.log('🎨 Final layout:', { 
+      title: plotlyLayout.title,
+      hasXaxis: !!plotlyLayout.xaxis,
+      hasYaxis: !!plotlyLayout.yaxis
+    });
+
+    // Config
     const plotlyConfig = {
       responsive: true,
       displayModeBar: true,
-      displaylogo: false
+      displaylogo: false,
+      modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+      toImageButtonOptions: {
+        format: 'png',
+        filename: 'visualization',
+        height: 500,
+        width: 800,
+        scale: 1
+      }
     };
     
     console.log('📊 Final data:', { 
@@ -160,21 +219,22 @@ const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
           borderLeft: '3px solid #0ea5e9'
         }}>
           <strong>🐛 PLOTLY DEBUG:</strong> 
-          x({plotlyData[0].x.length}) y({plotlyData[0].y.length}) type({plotlyData[0].type})
-          <br />Title: {plotlyLayout.title}
-          <br />Data sample: x=[{plotlyData[0].x.slice(0, 2).join(', ')}...] y=[{plotlyData[0].y.slice(0, 2).join(', ')}...]
+          traces({plotlyData.length}) type({plotlyData[0]?.type})
+          <br />
+          Data: x[{plotlyData[0]?.x?.length || 0}] = [{plotlyData[0]?.x?.slice(0, 3)?.join(', ')}...]
+          <br />
+          Data: y[{plotlyData[0]?.y?.length || 0}] = [{plotlyData[0]?.y?.slice(0, 3)?.join(', ')}...]
+          <br />
+          Layout: {plotlyLayout.title} (autosize: {plotlyLayout.autosize ? 'yes' : 'no'})
         </div>
         
         <VizContent>
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={{ width: '100%', height: '500px', minHeight: '400px', position: 'relative', boxSizing: 'border-box' }}>
             <Plot
               data={plotlyData}
-              layout={plotlyLayout}
+              layout={{ ...plotlyLayout, height: 500, width: undefined }}
               config={plotlyConfig}
-              style={{ 
-                width: '100%', 
-                height: '100%'
-              }}
+              style={{ width: '100%', height: '100%' }}
               useResizeHandler={true}
               onError={(error) => {
                 console.error('📊 Plotly render error:', error);
@@ -182,8 +242,21 @@ const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
               onInitialized={(figure, graphDiv) => {
                 console.log('📊 Plotly initialized successfully', { 
                   figureData: figure.data?.length || 0,
-                  graphDivId: graphDiv?.id || 'none'
+                  graphDivId: graphDiv?.id || 'none',
+                  traces: figure.data?.map(d => ({ type: d.type, xLength: d.x?.length, yLength: d.y?.length }))
                 });
+              }}
+              onUpdate={(figure, graphDiv) => {
+                console.log('📊 Plotly updated', {
+                  graphDivWidth: graphDiv?.offsetWidth,
+                  graphDivHeight: graphDiv?.offsetHeight
+                });
+              }}
+              onRelayout={(eventData) => {
+                console.log('📊 Plotly relayout:', eventData);
+              }}
+              onRestyle={(eventData) => {
+                console.log('📊 Plotly restyle:', eventData);
               }}
             />
           </div>
@@ -239,4 +312,4 @@ const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
   }
 };
 
-export default TestPlotlyVisualization;
+export default PlotlyVisualizationComp;

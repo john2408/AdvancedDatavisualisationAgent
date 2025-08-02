@@ -22,7 +22,7 @@ code {
 
 /* TEST MARKER - This shows our changes are applied */
 body::before {
-  content: "🧪 Frontend Updated - TestPlotlyVisualization Active";
+  content: "🧪 Frontend Updated - PlotlyVisualizationComp Active";
   position: fixed;
   top: 0;
   right: 0;

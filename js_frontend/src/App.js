@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import {
+  SidebarHeader,
+  Message,
+  Input,
+  MetricCard,
+  WelcomeContainer,
+  FollowUpContainer
+} from './styles/enhancedComponents';
 import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
 import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
-import TestPlotlyVisualization from './components/PlotlyVisualization';
+import PlotlyVisualizationComp from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
 import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import { generateAndReviewSQL } from './utils/sqlRetrieval';
 import { executeSQLQuery } from './utils/executeSQL';
-import { analyzeQueryData } from './utils/dataAnalysis';
-import { createDataVisualization, createAlternativeVisualization } from './utils/createVisualization';
-import { DataTable, renderDataTable } from './utils/renderDataTable';
+import { performDataAnalysis } from './utils/performDataAnalysis';
+import { performVisualizationGeneration } from './utils/performVisualizationGeneration';
+import { createAlternativeVisualization } from './utils/createVisualization';
+import { DataTable } from './utils/renderDataTable';
 import {
   ResponsiveContainer,
   ResponsiveSidebar,
@@ -18,7 +27,6 @@ import {
   ResponsiveMetricsGrid,
   ResponsiveWelcomeButtons,
   ResponsiveFollowUpGrid,
-  ResponsiveTableContainer,
   ResponsiveChatContainer,
   ResponsiveInputContainer,
   ResponsiveInputWrapper,
@@ -32,124 +40,6 @@ import {
   media
 } from './styles/ResponsiveLayout';
 
-// Enhanced Styled Components for remaining elements
-const SidebarHeader = styled.div`
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  
-  h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-    color: #1f2937;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    ${media.mobile} {
-      font-size: 1.25rem;
-    }
-  }
-  
-  p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-    
-    ${media.mobile} {
-      font-size: 0.8rem;
-    }
-  }
-`;
-
-const Message = styled.div`
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  max-width: 85%;
-  word-wrap: break-word;
-  
-  ${props => props.isUser ? `
-    background-color: #3b82f6;
-    color: white;
-    margin-left: auto;
-    text-align: right;
-  ` : `
-    background-color: #f1f5f9;
-    color: #1f2937;
-    border: 1px solid #e2e8f0;
-  `}
-  
-  ${media.mobile} {
-    max-width: 95%;
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 0.75rem;
-  border: 2px solid #000000;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  outline: none;
-  
-  &:focus {
-    border-color: #3b82f6;
-  }
-  
-  ${media.mobile} {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-`;
-
-const MetricCard = styled(ResponsiveCard)`
-  h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.9rem;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    
-    ${media.mobile} {
-      font-size: 0.8rem;
-    }
-  }
-  
-  p {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #1f2937;
-    
-    ${media.mobile} {
-      font-size: 1.25rem;
-    }
-  }
-`;
-
-const WelcomeContainer = styled.div`
-  text-align: center;
-  padding: 3rem 2rem;
-  
-  ${media.mobile} {
-    padding: 2rem 1rem;
-  }
-`;
-
-const FollowUpContainer = styled.div`
-  margin-top: 2rem;
-  
-  h3 {
-    color: #1f2937;
-    margin-bottom: 1rem;
-    
-    ${media.mobile} {
-      font-size: 1.1rem;
-    }
-  }
-`;
 
 function App() {
   const [messages, setMessages] = useState([
@@ -288,6 +178,8 @@ function App() {
   };
 
   const performDataAnalysisAndVisualization = async (data, userMessage, dbSchema) => {
+    console.log('🔄 Starting Step 4: Data Analysis & Visualization (Modularized)...');
+    
     try {
       // Create callbacks object for modular functions
       const callbacks = {
@@ -296,24 +188,35 @@ function App() {
         setFollowUpQuestions
       };
 
-      // Step 4a: Analyze data
-      const analysisResult = await analyzeQueryData(data, userMessage, callbacks);
+      console.log('📊 Step 4a: Starting data analysis...');
+      updatePipelineStep('data_analysis');
+      
+      // Step 4a: Analyze data using modular function
+      const analysisResult = await performDataAnalysis(data, userMessage, callbacks);
       
       if (!analysisResult.success) {
+        console.error('❌ Step 4a failed:', analysisResult.error);
         throw new Error(`Data analysis step failed: ${analysisResult.error}`);
       }
+      
+      console.log('✅ Step 4a: Data analysis completed successfully');
+      console.log('🎨 Step 4b: Starting visualization generation...');
 
-      // Step 4b: Create visualization
-      const vizResult = await createDataVisualization(
+      // Step 4b: Create visualization using modular function
+      const vizResult = await performVisualizationGeneration(
         data, 
         userMessage, 
         analysisResult.data, 
-        { ...callbacks, setFollowUpQuestions: (questions) => setFollowUpQuestions(questions) }
+        callbacks
       );
 
       if (!vizResult.success && !vizResult.fallbackCreated) {
+        console.error('❌ Step 4b failed:', vizResult.error);
         throw new Error(`Visualization creation failed: ${vizResult.error}`);
       }
+      
+      console.log('✅ Step 4b: Visualization generation completed');
+      console.log('🎉 Step 4: Complete - Analysis & Visualization finished successfully');
 
       return {
         success: true,
@@ -322,7 +225,7 @@ function App() {
       };
 
     } catch (error) {
-      console.error('Error in data analysis and visualization:', error);
+      console.error('❌ Error in data analysis and visualization:', error);
       addMessage('assistant', `❌ ANALYSIS & VISUALIZATION ERROR: ${error.message}`);
       
       // Create fallback visualization as last resort
@@ -644,7 +547,7 @@ function App() {
         
         {/* Show Visualization Section - Only when visualization exists */}
         {currentVisualization && (
-          <TestPlotlyVisualization
+          <PlotlyVisualizationComp
             plotSpec={currentVisualization}
             title={currentVisualization?.layout?.title || 'Data Visualization'}
             isLoading={false}
