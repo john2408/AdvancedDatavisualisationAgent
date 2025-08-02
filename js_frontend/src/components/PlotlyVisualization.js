@@ -79,17 +79,45 @@ const PlotlyVisualizationComp = ({ plotSpec, title, isLoading = false }) => {
 
   // Convert to Plotly format if needed
   let plotlyData = [];
+  
+  // Debug: Log the spec structure
+  console.log('🐛 PlotlyVisualizationComp spec:', spec);
+  console.log('🐛 spec.data:', spec.data);
+  console.log('🐛 spec.type:', spec.type);
+  console.log('🐛 spec.data.x exists?', spec.data && spec.data.x);
+  console.log('🐛 spec.data.y exists?', spec.data && spec.data.y);
+  console.log('🐛 Array.isArray(spec.data)?', Array.isArray(spec.data));
+  
   if (spec.data && Array.isArray(spec.data)) {
+    // Already in Plotly format
     plotlyData = spec.data;
+    console.log('✅ Path 1: Using array format data:', plotlyData);
   } else if (spec.data && spec.data.x && spec.data.y) {
+    // Backend format: data.x and data.y are arrays
     plotlyData = [{
       x: spec.data.x,
       y: spec.data.y,
       type: spec.type || 'bar',
       name: spec.data.name || '',
+      marker: { color: spec.data.color || '#3b82f6' }
     }];
+    console.log('✅ Path 2: Converted backend format to Plotly:', plotlyData);
+  } else if (spec.x && spec.y) {
+    // Alternative format: x and y directly on spec
+    plotlyData = [{
+      x: spec.x,
+      y: spec.y,
+      type: spec.type || 'bar',
+      name: spec.name || '',
+      marker: { color: spec.color || '#3b82f6' }
+    }];
+    console.log('✅ Path 3: Using direct x/y format:', plotlyData);
   } else {
+    // Fallback: empty data
     plotlyData = [{ x: [], y: [], type: spec.type || 'bar', name: '' }];
+    console.log('⚠️ Path 4: Using fallback empty data');
+    console.log('🔍 spec keys:', Object.keys(spec || {}));
+    console.log('🔍 spec.data keys:', Object.keys(spec.data || {}));
   }
 
   const plotlyLayout = {
@@ -134,6 +162,13 @@ const PlotlyVisualizationComp = ({ plotSpec, title, isLoading = false }) => {
         <h3>✨ {title || 'Data Visualization'}</h3>
       </VizHeader>
       <VizContent>
+        {/* Debug section - remove in production */}
+        <div style={{ background: '#f0f9ff', padding: '0.5rem', margin: '0.5rem 0', fontSize: '0.8rem', border: '1px solid #0ea5e9' }}>
+          <strong>🐛 DEBUG:</strong> Data points: {plotlyData[0]?.x?.length || 0}, 
+          X: {JSON.stringify(plotlyData[0]?.x)}, 
+          Y: {JSON.stringify(plotlyData[0]?.y)}
+        </div>
+        
         <Plot
           data={plotlyData}
           layout={plotlyLayout}

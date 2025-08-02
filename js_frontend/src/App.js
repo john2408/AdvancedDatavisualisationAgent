@@ -14,6 +14,7 @@ import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
 import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualizationComp from './components/PlotlyVisualization';
+import fallbackViz from './utils/fallbackViz';
 import OrchestrationFlow from './components/OrchestrationFlow';
 import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import { generateAndReviewSQL } from './utils/sqlRetrieval';
@@ -243,12 +244,25 @@ function App() {
           analysisResult.data,
           { addMessage, setCurrentVisualization }
         );
+        
+        // Debug: Log the visualization result
+        console.log('🐛 VISUALIZATION RESULT:', vizResult);
+        console.log('🐛 vizResult.success:', vizResult.success);
+        console.log('🐛 vizResult.data:', vizResult.data);
+        console.log('🐛 vizResult.data.visualization:', vizResult.data?.visualization);
+        
         if (vizResult.success && vizResult.data) {
-          setCurrentVisualization(vizResult.data);
+          // The visualization should already be set by the callback
+          // but let's also explicitly set it from the returned data
+          if (vizResult.data.visualization) {
+            console.log('🐛 Setting visualization from vizResult.data.visualization');
+            setCurrentVisualization(vizResult.data.visualization);
+          }
           completePipelineStep('data_analysis');
           addMessage('assistant', '🎉 Complete! Both table and visualization are ready.');
         } else {
           // Optionally create a fallback visualization here
+          console.log('🐛 Visualization failed, using fallback');
           setCurrentVisualization(null);
           completePipelineStep('data_analysis');
           addMessage('assistant', '⚠️ Table ready! Visualization had issues but your data is displayed in the table above.');
@@ -397,6 +411,31 @@ function App() {
     );
   };
 
+  // Test function to simulate backend visualization response
+  const testBackendVisualization = () => {
+    const backendFormat = {
+      "type": "bar",
+      "data": {
+        "x": ["AUDI", "BMW", "MERCEDES-BENZ"],
+        "y": [120, 150, 100]
+      },
+      "layout": {
+        "title": "Test: Vehicles by Manufacturer",
+        "xaxis": {"title": "manufacturer"},
+        "yaxis": {"title": "count"},
+        "barmode": "group",
+        "showlegend": false,
+        "plot_bgcolor": "white",
+        "paper_bgcolor": "white",
+        "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"}
+      }
+    };
+    
+    console.log('🧪 Testing backend format:', backendFormat);
+    setCurrentVisualization(backendFormat);
+    addMessage('assistant', '🧪 Test visualization loaded with backend format');
+  };
+
   return (
     <ResponsiveContainer>
       <ResponsiveSidebar>
@@ -502,36 +541,25 @@ function App() {
         )}
   
         
-        {/* Show Visualization Section - Always render for testing */}
-        <PlotlyChartContainer>
-          <PlotlyVisualizationComp
-            plotSpec={{
-              data: [
-                {
-                  type: 'bar',
-                  x: ['AUDI', 'BMW', 'MERCEDES-BENZ'],
-                  y: [120, 150, 100],
-                  marker: { color: '#3b82f6' }
-                }
-              ],
-              layout: {
-                title: 'Number of Vehicles Registered by Car Manufacturers',
-                xaxis: { title: 'manufacturer' },
-                yaxis: { title: 'count' },
-                barmode: 'group',
-                showlegend: false,
-                plot_bgcolor: 'white',
-                paper_bgcolor: 'white',
-                font: { color: '#2E2E2E', family: 'Arial, sans-serif' },
-                responsive: true
-              }
-            }}
-            title={'Dummy Visualization'}
-            isLoading={false}
-            useResizeHandler={true}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </PlotlyChartContainer>
+        {/* Show Visualization Section - Only when currentVisualization is available */}
+        {currentVisualization && (
+          <PlotlyChartContainer>
+            <PlotlyVisualizationComp
+              plotSpec={currentVisualization}
+              title={currentVisualization?.layout?.title || 'Visualization'}
+              isLoading={isLoading}
+              useResizeHandler={true}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </PlotlyChartContainer>
+        )}
+        
+        {/* Show error message if visualization fails */}
+        {!currentVisualization && currentData && currentData.length > 0 && !isLoading && (
+          <div style={{ color: '#d97706', background: '#fef3c7', border: '1px solid #f59e0b', padding: '1rem', borderRadius: '0.5rem', margin: '1rem 0', textAlign: 'center' }}>
+            <strong>⚠️ Visualization not available:</strong> Data is loaded but no chart could be generated. Check the console for details.
+          </div>
+        )}
         
 
         {/* Follow-up Questions - Show when available */}
@@ -575,6 +603,9 @@ function App() {
               </ResponsiveButton>
               <ResponsiveButton onClick={() => setInputValue("Show me monthly vehicle registration trends")}>
                 📈 Monthly Trends
+              </ResponsiveButton>
+              <ResponsiveButton onClick={testBackendVisualization} style={{ background: '#dc2626' }}>
+                🧪 Test Backend Viz Format
               </ResponsiveButton>
             </ResponsiveWelcomeButtons>
           </WelcomeContainer>

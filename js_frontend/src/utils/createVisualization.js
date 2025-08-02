@@ -63,6 +63,11 @@ export const createDataVisualization = async (data, userMessage, analysisData, c
       // Backend returns plot_spec as JSON string
       plotSpec = JSON.parse(vizResult.data.plot_spec);
       console.log('📊 Parsed plot_spec from backend:', plotSpec);
+      console.log('🐛 plotSpec.type:', plotSpec.type);
+      console.log('🐛 plotSpec.data:', plotSpec.data);
+      console.log('🐛 plotSpec.data.x:', plotSpec.data?.x);
+      console.log('🐛 plotSpec.data.y:', plotSpec.data?.y);
+      console.log('🐛 plotSpec.layout:', plotSpec.layout);
     } catch (parseError) {
       console.error('❌ Failed to parse plot_spec:', parseError, vizResult.data.plot_spec);
       const error = new Error(`Failed to parse visualization specification: ${parseError.message}`);
@@ -77,7 +82,9 @@ export const createDataVisualization = async (data, userMessage, analysisData, c
     // 
     // We'll pass the backend format directly and let PlotlyVisualization handle conversion
     console.log('✅ Setting visualization with backend format');
+    console.log('🐛 About to call setCurrentVisualization with:', JSON.stringify(plotSpec, null, 2));
     setCurrentVisualization(plotSpec);
+    console.log('🐛 setCurrentVisualization called successfully');
     addMessage('assistant', '✨ Visualization created successfully!');
 
     // Generate follow-up questions
