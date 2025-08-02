@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Plotly Visualization</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 12px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        
+        /* Debug styles to see container boundaries */
+        .debug-border { border: 2px solid red !important; }
+        .plotly-container { border: 3px solid blue; margin: 10px 0; }
+        .plotly-content { border: 2px dashed green; padding: 10px; min-height: 400px; }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>🔍 Debug Plotly Visualization Issue</h1>
+    <p>This page tests Plotly rendering with the same data format that the React component receives.</p>
+    
+    <div class="test-section">
+        <h2>Test Configuration</h2>
+        <div id="testConfig"></div>
+        <button onclick="testDirectPlotly()">🧪 Test Direct Plotly</button>
+        <button onclick="testBackendFormat()">📊 Test Backend Format</button>
+        <button onclick="clearAll()">🧹 Clear All</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Direct Plotly Test</h2>
+        <div id="directPlotlyContainer" class="plotly-container">
+            <div id="directPlotly" class="plotly-content"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Backend Format Test</h2>
+        <div id="backendFormatContainer" class="plotly-container">
+            <div id="backendPlotly" class="plotly-content"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>React Component Simulation</h2>
+        <div id="reactSimContainer" class="plotly-container">
+            <div id="reactSim" class="plotly-content" style="background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin: 1rem 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
+                    <h3 style="margin: 0; color: #1f2937; font-size: 1.1rem;">✨ Data Visualization</h3>
+                </div>
+                <div id="reactSimPlot" style="padding: 1rem; min-height: 400px;">
+                    <!-- Plotly chart will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="consoleOutput" style="background: #f8f9fa; padding: 10px; border-radius: 4px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        // Simulate the exact data format that React component receives
+        const backendResponse = {
+            "plot_type": "bar",
+            "x_column": "manufacturer",
+            "y_column": "count",
+            "color_column": "",
+            "title": "Number of Vehicles Registered by Car Manufacturers",
+            "plot_spec": '{"type": "bar", "data": {"x": ["AUDI", "BMW", "MERCEDES-BENZ"], "y": [120, 150, 100]}, "layout": {"title": "Number of Vehicles Registered by Car Manufacturers", "xaxis": {"title": "manufacturer", "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}}, "yaxis": {"title": "count", "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}}, "barmode": "group", "showlegend": false, "plot_bgcolor": "white", "paper_bgcolor": "white", "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"}, "title_font": {"size": 16, "color": "#1f1f1f"}, "colorway": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]}, "config": {"responsive": true}}'
+        };
+
+        function log(message) {
+            const consoleDiv = document.getElementById('consoleOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(message);
+        }
+
+        document.getElementById('testConfig').innerHTML = `
+            <p><strong>Backend Response:</strong></p>
+            <pre>${JSON.stringify(backendResponse, null, 2).substring(0, 500)}...</pre>
+            <p><strong>Plot Spec:</strong></p>
+            <pre>${backendResponse.plot_spec.substring(0, 200)}...</pre>
+        `;
+
+        function testDirectPlotly() {
+            log('🧪 Testing direct Plotly rendering...');
+            
+            const data = [{
+                x: ['AUDI', 'BMW', 'MERCEDES-BENZ'],
+                y: [120, 150, 100],
+                type: 'bar',
+                marker: { color: '#3b82f6' }
+            }];
+            
+            const layout = {
+                title: 'Direct Plotly Test',
+                xaxis: { title: 'Manufacturer' },
+                yaxis: { title: 'Count' },
+                paper_bgcolor: 'white',
+                plot_bgcolor: 'white'
+            };
+            
+            const config = { responsive: true, displayModeBar: true };
+            
+            Plotly.newPlot('directPlotly', data, layout, config)
+                .then(() => {
+                    log('✅ Direct Plotly rendering successful');
+                })
+                .catch(error => {
+                    log('❌ Direct Plotly rendering failed: ' + error.message);
+                });
+        }
+
+        function testBackendFormat() {
+            log('📊 Testing backend format conversion...');
+            
+            try {
+                // Parse the backend plot_spec like React component does
+                const spec = JSON.parse(backendResponse.plot_spec);
+                log('✅ Parsed backend spec: ' + JSON.stringify({ type: spec.type, hasData: !!spec.data, hasLayout: !!spec.layout }));
+                
+                // Convert to Plotly format like React component does
+                const plotlyData = [{
+                    x: spec.data.x || [],
+                    y: spec.data.y || [],
+                    type: 'bar',
+                    marker: { 
+                        color: spec.data.color || '#3b82f6',
+                        line: { width: 1, color: '#1f2937' }
+                    },
+                    hovertemplate: '<b>%{x}</b><br>Value: %{y}<extra></extra>',
+                    name: spec.data.name || ''
+                }];
+                
+                const plotlyLayout = {
+                    autosize: true,
+                    font: { 
+                        family: 'Arial, sans-serif',
+                        color: '#1f2937'
+                    },
+                    paper_bgcolor: '#ffffff',
+                    plot_bgcolor: '#ffffff',
+                    margin: { l: 60, r: 40, t: 80, b: 60 },
+                    showlegend: false,
+                    title: {
+                        text: backendResponse.title || spec.layout?.title || 'Data Visualization',
+                        font: { size: 18, color: '#1f2937', family: 'Arial, sans-serif' },
+                        x: 0.5,
+                        xanchor: 'center'
+                    },
+                    xaxis: {
+                        title: spec.layout?.xaxis?.title || '',
+                        gridcolor: '#f1f5f9',
+                        linecolor: '#d1d5db',
+                        tickfont: { color: '#4b5563' },
+                        titlefont: { color: '#1f2937' },
+                        showline: true,
+                        zeroline: false,
+                        ...spec.layout?.xaxis
+                    },
+                    yaxis: {
+                        title: spec.layout?.yaxis?.title || '',
+                        gridcolor: '#f1f5f9',
+                        linecolor: '#d1d5db',
+                        tickfont: { color: '#4b5563' },
+                        titlefont: { color: '#1f2937' },
+                        showline: true,
+                        zeroline: false,
+                        ...spec.layout?.yaxis
+                    },
+                    ...spec.layout
+                };
+                
+                const plotlyConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false,
+                    ...spec.config
+                };
+                
+                log('📊 Final data: ' + JSON.stringify(plotlyData));
+                log('🎨 Final layout title: ' + plotlyLayout.title.text);
+                
+                Plotly.newPlot('backendPlotly', plotlyData, plotlyLayout, plotlyConfig)
+                    .then(() => {
+                        log('✅ Backend format conversion successful');
+                    })
+                    .catch(error => {
+                        log('❌ Backend format conversion failed: ' + error.message);
+                    });
+                    
+            } catch (error) {
+                log('💥 Error processing backend format: ' + error.message);
+            }
+        }
+
+        function testReactComponentSim() {
+            log('⚛️ Testing React component simulation...');
+            
+            try {
+                const spec = JSON.parse(backendResponse.plot_spec);
+                
+                const plotlyData = [{
+                    x: spec.data.x || [],
+                    y: spec.data.y || [],
+                    type: 'bar',
+                    marker: { 
+                        color: '#3b82f6',
+                        line: { width: 1, color: '#1f2937' }
+                    },
+                    hovertemplate: '<b>%{x}</b><br>Value: %{y}<extra></extra>'
+                }];
+                
+                const plotlyLayout = {
+                    autosize: true,
+                    font: { family: 'Arial, sans-serif', color: '#1f2937' },
+                    paper_bgcolor: '#ffffff',
+                    plot_bgcolor: '#ffffff',
+                    margin: { l: 60, r: 40, t: 80, b: 60 },
+                    showlegend: false,
+                    title: {
+                        text: backendResponse.title,
+                        font: { size: 18, color: '#1f2937', family: 'Arial, sans-serif' },
+                        x: 0.5,
+                        xanchor: 'center'
+                    },
+                    xaxis: {
+                        title: 'manufacturer',
+                        gridcolor: '#f1f5f9',
+                        linecolor: '#d1d5db',
+                        tickfont: { color: '#4b5563' },
+                        titlefont: { color: '#1f2937' },
+                        showline: true,
+                        zeroline: false
+                    },
+                    yaxis: {
+                        title: 'count',
+                        gridcolor: '#f1f5f9',
+                        linecolor: '#d1d5db',
+                        tickfont: { color: '#4b5563' },
+                        titlefont: { color: '#1f2937' },
+                        showline: true,
+                        zeroline: false
+                    }
+                };
+                
+                const plotlyConfig = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                };
+                
+                Plotly.newPlot('reactSimPlot', plotlyData, plotlyLayout, plotlyConfig)
+                    .then(() => {
+                        log('✅ React component simulation successful');
+                    })
+                    .catch(error => {
+                        log('❌ React component simulation failed: ' + error.message);
+                    });
+                    
+            } catch (error) {
+                log('💥 Error in React component simulation: ' + error.message);
+            }
+        }
+
+        function clearAll() {
+            ['directPlotly', 'backendPlotly', 'reactSimPlot'].forEach(id => {
+                Plotly.purge(id);
+            });
+            document.getElementById('consoleOutput').innerHTML = '';
+            log('🧹 Cleared all plots');
+        }
+
+        // Auto-run tests on load
+        window.onload = function() {
+            log('🔍 Debug page loaded - ready to test');
+            testDirectPlotly();
+            setTimeout(() => testBackendFormat(), 1000);
+            setTimeout(() => testReactComponentSim(), 2000);
+        };
+    </script>
+</body>
+</html>

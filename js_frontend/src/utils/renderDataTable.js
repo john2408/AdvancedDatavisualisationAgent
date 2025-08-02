@@ -7,17 +7,18 @@ import { ResponsiveTableContainer } from '../styles/ResponsiveLayout';
 
 /**
  * React component that renders SQL query data as a formatted table
+ * Optimized with React.memo to prevent unnecessary re-renders
  * @param {Object} props - Component props
  * @param {Array} props.data - Array of objects representing table rows
  * @param {Object} props.options - Optional configuration for table rendering
  * @returns {JSX.Element|null} - Rendered table component or null if no data
  */
-export const DataTable = ({ data, options = {} }) => {
-  console.log('🐛 DataTable component called with:', { data, options });
+export const DataTable = React.memo(({ data, options = {} }) => {
+  console.log('🐛 DataTable component called with:', { dataLength: data?.length, options });
   
   // Validate input data
   if (!data || !Array.isArray(data) || data.length === 0) {
-    console.warn('DataTable: No data provided or data is empty', { data });
+    console.warn('DataTable: No data provided or data is empty');
     return null;
   }
 
@@ -122,7 +123,7 @@ export const DataTable = ({ data, options = {} }) => {
       </div>
     );
   }
-};
+});
 
 /**
  * Legacy function version for backwards compatibility

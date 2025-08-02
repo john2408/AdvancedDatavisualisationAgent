@@ -14,19 +14,45 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('🚨 API Interceptor caught error:', error);
+    
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      console.error('API Error:', error.response.data);
-      throw new Error(error.response.data.detail || 'An error occurred');
+      console.error('📡 API Response Error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers
+      });
+      
+      // Extract error message properly
+      let errorMessage = 'An error occurred';
+      if (error.response.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = Array.isArray(error.response.data.detail) 
+            ? error.response.data.detail.map(d => d.msg || d).join(', ')
+            : error.response.data.detail;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      }
+      
+      throw new Error(`API Error (${error.response.status}): ${errorMessage}`);
     } else if (error.request) {
       // The request was made but no response was received
-      console.error('Network Error:', error.request);
+      console.error('🌐 Network Error:', error.request);
       throw new Error('Network error - please check if the backend is running');
     } else {
       // Something happened in setting up the request that triggered an Error
-      console.error('Request Error:', error.message);
-      throw new Error(error.message);
+      console.error('⚠️ Request Setup Error:', error.message);
+      throw new Error(`Request error: ${error.message}`);
     }
   }
 );
@@ -109,14 +135,24 @@ export const agentAPI = {
       key_findings: typeof key_findings === 'string' ? key_findings.substring(0, 100) + '...' : key_findings
     });
     
-    const response = await api.post('/agents/data-visualization', {
-      data: data,
-      user_query: user_query,
-      recommended_viz: recommended_viz,
-      analysis: analysis,
-      key_findings: key_findings
-    });
-    return response.data;
+    try {
+      const response = await api.post('/agents/data-visualization', {
+        data: data,
+        user_query: user_query,
+        recommended_viz: recommended_viz,
+        analysis: analysis,
+        key_findings: key_findings
+      });
+      
+      console.log('✅ createVisualization response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ createVisualization failed:', {
+        error: error.message,
+        requestData: { data, user_query, recommended_viz, analysis, key_findings }
+      });
+      throw error;
+    }
   },
 
   // Follow-up Questions Generation - NOW REAL ENDPOINT

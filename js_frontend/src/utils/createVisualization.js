@@ -26,53 +26,58 @@ export const createDataVisualization = async (data, userMessage, analysisData, c
       throw error;
     }
 
-    const vizResult = await agentAPI.createVisualization(
-      JSON.stringify(data),
-      userMessage,
-      analysisData.recommended_visualizations.join(', '),
-      analysisData.analysis,
-      analysisData.key_findings
-    );
+    let vizResult;
+    try {
+      // Ensure key_findings is a string (join array if needed)
+      const keyFindingsString = Array.isArray(analysisData.key_findings) 
+        ? analysisData.key_findings.join(', ') 
+        : analysisData.key_findings;
 
-    if (!vizResult.success) {
-      const error = new Error(`Visualization creation failed: ${vizResult.error || 'Unknown error'}`);
+      vizResult = await agentAPI.createVisualization(
+        JSON.stringify(data),
+        userMessage,
+        analysisData.recommended_visualizations.join(', '),
+        analysisData.analysis,
+        keyFindingsString
+      );
+
+      console.log('📊 createVisualization result:', vizResult);
+
+      if (!vizResult.success) {
+        const error = new Error(`Visualization creation failed: ${vizResult.error || 'Unknown error'}`);
+        error.step = 'data_visualization';
+        error.details = vizResult;
+        throw error;
+      }
+    } catch (apiError) {
+      console.error('🚨 API call failed in createVisualization:', apiError);
+      const error = new Error(`Visualization API call failed: ${apiError.message}`);
       error.step = 'data_visualization';
-      error.details = vizResult;
+      error.originalError = apiError;
       throw error;
     }
 
-    // Convert backend visualization format to Plotly format
+    // Convert backend visualization format to PlotlyVisualization format
     let plotSpec;
     try {
+      // Backend returns plot_spec as JSON string
       plotSpec = JSON.parse(vizResult.data.plot_spec);
+      console.log('📊 Parsed plot_spec from backend:', plotSpec);
     } catch (parseError) {
+      console.error('❌ Failed to parse plot_spec:', parseError, vizResult.data.plot_spec);
       const error = new Error(`Failed to parse visualization specification: ${parseError.message}`);
       error.step = 'data_visualization';
       error.details = { plot_spec: vizResult.data.plot_spec, parseError };
       throw error;
     }
     
-    // Ensure the plot has proper structure for PlotlyVisualization component
-    // Backend returns: {type: "bar", data: {x: [...], y: [...]}, layout: {...}}
-    // Plotly expects: {data: [{x: [...], y: [...], type: "bar"}], layout: {...}}
-    const processedViz = {
-      data: [{
-        x: plotSpec.data?.x || [],
-        y: plotSpec.data?.y || [],
-        type: plotSpec.type || vizResult.data.plot_type || 'bar',
-        ...(plotSpec.data?.name && { name: plotSpec.data.name }),
-        ...(plotSpec.data?.marker && { marker: plotSpec.data.marker })
-      }],
-      layout: plotSpec.layout || {
-        title: vizResult.data.title || 'Data Visualization',
-        plot_bgcolor: 'white',
-        paper_bgcolor: 'white',
-        font: { color: 'black' }
-      },
-      config: plotSpec.config || { responsive: true }
-    };
-    
-    setCurrentVisualization(processedViz);
+    // PlotlyVisualization component now handles both formats:
+    // 1. Backend format: {type: "bar", data: {x: [...], y: [...]}, layout: {...}}
+    // 2. Direct Plotly format: {data: [{x: [...], y: [...], type: "bar"}], layout: {...}}
+    // 
+    // We'll pass the backend format directly and let PlotlyVisualization handle conversion
+    console.log('✅ Setting visualization with backend format');
+    setCurrentVisualization(plotSpec);
     addMessage('assistant', '✨ Visualization created successfully!');
 
     // Generate follow-up questions
@@ -96,7 +101,7 @@ export const createDataVisualization = async (data, userMessage, analysisData, c
     return {
       success: true,
       data: {
-        visualization: processedViz,
+        visualization: plotSpec,
         followUpGenerated: true
       }
     };

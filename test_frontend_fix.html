@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Fixed Frontend createVisualization</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 12px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .step { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .step-success { border-left-color: #28a745; }
+        .step-error { border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Fixed Frontend createVisualization</h1>
+    <p>This test simulates the fixed <code>createDataVisualization</code> function to verify that the <code>key_findings</code> array is properly converted to a string before calling the API.</p>
+    
+    <div class="test-section">
+        <h2>Test Configuration</h2>
+        <div id="testConfig"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Execution</h2>
+        <button onclick="runFullPipelineTest()">🚀 Run Full Pipeline Test</button>
+        <button onclick="runVisualizationOnlyTest()">📊 Test Visualization Only</button>
+        <button onclick="clearResults()">🧹 Clear Results</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        const testData = [
+            {"manufacturer": "BMW", "count": 150},
+            {"manufacturer": "AUDI", "count": 120},
+            {"manufacturer": "MERCEDES-BENZ", "count": 100},
+            {"manufacturer": "Honda", "count": 10},
+            {"manufacturer": "Lexus", "count": 5}
+        ];
+
+        const mockAnalysisData = {
+            analysis: "BMW has the highest vehicle registrations, followed by AUDI and MERCEDES-BENZ. The data shows clear market leaders in the luxury vehicle segment.",
+            recommended_visualizations: ["bar", "pie", "scatter"],
+            key_findings: [
+                "BMW has the highest vehicle registrations, followed by AUDI and MERCEDES-BENZ.",
+                "Potentially check for low registration anomalies among manufacturers like Lexus or Honda, which are not in the initial sample.",
+                "Market dominance is concentrated among German luxury brands."
+            ]
+        };
+
+        const userMessage = "Show me vehicle registrations by manufacturer";
+
+        // Display test configuration
+        document.getElementById('testConfig').innerHTML = `
+            <p><strong>Test Data:</strong> ${testData.length} vehicle manufacturers</p>
+            <p><strong>User Query:</strong> "${userMessage}"</p>
+            <p><strong>Key Findings Type:</strong> ${Array.isArray(mockAnalysisData.key_findings) ? 'Array' : 'String'} (${mockAnalysisData.key_findings.length} items)</p>
+            <p><strong>Recommended Visualizations:</strong> ${mockAnalysisData.recommended_visualizations.join(', ')}</p>
+        `;
+
+        // Mock callbacks for testing
+        const mockCallbacks = {
+            addMessage: (role, message) => {
+                console.log(`[${role.toUpperCase()}] ${message}`);
+                addTestStep(`Message: ${message}`, role === 'assistant' ? 'info' : 'success');
+            },
+            setCurrentVisualization: (viz) => {
+                console.log('📊 Setting visualization:', viz);
+                addTestStep(`Visualization set: ${viz.type || 'unknown type'}`, 'success');
+            },
+            setFollowUpQuestions: (questions) => {
+                console.log('💡 Setting follow-up questions:', questions);
+                addTestStep(`Follow-up questions: ${questions.length} generated`, 'success');
+            }
+        };
+
+        // Simulate the FIXED createDataVisualization function
+        async function createDataVisualization(data, userMessage, analysisData, callbacks) {
+            const { addMessage, setCurrentVisualization, setFollowUpQuestions } = callbacks;
+            
+            try {
+                addMessage('assistant', '🎨 Creating visualization...');
+                
+                // Validate input parameters
+                if (!Array.isArray(data) || data.length === 0) {
+                    const error = new Error('Invalid or empty data provided for visualization');
+                    error.step = 'data_visualization';
+                    error.details = { dataLength: data?.length, dataType: typeof data };
+                    throw error;
+                }
+
+                if (!analysisData || !analysisData.recommended_visualizations) {
+                    const error = new Error('Analysis data is required for visualization creation');
+                    error.step = 'data_visualization';
+                    error.details = { analysisData };
+                    throw error;
+                }
+
+                // ✅ THE FIX: Ensure key_findings is a string (join array if needed)
+                const keyFindingsString = Array.isArray(analysisData.key_findings) 
+                    ? analysisData.key_findings.join(', ') 
+                    : analysisData.key_findings;
+
+                console.log('🔧 KEY_FINDINGS FIX APPLIED:');
+                console.log('  Original type:', typeof analysisData.key_findings);
+                console.log('  Original value:', analysisData.key_findings);
+                console.log('  Fixed type:', typeof keyFindingsString);
+                console.log('  Fixed value:', keyFindingsString.substring(0, 100) + '...');
+
+                // Simulate API call
+                const apiPayload = {
+                    data: JSON.stringify(data),
+                    user_query: userMessage,
+                    recommended_viz: analysisData.recommended_visualizations.join(', '),
+                    analysis: analysisData.analysis,
+                    key_findings: keyFindingsString // ✅ Now a string!
+                };
+
+                addMessage('assistant', `📡 Calling API with payload (key_findings: ${typeof apiPayload.key_findings})`);
+
+                const response = await fetch('http://localhost:8000/agents/data-visualization', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(apiPayload)
+                });
+
+                const vizResult = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`API Error (${response.status}): ${JSON.stringify(vizResult)}`);
+                }
+
+                console.log('📊 createVisualization result:', vizResult);
+
+                if (!vizResult.success) {
+                    const error = new Error(`Visualization creation failed: ${vizResult.error || 'Unknown error'}`);
+                    error.step = 'data_visualization';
+                    error.details = vizResult;
+                    throw error;
+                }
+
+                // Parse visualization
+                let plotSpec;
+                try {
+                    plotSpec = JSON.parse(vizResult.data.plot_spec);
+                    console.log('📊 Parsed plot_spec from backend:', plotSpec);
+                } catch (parseError) {
+                    console.error('❌ Failed to parse plot_spec:', parseError, vizResult.data.plot_spec);
+                    const error = new Error(`Failed to parse visualization specification: ${parseError.message}`);
+                    error.step = 'data_visualization';
+                    error.details = { plot_spec: vizResult.data.plot_spec, parseError };
+                    throw error;
+                }
+                
+                setCurrentVisualization(plotSpec);
+                addMessage('assistant', '✨ Visualization created successfully!');
+
+                return {
+                    success: true,
+                    data: {
+                        visualization: plotSpec,
+                        followUpGenerated: true
+                    }
+                };
+
+            } catch (error) {
+                console.error('Visualization Creation Error:', error);
+                
+                const errorMessage = `❌ VISUALIZATION CREATION ERROR:\n` +
+                                  `Message: ${error.message}\n` +
+                                  `Step: ${error.step || 'data_visualization'}`;
+                
+                addMessage('assistant', errorMessage);
+                
+                return {
+                    success: false,
+                    error: error.message,
+                    step: error.step
+                };
+            }
+        }
+
+        function addTestStep(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `step step-${type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}`;
+            stepDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            resultsDiv.appendChild(stepDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        async function runVisualizationOnlyTest() {
+            clearResults();
+            addTestStep('🧪 Starting Visualization-Only Test', 'info');
+            
+            try {
+                const result = await createDataVisualization(testData, userMessage, mockAnalysisData, mockCallbacks);
+                
+                if (result.success) {
+                    addTestStep('🎉 Test PASSED: createDataVisualization worked correctly!', 'success');
+                    addTestStep('✅ The key_findings array was successfully converted to string', 'success');
+                    addTestStep('✅ API call succeeded and visualization was created', 'success');
+                } else {
+                    addTestStep(`❌ Test FAILED: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addTestStep(`💥 Test CRASHED: ${error.message}`, 'error');
+            }
+        }
+
+        async function runFullPipelineTest() {
+            clearResults();
+            addTestStep('🧪 Starting Full Pipeline Test', 'info');
+            
+            // This would simulate the full pipeline including SQL generation, review, execution, analysis, and visualization
+            addTestStep('⚠️ Full pipeline test not implemented yet - use "Test Visualization Only" for now', 'warning');
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // Initial load message
+        addTestStep('🔧 Frontend Fix Test Loaded - Ready to test!', 'info');
+        addTestStep(`📊 Test data: ${testData.length} manufacturers`, 'info');
+        addTestStep(`🔍 Key findings: ${mockAnalysisData.key_findings.length} items (${Array.isArray(mockAnalysisData.key_findings) ? 'Array' : 'String'})`, 'info');
+    </script>
+</body>
+</html>

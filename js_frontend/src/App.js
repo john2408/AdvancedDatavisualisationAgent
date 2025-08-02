@@ -616,68 +616,39 @@ function App() {
         {/* Show Data Results Section - Independent of Visualization */}
         {currentData && currentData.length > 0 && (
           <>
-            {/* Debug info */}
-            <div style={{ background: '#f0f9ff', padding: '1rem', margin: '1rem 0', border: '1px solid #0ea5e9' }}>
-              <strong>🐛 DEBUG INFO:</strong>
-              <p>currentData exists: {currentData ? 'YES' : 'NO'}</p>
-              <p>currentData length: {currentData ? currentData.length : 'N/A'}</p>
-              <p>First row keys: {currentData && currentData[0] ? Object.keys(currentData[0]).join(', ') : 'N/A'}</p>
-              <p>renderDataTable function exists: {typeof renderDataTable === 'function' ? 'YES' : 'NO'}</p>
+            {/* Debug info - simplified */}
+            <div style={{ background: '#f0f9ff', padding: '0.75rem', margin: '1rem 0', border: '1px solid #0ea5e9', fontSize: '0.85rem' }}>
+              <strong>🐛 DEBUG:</strong> {currentData.length} rows loaded, keys: {currentData[0] ? Object.keys(currentData[0]).join(', ') : 'N/A'}
             </div>
             
-                {/* Metrics Overview */}
-                  {renderMetrics()}
-                  
-                  {/* Test simple table rendering first */}
-                  {/* <div style={{ background: '#fef2f2', padding: '1rem', margin: '1rem 0', border: '1px solid #fecaca' }}>
-                    <h3>🧪 Simple Table Test</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f8fafc' }}>
-                      {currentData && currentData[0] && Object.keys(currentData[0]).map(key => (
-                        <th key={key} style={{ padding: '0.5rem', border: '1px solid #e2e8f0' }}>{key}</th>
-                      ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentData && currentData.slice(0, 3).map((row, index) => (
-                      <tr key={index}>
-                        {Object.values(row).map((value, i) => (
-                        <td key={i} style={{ padding: '0.5rem', border: '1px solid #e2e8f0' }}>{value}</td>
-                        ))}
-                      </tr>
-                      ))}
-                    </tbody>
-                    </table>
-                  </div> */}
-                  
-                  {/* Data Table - Always show when we have data */}
-            <div style={{ background: '#f0fdf4', padding: '1rem', margin: '1rem 0', border: '1px solid #bbf7d0' }}>
-              <h3>📊 DataTable Component Result:</h3>
+            {/* Metrics Overview */}
+            {renderMetrics()}
+            
+            {/* Data Table - Always show when we have data */}
+            <ResponsiveCard style={{ marginTop: '1rem' }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+                <h3 style={{ margin: 0 }}>📊 Query Results ({currentData.length} rows)</h3>
+              </div>
               <DataTable 
                 data={currentData} 
                 options={{ 
-                  title: '📊 Query Results (Component)',
+                  title: 'Query Results',
                   maxRows: 100,
                   showRowNumbers: false
                 }}
               />
-            </div>
-            
+            </ResponsiveCard>
           </>
         )}
   
         
         {/* Show Visualization Section - Only when visualization exists */}
         {currentVisualization && (
-          <>
-            {/* Main Visualization */}
-            <PlotlyVisualization
-              plotSpec={currentVisualization}
-              title={currentVisualization?.layout?.title || 'Data Visualization'}
-              isLoading={currentStep === 'data_analysis'}
-            />
-          </>
+          <PlotlyVisualization
+            plotSpec={currentVisualization}
+            title={currentVisualization?.layout?.title || 'Data Visualization'}
+            isLoading={false}
+          />
         )}
         
 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Visualization API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Visualization API Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Data Payload</h2>
+        <pre id="testPayload"></pre>
+        <button onclick="testVisualizationAPI()">Test Visualization API</button>
+        <button onclick="testWithCorrectTypes()">Test with Correct Types</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>API Response</h2>
+        <div id="apiResult"></div>
+    </div>
+
+    <script>
+        // Sample test data that mimics what we'd get from data analysis
+        const testData = [
+            {"manufacturer": "BMW", "count": 150},
+            {"manufacturer": "AUDI", "count": 120},
+            {"manufacturer": "MERCEDES-BENZ", "count": 100},
+            {"manufacturer": "Honda", "count": 10},
+            {"manufacturer": "Lexus", "count": 5}
+        ];
+
+        const analysisData = {
+            analysis: "BMW has the highest vehicle registrations, followed by AUDI and MERCEDES-BENZ.",
+            recommended_visualizations: ["bar", "pie"],
+            key_findings: [
+                "BMW has the highest vehicle registrations, followed by AUDI and MERCEDES-BENZ.",
+                "Potentially check for low registration anomalies among manufacturers like Lexus or Honda, which are not in the initial sample."
+            ]
+        };
+
+        const userMessage = "Show me vehicle registrations by manufacturer";
+
+        // This is the PROBLEMATIC payload (key_findings as array)
+        const problematicPayload = {
+            data: JSON.stringify(testData),
+            user_query: userMessage,
+            recommended_viz: analysisData.recommended_visualizations.join(', '),
+            analysis: analysisData.analysis,
+            key_findings: analysisData.key_findings  // ❌ This is an ARRAY!
+        };
+
+        // This is the CORRECT payload (key_findings as string)
+        const correctPayload = {
+            data: JSON.stringify(testData),
+            user_query: userMessage,
+            recommended_viz: analysisData.recommended_visualizations.join(', '),
+            analysis: analysisData.analysis,
+            key_findings: analysisData.key_findings.join(', ')  // ✅ This is a STRING!
+        };
+
+        document.getElementById('testPayload').textContent = JSON.stringify(problematicPayload, null, 2);
+
+        async function testVisualizationAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<div>Testing with problematic payload (key_findings as array)...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/agents/data-visualization', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(problematicPayload)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Success!</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error ${response.status}:</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWithCorrectTypes() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<div>Testing with correct payload (key_findings as string)...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/agents/data-visualization', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(correctPayload)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Success!</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Error ${response.status}:</div><pre>${JSON.stringify(result, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        // Show the difference
+        console.log('🔍 Problematic payload key_findings type:', typeof problematicPayload.key_findings);
+        console.log('🔍 Problematic payload key_findings value:', problematicPayload.key_findings);
+        console.log('✅ Correct payload key_findings type:', typeof correctPayload.key_findings);
+        console.log('✅ Correct payload key_findings value:', correctPayload.key_findings);
+    </script>
+</body>
+</html>
