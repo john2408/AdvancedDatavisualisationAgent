@@ -18,25 +18,18 @@ import os
 # Add the parent directory to Python path to import agents
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-try:
-    from agents.crew_agents import (
-        sql_generator_crew, 
-        sql_reviewer_crew, 
-        data_analysis_crew,
-        data_visualization_crew,
-        orchestration_crew,
-        data_question_crew,
-        alternative_viz_crew,
-        follow_up_crew
-    )
-    CREW_AI_AVAILABLE = True
-    print("✅ CrewAI agents loaded successfully")
-    print(f"  - sql_generator_crew: {sql_generator_crew}")
-    print(f"  - sql_reviewer_crew: {sql_reviewer_crew}")
-    print(f"  - data_analysis_crew: {data_analysis_crew}")
-except ImportError as e:
-    print(f"⚠️ Warning: CrewAI agents not available: {e}")
-    CREW_AI_AVAILABLE = False
+
+from agents.crew_agents import (
+    sql_generator_crew, 
+    sql_reviewer_crew, 
+    data_analysis_crew,
+    data_visualization_crew,
+    orchestration_crew,
+    data_question_crew,
+    alternative_viz_crew,
+    follow_up_crew
+)
+
 
 app = FastAPI(
     title="Advanced Data Visualization Agent API",
@@ -107,12 +100,6 @@ async def get_database_schema():
 async def generate_sql(request: SQLGeneratorRequest):
     """Generate SQL query from natural language input using CrewAI agents"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503, 
-                detail="CrewAI agents are not available. Please check the server configuration and ensure all dependencies are installed."
-            )
-        
         # Load config to get DB schema
         config = load_config()
         db_schema = config.get('db_schema_agent', '')
@@ -153,11 +140,6 @@ async def generate_sql(request: SQLGeneratorRequest):
 async def orchestrate_intent(request: dict):
     """Determine user intent using CrewAI orchestration agent"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI orchestration agent is not available. Please check the server configuration and ensure all dependencies are installed."
-            )
         
         # Extract user input from request
         user_input = request.get('user_input', '')
@@ -262,25 +244,11 @@ class SQLReviewRequest(BaseModel):
     sql_query: str = Field(..., description="SQL query to review")
     db_schema: str = Field(..., description="Database schema for context")
 
-# Test endpoint to verify routing works
-@app.get("/test-sql-reviewer")
-async def test_sql_reviewer():
-    """Test endpoint to check if SQL reviewer is available"""
-    return {
-        "status": "endpoint_registered",
-        "crew_ai_available": CREW_AI_AVAILABLE,
-        "sql_reviewer_available": "sql_reviewer_crew" in globals()
-    }
-
 @app.post("/agents/sql-reviewer", response_model=APIResponse)
 async def review_sql_query(request: SQLReviewRequest):
     """Review and optimize SQL query using GPT-4o reviewer agent"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI agents are not available"
-            )
+
         
         result = sql_reviewer_crew.kickoff(inputs={
             "sql_query": request.sql_query,
@@ -319,12 +287,7 @@ class DataAnalysisRequest(BaseModel):
 async def analyze_data(request: DataAnalysisRequest):
     """Analyze data patterns and recommend visualizations"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI agents are not available"
-            )
-        
+
         result = data_analysis_crew.kickoff(inputs={
             "columns": request.columns,
             "shape": request.shape,
@@ -367,11 +330,7 @@ class VisualizationRequest(BaseModel):
 async def create_visualization(request: VisualizationRequest):
     """Create visualization using data visualization agent"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI agents are not available"
-            )
+
         
         result = data_visualization_crew.kickoff(inputs={
             "data": request.data,
@@ -462,12 +421,7 @@ class AlternativeVisualizationRequest(BaseModel):
 async def create_alternative_visualization(request: AlternativeVisualizationRequest):
     """Create alternative visualization using alternative viz agent"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI agents are not available"
-            )
-        
+
         result = alternative_viz_crew.kickoff(inputs={
             "user_request": request.user_request,
             "current_data": request.current_data,
@@ -510,12 +464,7 @@ class FollowUpRequest(BaseModel):
 async def generate_follow_up_questions(request: FollowUpRequest):
     """Generate follow-up questions using follow-up agent"""
     try:
-        if not CREW_AI_AVAILABLE:
-            raise HTTPException(
-                status_code=503,
-                detail="CrewAI agents are not available"
-            )
-        
+
         result = follow_up_crew.kickoff(inputs={
             "analysis": request.analysis,
             "original_query": request.original_query,
@@ -547,11 +496,7 @@ async def generate_follow_up_questions(request: FollowUpRequest):
 @app.get("/agents/list")
 async def list_available_agents():
     """List all available AI agents and their endpoints"""
-    if not CREW_AI_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="CrewAI agents are not available. Please check the server configuration and ensure all dependencies are installed."
-        )
+
     
     return {
         "agents": [
