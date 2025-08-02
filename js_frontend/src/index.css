@@ -20,6 +20,20 @@ code {
   height: 100vh;
 }
 
+/* TEST MARKER - This shows our changes are applied */
+body::before {
+  content: "🧪 Frontend Updated - TestPlotlyVisualization Active";
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: #3b82f6;
+  color: white;
+  padding: 4px 8px;
+  font-size: 10px;
+  z-index: 9999;
+  border-radius: 0 0 0 4px;
+}
+
 /* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

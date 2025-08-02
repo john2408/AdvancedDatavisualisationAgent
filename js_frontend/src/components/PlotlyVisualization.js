@@ -25,31 +25,18 @@ const VizHeader = styled.div`
 
 const VizContent = styled.div`
   padding: 1rem;
-  min-height: 450px;
-  height: auto;
   width: 100%;
-  
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-    min-height: 350px;
-  }
+  height: 500px;
+  display: flex;
+  flex-direction: column;
 `;
 
-const ErrorMessage = styled.div`
-  padding: 2rem;
-  text-align: center;
-  color: #ef4444;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 0.5rem;
-  margin: 1rem;
-`;
-
-const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
+const TestPlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
   console.log('🔍 PlotlyVisualization received:', { 
-    plotSpec: typeof plotSpec === 'string' ? plotSpec.substring(0, 200) + '...' : plotSpec, 
+    plotSpecType: typeof plotSpec,
     title, 
-    isLoading 
+    isLoading,
+    plotSpecPreview: typeof plotSpec === 'string' ? plotSpec.substring(0, 100) + '...' : plotSpec
   });
 
   if (isLoading) {
@@ -60,16 +47,13 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
         </VizHeader>
         <VizContent>
           <div style={{ 
-            height: '300px', 
+            height: '100%', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
             color: '#6b7280'
           }}>
-            <div>
-              <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📊</div>
-              <div>Generating your visualization...</div>
-            </div>
+            <div>Loading...</div>
           </div>
         </VizContent>
       </VisualizationContainer>
@@ -78,46 +62,71 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
 
   if (!plotSpec) {
     console.log('⚠️ PlotlyVisualization: No plotSpec provided');
-    return null;
+    return (
+      <VisualizationContainer>
+        <VizHeader>
+          <h3>⚠️ No Visualization Data</h3>
+        </VizHeader>
+        <VizContent>
+          <div style={{ 
+            height: '100%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            color: '#6b7280'
+          }}>
+            No data to visualize
+          </div>
+        </VizContent>
+      </VisualizationContainer>
+    );
   }
 
   try {
-    // Parse the backend plot specification
+    // Extract the actual plot specification
     let spec;
+    
+    // Handle different input formats
     if (typeof plotSpec === 'string') {
+      console.log('📝 Parsing plotSpec string');
       spec = JSON.parse(plotSpec);
     } else if (plotSpec.plot_spec) {
+      console.log('📦 Extracting from wrapper format');
       spec = typeof plotSpec.plot_spec === 'string' ? JSON.parse(plotSpec.plot_spec) : plotSpec.plot_spec;
     } else {
+      console.log('📋 Using direct spec object');
       spec = plotSpec;
     }
     
-    console.log('✅ Parsed spec:', { type: spec.type, hasData: !!spec.data, hasLayout: !!spec.layout });
+    console.log('✅ Parsed spec:', { 
+      type: spec.type, 
+      hasData: !!spec.data, 
+      hasLayout: !!spec.layout,
+      dataKeys: spec.data ? Object.keys(spec.data) : [],
+      xLength: spec.data?.x?.length || 0,
+      yLength: spec.data?.y?.length || 0
+    });
 
-    // Simple data conversion - directly use the backend format
+    // Create Plotly data - simplified approach based on your sample
     const plotlyData = [{
       x: spec.data.x || [],
       y: spec.data.y || [],
       type: spec.type || 'bar',
       marker: { 
-        color: '#3b82f6',
-        line: { width: 1, color: '#1f2937' }
+        color: '#3b82f6'
       },
-      name: ''
+      name: spec.data.name || ''
     }];
 
-    // Simple layout - keep it minimal like your sample
+    // Create Plotly layout - minimal like your sample
     const plotlyLayout = {
       title: title || spec.layout?.title || 'Data Visualization',
       autosize: true,
-      font: { 
-        family: 'Arial, sans-serif',
-        color: '#1f2937'
-      },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#ffffff',
       showlegend: false,
-      margin: { l: 60, r: 40, t: 80, b: 60 }
+      margin: { l: 60, r: 40, t: 80, b: 60 },
+      font: { color: '#1f2937' },
+      paper_bgcolor: '#ffffff',
+      plot_bgcolor: '#ffffff'
     };
 
     // Minimal config like your sample
@@ -127,8 +136,14 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
       displaylogo: false
     };
     
-    console.log('📊 Final data:', plotlyData);
-    console.log('🎨 Final layout:', plotlyLayout.title);
+    console.log('📊 Final data:', { 
+      dataLength: plotlyData.length,
+      firstTrace: {
+        x: plotlyData[0].x.slice(0, 3),
+        y: plotlyData[0].y.slice(0, 3),
+        type: plotlyData[0].type
+      }
+    });
 
     return (
       <VisualizationContainer>
@@ -136,7 +151,7 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
           <h3>✨ {title || 'Data Visualization'}</h3>
         </VizHeader>
         
-        {/* Debug section */}
+        {/* Debug info */}
         <div style={{ 
           background: '#f0f9ff', 
           padding: '0.5rem', 
@@ -144,28 +159,34 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
           fontSize: '0.8rem',
           borderLeft: '3px solid #0ea5e9'
         }}>
-          <strong>🐛 PLOTLY DEBUG:</strong>
-          <div>Data: x({plotlyData[0].x.length}) y({plotlyData[0].y.length}) type({plotlyData[0].type})</div>
-          <div>Title: {plotlyLayout.title}</div>
+          <strong>🐛 PLOTLY DEBUG:</strong> 
+          x({plotlyData[0].x.length}) y({plotlyData[0].y.length}) type({plotlyData[0].type})
+          <br />Title: {plotlyLayout.title}
+          <br />Data sample: x=[{plotlyData[0].x.slice(0, 2).join(', ')}...] y=[{plotlyData[0].y.slice(0, 2).join(', ')}...]
         </div>
         
         <VizContent>
-          <Plot
-            data={plotlyData}
-            layout={plotlyLayout}
-            config={plotlyConfig}
-            style={{ 
-              width: '100%', 
-              height: '400px'
-            }}
-            useResizeHandler={true}
-            onError={(error) => {
-              console.error('📊 Plotly render error:', error);
-            }}
-            onInitialized={(figure, graphDiv) => {
-              console.log('📊 Plotly initialized successfully');
-            }}
-          />
+          <div style={{ width: '100%', height: '100%' }}>
+            <Plot
+              data={plotlyData}
+              layout={plotlyLayout}
+              config={plotlyConfig}
+              style={{ 
+                width: '100%', 
+                height: '100%'
+              }}
+              useResizeHandler={true}
+              onError={(error) => {
+                console.error('📊 Plotly render error:', error);
+              }}
+              onInitialized={(figure, graphDiv) => {
+                console.log('📊 Plotly initialized successfully', { 
+                  figureData: figure.data?.length || 0,
+                  graphDivId: graphDiv?.id || 'none'
+                });
+              }}
+            />
+          </div>
         </VizContent>
       </VisualizationContainer>
     );
@@ -179,16 +200,43 @@ const PlotlyVisualization = ({ plotSpec, title, isLoading = false }) => {
         <VizHeader>
           <h3>❌ Visualization Error</h3>
         </VizHeader>
-        <ErrorMessage>
-          <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚠️</div>
-          <div><strong>Unable to render visualization</strong></div>
-          <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#6b7280' }}>
-            {error.message}
+        <VizContent>
+          <div style={{ 
+            height: '100%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            flexDirection: 'column',
+            color: '#ef4444',
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '0.5rem',
+            padding: '2rem'
+          }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>⚠️</div>
+            <div><strong>Unable to render visualization</strong></div>
+            <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#6b7280' }}>
+              {error.message}
+            </div>
+            <details style={{ marginTop: '1rem', fontSize: '0.8rem' }}>
+              <summary style={{ cursor: 'pointer' }}>Debug Info</summary>
+              <pre style={{ 
+                background: '#f9fafb', 
+                padding: '0.5rem', 
+                borderRadius: '0.25rem',
+                marginTop: '0.5rem',
+                overflow: 'auto',
+                maxHeight: '200px',
+                textAlign: 'left'
+              }}>
+                {JSON.stringify(plotSpec, null, 2)}
+              </pre>
+            </details>
           </div>
-        </ErrorMessage>
+        </VizContent>
       </VisualizationContainer>
     );
   }
 };
 
-export default PlotlyVisualization;
+export default TestPlotlyVisualization;

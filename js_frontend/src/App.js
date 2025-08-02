@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
 import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
-import PlotlyVisualization from './components/PlotlyVisualization';
+import TestPlotlyVisualization from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
 import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import { generateAndReviewSQL } from './utils/sqlRetrieval';
@@ -644,7 +644,7 @@ function App() {
         
         {/* Show Visualization Section - Only when visualization exists */}
         {currentVisualization && (
-          <PlotlyVisualization
+          <TestPlotlyVisualization
             plotSpec={currentVisualization}
             title={currentVisualization?.layout?.title || 'Data Visualization'}
             isLoading={false}
