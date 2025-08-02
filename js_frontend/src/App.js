@@ -14,14 +14,12 @@ import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
 import { agentAPI } from './api';
 import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualizationComp from './components/PlotlyVisualization';
-import fallbackViz from './utils/fallbackViz';
 import OrchestrationFlow from './components/OrchestrationFlow';
 import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
 import { generateAndReviewSQL } from './utils/sqlRetrieval';
 import { executeSQLQuery } from './utils/executeSQL';
 import { performDataAnalysis } from './utils/performDataAnalysis';
-import { performVisualizationGeneration } from './utils/performVisualizationGeneration';
-import { createAlternativeVisualization } from './utils/createVisualization';
+import { performVisualizationGeneration, createAlternativeVisualization } from './utils/performVisualizationGeneration';
 import { DataTable } from './utils/renderDataTable';
 import {
   ResponsiveContainer,
@@ -144,42 +142,6 @@ function App() {
     setCurrentStep(null);
   };
 
-  const createFallbackVisualization = (data) => {
-    try {
-      if (!Array.isArray(data) || data.length === 0) {
-        return null;
-      }
-
-      const keys = Object.keys(data[0] || {});
-      const numericKey = keys.find(key => typeof data[0][key] === 'number');
-      const categoryKey = keys.find(key => typeof data[0][key] === 'string');
-      
-      if (!numericKey && !categoryKey) {
-        return null;
-      }
-      
-      return {
-        type: 'bar',
-        data: [{
-          x: data.map(d => d[categoryKey] || `Row ${data.indexOf(d) + 1}`),
-          y: data.map(d => d[numericKey] || 0),
-          type: 'bar'
-        }],
-        layout: {
-          title: 'Data Overview (Fallback)',
-          xaxis: { title: categoryKey || 'Category' },
-          yaxis: { title: numericKey || 'Value' },
-          plot_bgcolor: 'white',
-          paper_bgcolor: 'white',
-          font: { color: 'black' }
-        }
-      };
-    } catch (error) {
-      console.error('Failed to create fallback visualization:', error);
-      return null;
-    }
-  };
-
   const handleNewQueryPipeline = async (userMessage) => {
     try {
       // Use loaded database schema
@@ -242,30 +204,25 @@ function App() {
           queryData,
           userMessage,
           analysisResult.data,
-          { addMessage, setCurrentVisualization }
+          { addMessage, setCurrentVisualization, setFollowUpQuestions }
         );
         
         // Debug: Log the visualization result
         console.log('🐛 VISUALIZATION RESULT:', vizResult);
-        console.log('🐛 vizResult.success:', vizResult.success);
-        console.log('🐛 vizResult.data:', vizResult.data);
-        console.log('🐛 vizResult.data.visualization:', vizResult.data?.visualization);
         
-        if (vizResult.success && vizResult.data) {
-          // The visualization should already be set by the callback
-          // but let's also explicitly set it from the returned data
-          if (vizResult.data.visualization) {
-            console.log('🐛 Setting visualization from vizResult.data.visualization');
-            setCurrentVisualization(vizResult.data.visualization);
-          }
+        if (vizResult.success) {
+          // Visualization is already set by the callback in performVisualizationGeneration
           completePipelineStep('data_analysis');
-          addMessage('assistant', '🎉 Complete! Both table and visualization are ready.');
+          if (vizResult.fallbackCreated) {
+            addMessage('assistant', '🎉 Complete! Table and fallback visualization are ready.');
+          } else {
+            addMessage('assistant', '🎉 Complete! Both table and visualization are ready.');
+          }
         } else {
-          // Optionally create a fallback visualization here
-          console.log('🐛 Visualization failed, using fallback');
+          // No visualization could be created
           setCurrentVisualization(null);
           completePipelineStep('data_analysis');
-          addMessage('assistant', '⚠️ Table ready! Visualization had issues but your data is displayed in the table above.');
+          addMessage('assistant', '⚠️ Table ready! Visualization failed but your data is displayed in the table above.');
         }
       } catch (vizError) {
         // Optionally create a fallback visualization here
@@ -603,9 +560,6 @@ function App() {
               </ResponsiveButton>
               <ResponsiveButton onClick={() => setInputValue("Show me monthly vehicle registration trends")}>
                 📈 Monthly Trends
-              </ResponsiveButton>
-              <ResponsiveButton onClick={testBackendVisualization} style={{ background: '#dc2626' }}>
-                🧪 Test Backend Viz Format
               </ResponsiveButton>
             </ResponsiveWelcomeButtons>
           </WelcomeContainer>

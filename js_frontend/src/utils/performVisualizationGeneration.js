@@ -3,7 +3,7 @@
  * Handles only the visualization creation step of the pipeline
  */
 
-import { createDataVisualization } from './createVisualization';
+import { agentAPI } from '../api';
 
 /**
  * Performs visualization generation based on data and analysis results
@@ -24,41 +24,74 @@ export const performVisualizationGeneration = async (data, userMessage, analysis
       throw new Error('No data provided for visualization');
     }
 
-    if (!analysisData) {
-      throw new Error('Analysis data is required for visualization creation');
+    if (!analysisData || !analysisData.recommended_visualizations) {
+      throw new Error('Analysis data with recommended visualizations is required');
     }
 
     if (addMessage) {
       addMessage('assistant', '🎨 Creating your visualization...');
     }
 
-    // Create visualization using existing modular function
-    const vizResult = await createDataVisualization(
-      data, 
-      userMessage, 
-      analysisData, 
-      { ...callbacks, setFollowUpQuestions: (questions) => setFollowUpQuestions && setFollowUpQuestions(questions) }
+    // Call the API to create visualization
+    const keyFindingsString = Array.isArray(analysisData.key_findings) 
+      ? analysisData.key_findings.join(', ') 
+      : analysisData.key_findings || '';
+
+    console.log('📊 Calling createVisualization API...');
+    const vizResult = await agentAPI.createVisualization(
+      JSON.stringify(data),
+      userMessage,
+      analysisData.recommended_visualizations.join(', '),
+      analysisData.analysis,
+      keyFindingsString
     );
 
-    if (!vizResult.success && !vizResult.fallbackCreated) {
-      throw new Error(`Visualization creation failed: ${vizResult.error}`);
+    if (!vizResult.success) {
+      throw new Error(`API call failed: ${vizResult.error || 'Unknown error'}`);
+    }
+
+    // Parse the plot_spec from backend
+    let plotSpec;
+    try {
+      plotSpec = JSON.parse(vizResult.data.plot_spec);
+      console.log('📊 Parsed plot_spec from backend:', plotSpec);
+      console.log('🐛 plotSpec.data.x:', plotSpec.data?.x);
+      console.log('🐛 plotSpec.data.y:', plotSpec.data?.y);
+    } catch (parseError) {
+      throw new Error(`Failed to parse visualization specification: ${parseError.message}`);
+    }
+    
+    // Set the visualization (PlotlyVisualization component handles backend format)
+    console.log('✅ Setting visualization with backend format');
+    setCurrentVisualization(plotSpec);
+    
+    if (addMessage) {
+      addMessage('assistant', '✨ Visualization created successfully!');
+    }
+
+    // Generate follow-up questions if callback is available
+    if (setFollowUpQuestions) {
+      try {
+        const followUpResult = await agentAPI.generateFollowUpQuestions(
+          analysisData.analysis,
+          userMessage,
+          keyFindingsString,
+          ''
+        );
+        if (followUpResult.success && followUpResult.data.questions) {
+          setFollowUpQuestions(followUpResult.data.questions);
+        }
+      } catch (followUpError) {
+        console.warn('Follow-up question generation failed:', followUpError);
+      }
     }
 
     console.log('✅ Step 4b: Visualization generation completed successfully');
     
-    if (addMessage) {
-      if (vizResult.fallbackCreated) {
-        addMessage('assistant', '⚠️ Created fallback visualization - some features may be limited.');
-      } else {
-        addMessage('assistant', '✅ Visualization created successfully!');
-      }
-    }
-
     return {
       success: true,
-      data: vizResult.data,
-      fallbackCreated: vizResult.fallbackCreated || false,
-      message: vizResult.fallbackCreated ? 'Fallback visualization created' : 'Visualization created successfully'
+      data: { visualization: plotSpec },
+      message: 'Visualization created successfully'
     };
 
   } catch (error) {
@@ -72,15 +105,14 @@ export const performVisualizationGeneration = async (data, userMessage, analysis
       setCurrentVisualization(fallbackViz);
       
       if (addMessage) {
-        addMessage('assistant', '⚠️ Created basic fallback visualization due to generation error.');
+        addMessage('assistant', '⚠️ Created basic fallback visualization due to API error.');
       }
       
       return {
-        success: false,
-        error: error.message,
-        fallbackCreated: true,
+        success: true,
         data: { visualization: fallbackViz },
-        step: 'visualization_generation'
+        fallbackCreated: true,
+        message: 'Fallback visualization created'
       };
     }
     
@@ -91,8 +123,7 @@ export const performVisualizationGeneration = async (data, userMessage, analysis
     return {
       success: false,
       error: error.message,
-      fallbackCreated: false,
-      step: 'visualization_generation'
+      message: 'Visualization creation failed'
     };
   }
 };
@@ -117,45 +148,22 @@ export const createBasicFallbackVisualization = (data, analysisData = null) => {
       return null;
     }
 
-    // Determine chart type from analysis or fallback to bar
-    let chartType = 'bar';
-    if (analysisData?.recommended_visualizations?.length > 0) {
-      chartType = analysisData.recommended_visualizations[0];
-    }
-
-    // Create basic visualization spec based on chart type
-    const basicVizSpec = {
-      type: chartType,
+    // Create simple bar chart (backend format for consistency)
+    return {
+      type: 'bar',
       data: {
         x: data.map(d => d[categoryKey] || `Row ${data.indexOf(d) + 1}`),
         y: data.map(d => d[numericKey] || 0)
       },
       layout: {
-        title: analysisData?.analysis ? 
-          'Data Overview (Fallback)' : 
-          'Basic Data Visualization',
+        title: 'Data Overview (Fallback)',
         xaxis: { title: categoryKey || 'Category' },
         yaxis: { title: numericKey || 'Value' },
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
-        font: { color: 'black' },
-        showlegend: false
-      },
-      config: {
-        responsive: true,
-        displayModeBar: true,
-        displaylogo: false
+        font: { color: 'black' }
       }
     };
-
-    console.log('📊 Created basic fallback visualization:', { 
-      type: chartType, 
-      dataPoints: data.length,
-      xKey: categoryKey,
-      yKey: numericKey
-    });
-
-    return basicVizSpec;
 
   } catch (error) {
     console.error('Failed to create basic fallback visualization:', error);
@@ -164,53 +172,65 @@ export const createBasicFallbackVisualization = (data, analysisData = null) => {
 };
 
 /**
- * Validates visualization data before processing
- * @param {Array} data - Query result data
- * @param {Object} analysisData - Analysis results
- * @returns {Object} Validation result
+ * Create alternative visualization for follow-up questions
+ * @param {string} userMessage - User's request for alternative visualization
+ * @param {Array} currentData - Current data set
+ * @param {string} currentVizType - Current visualization type
+ * @param {Object} callbacks - Callback functions
+ * @returns {Promise<Object>} Alternative visualization result
  */
-export const validateVisualizationInput = (data, analysisData) => {
-  const errors = [];
-  const warnings = [];
-
-  // Data validation
-  if (!Array.isArray(data)) {
-    errors.push('Data must be an array');
-  } else if (data.length === 0) {
-    errors.push('Data array is empty');
-  } else if (data.length > 10000) {
-    warnings.push(`Large dataset (${data.length} rows) may affect performance`);
-  }
-
-  // Analysis data validation
-  if (!analysisData) {
-    warnings.push('No analysis data provided - will use fallback analysis');
-  } else {
-    if (!analysisData.recommended_visualizations) {
-      warnings.push('No recommended visualizations in analysis data');
+export const createAlternativeVisualization = async (userMessage, currentData, currentVizType, callbacks) => {
+  const { addMessage, setCurrentVisualization } = callbacks;
+  
+  try {
+    if (addMessage) {
+      addMessage('assistant', '🎨 Creating alternative visualization...');
     }
-    if (!analysisData.analysis) {
-      warnings.push('No analysis text provided');
+    
+    // Call API for alternative visualization
+    const altVizResult = await agentAPI.createAlternativeVisualization(
+      userMessage,
+      JSON.stringify(currentData),
+      currentVizType
+    );
+
+    if (!altVizResult.success) {
+      throw new Error(`Alternative visualization failed: ${altVizResult.error || 'Unknown error'}`);
     }
-  }
 
-  // Data structure validation
-  if (data.length > 0) {
-    const firstRow = data[0];
-    const keys = Object.keys(firstRow);
-    const numericKeys = keys.filter(key => typeof firstRow[key] === 'number');
-    const stringKeys = keys.filter(key => typeof firstRow[key] === 'string');
-
-    if (numericKeys.length === 0 && stringKeys.length === 0) {
-      errors.push('No suitable data columns found for visualization');
+    // Parse the plot_spec from backend
+    let plotSpec;
+    try {
+      plotSpec = JSON.parse(altVizResult.data.plot_spec);
+    } catch (parseError) {
+      throw new Error(`Failed to parse alternative visualization: ${parseError.message}`);
     }
-  }
+    
+    // Set the alternative visualization
+    setCurrentVisualization(plotSpec);
+    
+    if (addMessage) {
+      addMessage('assistant', '✨ Alternative visualization created!');
+    }
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings
-  };
+    return {
+      success: true,
+      data: { visualization: plotSpec }
+    };
+
+  } catch (error) {
+    console.error('Alternative Visualization Error:', error);
+    
+    if (addMessage) {
+      addMessage('assistant', `❌ ALTERNATIVE VISUALIZATION ERROR: ${error.message}`);
+    }
+    
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 };
+
 
 export default performVisualizationGeneration;
