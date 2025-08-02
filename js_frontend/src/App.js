@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+
 import {
   SidebarHeader,
   Message,
   Input,
   MetricCard,
   WelcomeContainer,
-  FollowUpContainer
+  FollowUpContainer, 
+  PlotlyChartContainer
 } from './styles/enhancedComponents';
 import { FiSend, FiMic, FiBarChart } from 'react-icons/fi';
 import { agentAPI } from './api';
@@ -37,8 +39,8 @@ import {
   ResponsiveButton,
   ResponsiveFollowUpButton,
   ResponsiveLoadingSpinner,
-  media
 } from './styles/ResponsiveLayout';
+
 
 
 function App() {
@@ -177,71 +179,6 @@ function App() {
     }
   };
 
-  const performDataAnalysisAndVisualization = async (data, userMessage, dbSchema) => {
-    console.log('🔄 Starting Step 4: Data Analysis & Visualization (Modularized)...');
-    
-    try {
-      // Create callbacks object for modular functions
-      const callbacks = {
-        addMessage,
-        setCurrentVisualization,
-        setFollowUpQuestions
-      };
-
-      console.log('📊 Step 4a: Starting data analysis...');
-      updatePipelineStep('data_analysis');
-      
-      // Step 4a: Analyze data using modular function
-      const analysisResult = await performDataAnalysis(data, userMessage, callbacks);
-      
-      if (!analysisResult.success) {
-        console.error('❌ Step 4a failed:', analysisResult.error);
-        throw new Error(`Data analysis step failed: ${analysisResult.error}`);
-      }
-      
-      console.log('✅ Step 4a: Data analysis completed successfully');
-      console.log('🎨 Step 4b: Starting visualization generation...');
-
-      // Step 4b: Create visualization using modular function
-      const vizResult = await performVisualizationGeneration(
-        data, 
-        userMessage, 
-        analysisResult.data, 
-        callbacks
-      );
-
-      if (!vizResult.success && !vizResult.fallbackCreated) {
-        console.error('❌ Step 4b failed:', vizResult.error);
-        throw new Error(`Visualization creation failed: ${vizResult.error}`);
-      }
-      
-      console.log('✅ Step 4b: Visualization generation completed');
-      console.log('🎉 Step 4: Complete - Analysis & Visualization finished successfully');
-
-      return {
-        success: true,
-        analysisResult,
-        vizResult
-      };
-
-    } catch (error) {
-      console.error('❌ Error in data analysis and visualization:', error);
-      addMessage('assistant', `❌ ANALYSIS & VISUALIZATION ERROR: ${error.message}`);
-      
-      // Create fallback visualization as last resort
-      const fallbackViz = createFallbackVisualization(data);
-      if (fallbackViz) {
-        setCurrentVisualization(fallbackViz);
-        addMessage('assistant', '⚠️ Created basic fallback visualization.');
-      }
-      
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  };
-
   const handleNewQueryPipeline = async (userMessage) => {
     try {
       // Use loaded database schema
@@ -281,24 +218,44 @@ function App() {
       const queryData = executionResult.data.queryData;
       addMessage('assistant', `📊 Table data is ready! ${queryData.length} rows available for display.`);
 
-      // Step 4: Data Analysis & Visualization (OPTIONAL - failure won't affect table)
+      // Step 4a: Data Analysis
       updatePipelineStep('data_analysis');
+      let analysisResult;
       try {
-        const analysisVizResult = await performDataAnalysisAndVisualization(
-          queryData, 
-          userMessage, 
-          dbSchemaForAgent
+        analysisResult = await performDataAnalysis(queryData, userMessage, { addMessage });
+        if (!analysisResult.success) {
+          completePipelineStep('data_analysis');
+          addMessage('assistant', '⚠️ Data analysis failed, but table is ready.');
+          return;
+        }
+      } catch (err) {
+        completePipelineStep('data_analysis');
+        addMessage('assistant', '⚠️ Data analysis failed, but table is ready.');
+        return;
+      }
+
+      // Step 4b: Visualization Generation
+      let vizResult;
+      try {
+        vizResult = await performVisualizationGeneration(
+          queryData,
+          userMessage,
+          analysisResult.data,
+          { addMessage, setCurrentVisualization }
         );
-        
-        if (analysisVizResult.success) {
+        if (vizResult.success && vizResult.data) {
+          setCurrentVisualization(vizResult.data);
           completePipelineStep('data_analysis');
           addMessage('assistant', '🎉 Complete! Both table and visualization are ready.');
         } else {
+          // Optionally create a fallback visualization here
+          setCurrentVisualization(null);
           completePipelineStep('data_analysis');
           addMessage('assistant', '⚠️ Table ready! Visualization had issues but your data is displayed in the table above.');
         }
       } catch (vizError) {
-        console.warn('Visualization step failed, but data table is still available:', vizError);
+        // Optionally create a fallback visualization here
+        setCurrentVisualization(null);
         completePipelineStep('data_analysis');
         addMessage('assistant', '📊 Table ready! Visualization failed but your query results are displayed above.');
       }
@@ -545,14 +502,36 @@ function App() {
         )}
   
         
-        {/* Show Visualization Section - Only when visualization exists */}
-        {currentVisualization && (
+        {/* Show Visualization Section - Always render for testing */}
+        <PlotlyChartContainer>
           <PlotlyVisualizationComp
-            plotSpec={currentVisualization}
-            title={currentVisualization?.layout?.title || 'Data Visualization'}
+            plotSpec={{
+              data: [
+                {
+                  type: 'bar',
+                  x: ['AUDI', 'BMW', 'MERCEDES-BENZ'],
+                  y: [120, 150, 100],
+                  marker: { color: '#3b82f6' }
+                }
+              ],
+              layout: {
+                title: 'Number of Vehicles Registered by Car Manufacturers',
+                xaxis: { title: 'manufacturer' },
+                yaxis: { title: 'count' },
+                barmode: 'group',
+                showlegend: false,
+                plot_bgcolor: 'white',
+                paper_bgcolor: 'white',
+                font: { color: '#2E2E2E', family: 'Arial, sans-serif' },
+                responsive: true
+              }
+            }}
+            title={'Dummy Visualization'}
             isLoading={false}
+            useResizeHandler={true}
+            style={{ width: '100%', height: '100%' }}
           />
-        )}
+        </PlotlyChartContainer>
         
 
         {/* Follow-up Questions - Show when available */}

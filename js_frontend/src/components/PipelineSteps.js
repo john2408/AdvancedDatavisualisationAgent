@@ -26,16 +26,16 @@ const StepItem = styled.div`
   transition: all 0.3s ease;
   
   ${props => {
-    if (props.status === 'completed') return `
+    if (props.$status === 'completed') return `
       background-color: #ecfdf5;
       border: 1px solid #10b981;
     `;
-    if (props.status === 'active') return `
+    if (props.$status === 'active') return `
       background-color: #eff6ff;
       border: 1px solid #3b82f6;
       transform: scale(1.02);
     `;
-    if (props.status === 'pending') return `
+    if (props.$status === 'pending') return `
       background-color: #f9fafb;
       border: 1px solid #d1d5db;
     `;
@@ -56,11 +56,11 @@ const StepIcon = styled.div`
   font-size: 1.2rem;
   
   ${props => {
-    if (props.status === 'completed') return `
+    if (props.$status === 'completed') return `
       background-color: #10b981;
       color: white;
     `;
-    if (props.status === 'active') return `
+    if (props.$status === 'active') return `
       background-color: #3b82f6;
       color: white;
     `;
@@ -92,10 +92,10 @@ const StepStatus = styled.div`
   font-weight: 500;
   
   ${props => {
-    if (props.status === 'completed') return `
+    if (props.$status === 'completed') return `
       color: #10b981;
     `;
-    if (props.status === 'active') return `
+    if (props.$status === 'active') return `
       color: #3b82f6;
     `;
     return `
@@ -183,15 +183,15 @@ const PipelineSteps = ({ currentStep, completedSteps, confidence, actionType }) 
         {steps.map((step) => {
           const status = getStepStatus(step.id);
           return (
-            <StepItem key={step.id} status={status}>
-              <StepIcon status={status}>
+            <StepItem key={step.id} $status={status}>
+              <StepIcon $status={status}>
                 {status === 'completed' ? <FiCheckCircle /> : step.icon}
               </StepIcon>
               <StepContent>
                 <h4>{step.title}</h4>
                 <p>{step.description}</p>
               </StepContent>
-              <StepStatus status={status}>
+              <StepStatus $status={status}>
                 {status === 'completed' && '✅ Complete'}
                 {status === 'active' && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -119,3 +119,16 @@ export const FollowUpContainer = styled.div`
     }
   }
 `;
+
+// Responsive container for Plotly chart
+export const PlotlyChartContainer = styled.div`
+  width: 100%;
+  min-width: 600px;
+  max-width: 1000px;
+  min-height: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
