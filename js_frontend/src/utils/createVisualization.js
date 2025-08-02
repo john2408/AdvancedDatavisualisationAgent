@@ -53,15 +53,23 @@ export const createDataVisualization = async (data, userMessage, analysisData, c
     }
     
     // Ensure the plot has proper structure for PlotlyVisualization component
+    // Backend returns: {type: "bar", data: {x: [...], y: [...]}, layout: {...}}
+    // Plotly expects: {data: [{x: [...], y: [...], type: "bar"}], layout: {...}}
     const processedViz = {
-      data: Array.isArray(plotSpec.data) ? plotSpec.data : [plotSpec.data],
+      data: [{
+        x: plotSpec.data?.x || [],
+        y: plotSpec.data?.y || [],
+        type: plotSpec.type || vizResult.data.plot_type || 'bar',
+        ...(plotSpec.data?.name && { name: plotSpec.data.name }),
+        ...(plotSpec.data?.marker && { marker: plotSpec.data.marker })
+      }],
       layout: plotSpec.layout || {
         title: vizResult.data.title || 'Data Visualization',
         plot_bgcolor: 'white',
         paper_bgcolor: 'white',
         font: { color: 'black' }
       },
-      type: vizResult.data.plot_type || 'bar'
+      config: plotSpec.config || { responsive: true }
     };
     
     setCurrentVisualization(processedViz);

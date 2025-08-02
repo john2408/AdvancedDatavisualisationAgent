@@ -101,6 +101,14 @@ export const agentAPI = {
 
   // Visualization Creation Agent - NOW REAL ENDPOINT
   createVisualization: async (data, user_query, recommended_viz, analysis, key_findings) => {
+    console.log('🐛 API createVisualization called with:', {
+      data: typeof data === 'string' ? data.substring(0, 200) + '...' : data,
+      user_query,
+      recommended_viz,
+      analysis: typeof analysis === 'string' ? analysis.substring(0, 100) + '...' : analysis,
+      key_findings: typeof key_findings === 'string' ? key_findings.substring(0, 100) + '...' : key_findings
+    });
+    
     const response = await api.post('/agents/data-visualization', {
       data: data,
       user_query: user_query,

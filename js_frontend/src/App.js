@@ -10,6 +10,7 @@ import { generateAndReviewSQL } from './utils/sqlRetrieval';
 import { executeSQLQuery } from './utils/executeSQL';
 import { analyzeQueryData } from './utils/dataAnalysis';
 import { createDataVisualization, createAlternativeVisualization } from './utils/createVisualization';
+import { DataTable, renderDataTable } from './utils/renderDataTable';
 import {
   ResponsiveContainer,
   ResponsiveSidebar,
@@ -355,7 +356,7 @@ function App() {
         updatePipelineStep,
         completePipelineStep,
         addMessage,
-        setCurrentData
+        setCurrentData  // This ensures executeSQL can set currentData directly
       };
 
       // Steps 1 & 2: Generate and Review SQL
@@ -372,19 +373,31 @@ function App() {
         throw new Error(`SQL execution failed: ${executionResult.error}`);
       }
 
-      // Step 4: Data Analysis & Visualization
+      // currentData is already set by executeSQLQuery callback
+      // Confirm data is available for table rendering
+      const queryData = executionResult.data.queryData;
+      addMessage('assistant', `📊 Table data is ready! ${queryData.length} rows available for display.`);
+
+      // Step 4: Data Analysis & Visualization (OPTIONAL - failure won't affect table)
       updatePipelineStep('data_analysis');
-      const analysisVizResult = await performDataAnalysisAndVisualization(
-        executionResult.data.queryData, 
-        userMessage, 
-        dbSchemaForAgent
-      );
-      
-      if (analysisVizResult.success) {
+      try {
+        const analysisVizResult = await performDataAnalysisAndVisualization(
+          queryData, 
+          userMessage, 
+          dbSchemaForAgent
+        );
+        
+        if (analysisVizResult.success) {
+          completePipelineStep('data_analysis');
+          addMessage('assistant', '🎉 Complete! Both table and visualization are ready.');
+        } else {
+          completePipelineStep('data_analysis');
+          addMessage('assistant', '⚠️ Table ready! Visualization had issues but your data is displayed in the table above.');
+        }
+      } catch (vizError) {
+        console.warn('Visualization step failed, but data table is still available:', vizError);
         completePipelineStep('data_analysis');
-        addMessage('assistant', '🎉 Pipeline completed successfully!');
-      } else {
-        addMessage('assistant', '⚠️ Pipeline completed with visualization fallback.');
+        addMessage('assistant', '📊 Table ready! Visualization failed but your query results are displayed above.');
       }
 
     } catch (error) {
@@ -491,38 +504,6 @@ function App() {
 
   const handleFollowUpClick = (question) => {
     setInputValue(question);
-  };
-
-  const renderDataTable = () => {
-    if (!currentData || currentData.length === 0) return null;
-
-    return (
-      <ResponsiveTableContainer>
-        <table>
-          <thead>
-            <tr>
-              {Object.keys(currentData[0] || {}).map(key => (
-                <th key={key}>{key.replace(/_/g, ' ').toUpperCase()}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.map((row, index) => (
-              <tr key={index}>
-                {Object.values(row).map((value, i) => (
-                  <td key={i}>
-                    {typeof value === 'number' ? 
-                      (value % 1 === 0 ? value.toLocaleString() : value.toFixed(2)) : 
-                      value
-                    }
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </ResponsiveTableContainer>
-    );
   };
 
   const renderMetrics = () => {
@@ -632,39 +613,93 @@ function App() {
           />
         )}
         
-        {currentVisualization ? (
+        {/* Show Data Results Section - Independent of Visualization */}
+        {currentData && currentData.length > 0 && (
           <>
-            {/* Metrics Overview */}
-            {renderMetrics()}
+            {/* Debug info */}
+            <div style={{ background: '#f0f9ff', padding: '1rem', margin: '1rem 0', border: '1px solid #0ea5e9' }}>
+              <strong>🐛 DEBUG INFO:</strong>
+              <p>currentData exists: {currentData ? 'YES' : 'NO'}</p>
+              <p>currentData length: {currentData ? currentData.length : 'N/A'}</p>
+              <p>First row keys: {currentData && currentData[0] ? Object.keys(currentData[0]).join(', ') : 'N/A'}</p>
+              <p>renderDataTable function exists: {typeof renderDataTable === 'function' ? 'YES' : 'NO'}</p>
+            </div>
             
-            {/* Data Table */}
-            {renderDataTable()}
+                {/* Metrics Overview */}
+                  {renderMetrics()}
+                  
+                  {/* Test simple table rendering first */}
+                  {/* <div style={{ background: '#fef2f2', padding: '1rem', margin: '1rem 0', border: '1px solid #fecaca' }}>
+                    <h3>🧪 Simple Table Test</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f8fafc' }}>
+                      {currentData && currentData[0] && Object.keys(currentData[0]).map(key => (
+                        <th key={key} style={{ padding: '0.5rem', border: '1px solid #e2e8f0' }}>{key}</th>
+                      ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentData && currentData.slice(0, 3).map((row, index) => (
+                      <tr key={index}>
+                        {Object.values(row).map((value, i) => (
+                        <td key={i} style={{ padding: '0.5rem', border: '1px solid #e2e8f0' }}>{value}</td>
+                        ))}
+                      </tr>
+                      ))}
+                    </tbody>
+                    </table>
+                  </div> */}
+                  
+                  {/* Data Table - Always show when we have data */}
+            <div style={{ background: '#f0fdf4', padding: '1rem', margin: '1rem 0', border: '1px solid #bbf7d0' }}>
+              <h3>📊 DataTable Component Result:</h3>
+              <DataTable 
+                data={currentData} 
+                options={{ 
+                  title: '📊 Query Results (Component)',
+                  maxRows: 100,
+                  showRowNumbers: false
+                }}
+              />
+            </div>
             
+          </>
+        )}
+  
+        
+        {/* Show Visualization Section - Only when visualization exists */}
+        {currentVisualization && (
+          <>
             {/* Main Visualization */}
             <PlotlyVisualization
               plotSpec={currentVisualization}
               title={currentVisualization?.layout?.title || 'Data Visualization'}
               isLoading={currentStep === 'data_analysis'}
             />
-            
-            {/* Follow-up Questions */}
-            {followUpQuestions.length > 0 && (
-              <FollowUpContainer>
-                <h3>💡 Suggested follow-up questions:</h3>
-                <ResponsiveFollowUpGrid>
-                  {followUpQuestions.map((question, index) => (
-                    <ResponsiveFollowUpButton
-                      key={index}
-                      onClick={() => handleFollowUpClick(question)}
-                    >
-                      {question}
-                    </ResponsiveFollowUpButton>
-                  ))}
-                </ResponsiveFollowUpGrid>
-              </FollowUpContainer>
-            )}
           </>
-        ) : (
+        )}
+        
+
+        {/* Follow-up Questions - Show when available */}
+        {followUpQuestions.length > 0 && (
+          <FollowUpContainer>
+            <h3>💡 Suggested follow-up questions:</h3>
+            <ResponsiveFollowUpGrid>
+              {followUpQuestions.map((question, index) => (
+                <ResponsiveFollowUpButton
+                  key={index}
+                  onClick={() => handleFollowUpClick(question)}
+                >
+                  {question}
+                </ResponsiveFollowUpButton>
+              ))}
+            </ResponsiveFollowUpGrid>
+          </FollowUpContainer>
+        )}
+
+        {/* Welcome Screen - Only show when no data */}
+        {(!currentData || currentData.length === 0) && (
           <WelcomeContainer>
             <ResponsiveSubheading>📊 Ready to Visualize Your Data</ResponsiveSubheading>
             <ResponsiveText>
