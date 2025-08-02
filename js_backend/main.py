@@ -13,6 +13,11 @@ import yaml
 import os
 
 # Import CrewAI agents for real functionality
+import sys
+import os
+# Add the parent directory to Python path to import agents
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from agents.crew_agents import (
         sql_generator_crew, 
@@ -26,6 +31,9 @@ try:
     )
     CREW_AI_AVAILABLE = True
     print("✅ CrewAI agents loaded successfully")
+    print(f"  - sql_generator_crew: {sql_generator_crew}")
+    print(f"  - sql_reviewer_crew: {sql_reviewer_crew}")
+    print(f"  - data_analysis_crew: {data_analysis_crew}")
 except ImportError as e:
     print(f"⚠️ Warning: CrewAI agents not available: {e}")
     CREW_AI_AVAILABLE = False
@@ -94,8 +102,6 @@ async def get_database_schema():
         "db_schema_user": config.get("db_schema_user", "User schema not available"),
         "db_path": config.get("db_path", "data/registered_vehicles.sqlite")
     }
-
-@app.post("/agents/sql-generator")
 
 @app.post("/agents/sql-generator", response_model=APIResponse)
 async def generate_sql(request: SQLGeneratorRequest):
@@ -255,6 +261,16 @@ async def execute_sql_query(request: SQLExecutionRequest):
 class SQLReviewRequest(BaseModel):
     sql_query: str = Field(..., description="SQL query to review")
     db_schema: str = Field(..., description="Database schema for context")
+
+# Test endpoint to verify routing works
+@app.get("/test-sql-reviewer")
+async def test_sql_reviewer():
+    """Test endpoint to check if SQL reviewer is available"""
+    return {
+        "status": "endpoint_registered",
+        "crew_ai_available": CREW_AI_AVAILABLE,
+        "sql_reviewer_available": "sql_reviewer_crew" in globals()
+    }
 
 @app.post("/agents/sql-reviewer", response_model=APIResponse)
 async def review_sql_query(request: SQLReviewRequest):

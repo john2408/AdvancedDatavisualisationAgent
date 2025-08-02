@@ -6,6 +6,10 @@ import PipelineSteps from './components/PipelineSteps';
 import PlotlyVisualization from './components/PlotlyVisualization';
 import OrchestrationFlow from './components/OrchestrationFlow';
 import DatabaseSchemaViewer from './components/DatabaseSchemaViewer';
+import { generateAndReviewSQL } from './utils/sqlRetrieval';
+import { executeSQLQuery } from './utils/executeSQL';
+import { analyzeQueryData } from './utils/dataAnalysis';
+import { createDataVisualization, createAlternativeVisualization } from './utils/createVisualization';
 import {
   ResponsiveContainer,
   ResponsiveSidebar,
@@ -247,89 +251,90 @@ function App() {
   };
 
   const createFallbackVisualization = (data) => {
-    const keys = Object.keys(data[0] || {});
-    const numericKey = keys.find(key => typeof data[0][key] === 'number');
-    const categoryKey = keys.find(key => typeof data[0][key] === 'string');
-    
-    return {
-      type: 'bar',
-      data: {
-        x: data.map(d => d[categoryKey]),
-        y: data.map(d => d[numericKey])
-      },
-      layout: {
-        title: 'Data Overview',
-        xaxis: { title: categoryKey || 'Category' },
-        yaxis: { title: numericKey || 'Value' }
+    try {
+      if (!Array.isArray(data) || data.length === 0) {
+        return null;
       }
-    };
+
+      const keys = Object.keys(data[0] || {});
+      const numericKey = keys.find(key => typeof data[0][key] === 'number');
+      const categoryKey = keys.find(key => typeof data[0][key] === 'string');
+      
+      if (!numericKey && !categoryKey) {
+        return null;
+      }
+      
+      return {
+        type: 'bar',
+        data: [{
+          x: data.map(d => d[categoryKey] || `Row ${data.indexOf(d) + 1}`),
+          y: data.map(d => d[numericKey] || 0),
+          type: 'bar'
+        }],
+        layout: {
+          title: 'Data Overview (Fallback)',
+          xaxis: { title: categoryKey || 'Category' },
+          yaxis: { title: numericKey || 'Value' },
+          plot_bgcolor: 'white',
+          paper_bgcolor: 'white',
+          font: { color: 'black' }
+        }
+      };
+    } catch (error) {
+      console.error('Failed to create fallback visualization:', error);
+      return null;
+    }
   };
 
   const performDataAnalysisAndVisualization = async (data, userMessage, dbSchema) => {
     try {
+      // Create callbacks object for modular functions
+      const callbacks = {
+        addMessage,
+        setCurrentVisualization,
+        setFollowUpQuestions
+      };
+
       // Step 4a: Analyze data
-      addMessage('assistant', '📊 Analyzing data patterns...');
+      const analysisResult = await analyzeQueryData(data, userMessage, callbacks);
       
-      const analysisResult = await agentAPI.analyzeData(
-        Object.keys(data[0] || {}).join(', '),
-        `${data.length} rows × ${Object.keys(data[0] || {}).length} columns`,
-        JSON.stringify(Object.keys(data[0] || {}).reduce((acc, key) => ({ ...acc, [key]: 'string' }), {})),
-        JSON.stringify(data.slice(0, 3)),
-        userMessage
-      );
-
-      if (analysisResult.success) {
-        // Step 4b: Create visualization
-        addMessage('assistant', '🎨 Creating visualization...');
-        
-        const vizResult = await agentAPI.createVisualization(
-          JSON.stringify(data),
-          userMessage,
-          analysisResult.data.recommended_visualizations.join(', '),
-          analysisResult.data.analysis,
-          analysisResult.data.key_findings
-        );
-
-        if (vizResult.success) {
-          // Convert backend visualization format to Plotly format
-          const plotSpec = JSON.parse(vizResult.data.plot_spec);
-          
-          // Ensure the plot has proper structure for PlotlyVisualization component
-          const processedViz = {
-            data: Array.isArray(plotSpec.data) ? plotSpec.data : [plotSpec.data],
-            layout: plotSpec.layout || {
-              title: vizResult.data.title || 'Data Visualization',
-              plot_bgcolor: 'white',
-              paper_bgcolor: 'white',
-              font: { color: 'black' }
-            },
-            type: vizResult.data.plot_type || 'bar'
-          };
-          
-          setCurrentVisualization(processedViz);
-          addMessage('assistant', '✨ Visualization created successfully!');
-
-          // Generate follow-up questions
-          const followUpResult = await agentAPI.generateFollowUpQuestions(
-            analysisResult.data.analysis,
-            userMessage,
-            analysisResult.data.key_findings.join(', '),
-            dbSchema.agent
-          );
-
-          if (followUpResult.success) {
-            setFollowUpQuestions(followUpResult.data.questions);
-          }
-        }
+      if (!analysisResult.success) {
+        throw new Error(`Data analysis step failed: ${analysisResult.error}`);
       }
 
+      // Step 4b: Create visualization
+      const vizResult = await createDataVisualization(
+        data, 
+        userMessage, 
+        analysisResult.data, 
+        { ...callbacks, setFollowUpQuestions: (questions) => setFollowUpQuestions(questions) }
+      );
+
+      if (!vizResult.success && !vizResult.fallbackCreated) {
+        throw new Error(`Visualization creation failed: ${vizResult.error}`);
+      }
+
+      return {
+        success: true,
+        analysisResult,
+        vizResult
+      };
+
     } catch (error) {
-      console.error('Error in data analysis:', error);
-      addMessage('assistant', 'Created basic visualization due to analysis error.');
+      console.error('Error in data analysis and visualization:', error);
+      addMessage('assistant', `❌ ANALYSIS & VISUALIZATION ERROR: ${error.message}`);
       
-      // Fallback to simple visualization
+      // Create fallback visualization as last resort
       const fallbackViz = createFallbackVisualization(data);
-      setCurrentVisualization(fallbackViz);
+      if (fallbackViz) {
+        setCurrentVisualization(fallbackViz);
+        addMessage('assistant', '⚠️ Created basic fallback visualization.');
+      }
+      
+      return {
+        success: false,
+        error: error.message
+      };
     }
   };
 
@@ -345,102 +350,70 @@ function App() {
         - registrations.time_period_id -> time_periods.id
       `;
 
-      // Step 1: Generate SQL
-      updatePipelineStep('sql_generation');
-      addMessage('assistant', '🤖 Generating SQL query...');
-      
-      const sqlResult = await agentAPI.generateSQL(userMessage, dbSchemaForAgent);
+      // Create callbacks object for modular functions
+      const callbacks = {
+        updatePipelineStep,
+        completePipelineStep,
+        addMessage,
+        setCurrentData
+      };
+
+      // Steps 1 & 2: Generate and Review SQL
+      const sqlResult = await generateAndReviewSQL(userMessage, dbSchemaForAgent, callbacks);
       
       if (!sqlResult.success) {
-        throw new Error('SQL generation failed');
+        throw new Error(`SQL generation/review failed: ${sqlResult.error}`);
       }
 
-      const initialSQL = sqlResult.data.sqlquery;
-      completePipelineStep('sql_generation');
-      addMessage('assistant', `📝 Generated SQL Query`);
-      
-      // Step 2: Review SQL
-      updatePipelineStep('sql_review');
-      addMessage('assistant', '🔍 Reviewing SQL with GPT-4o verifier...');
-      
-      const reviewResult = await agentAPI.reviewSQL(initialSQL, dbSchemaForAgent);
-      
-      if (!reviewResult.success) {
-        throw new Error('SQL review failed');
-      }
-
-      const reviewedSQL = reviewResult.data.reviewed_sqlquery;
-      const wasChanged = initialSQL.trim() !== reviewedSQL.trim();
-      
-      completePipelineStep('sql_review');
-      
-      if (wasChanged) {
-        addMessage('assistant', '✅ SQL optimized and improved');
-      } else {
-        addMessage('assistant', '✅ SQL validated - no changes needed');
-      }
-
-      // Step 3: Execute Query
-      updatePipelineStep('query_execution');
-      addMessage('assistant', '🔄 Executing SQL query...');
-      
-      // Execute SQL query against the database
-      const executionResult = await agentAPI.executeSQL(reviewedSQL);
+      // Step 3: Execute SQL Query
+      const executionResult = await executeSQLQuery(sqlResult.data.reviewedSQL, callbacks);
       
       if (!executionResult.success) {
-        throw new Error('SQL execution failed');
+        throw new Error(`SQL execution failed: ${executionResult.error}`);
       }
-
-      const queryData = executionResult.data.results;
-      const metadata = executionResult.data.metadata;
-      
-      setCurrentData(queryData);
-      completePipelineStep('query_execution');
-      addMessage('assistant', `✅ Retrieved ${metadata.row_count} rows successfully`);
 
       // Step 4: Data Analysis & Visualization
       updatePipelineStep('data_analysis');
-      await performDataAnalysisAndVisualization(queryData, userMessage, dbSchemaForAgent);
+      const analysisVizResult = await performDataAnalysisAndVisualization(
+        executionResult.data.queryData, 
+        userMessage, 
+        dbSchemaForAgent
+      );
       
-      completePipelineStep('data_analysis');
+      if (analysisVizResult.success) {
+        completePipelineStep('data_analysis');
+        addMessage('assistant', '🎉 Pipeline completed successfully!');
+      } else {
+        addMessage('assistant', '⚠️ Pipeline completed with visualization fallback.');
+      }
 
     } catch (error) {
       console.error('Error in new query pipeline:', error);
-      addMessage('assistant', 'Sorry, I encountered an error processing your query.');
+      addMessage('assistant', `❌ PIPELINE ERROR: ${error.message}\n\nPlease check the console for detailed error information.`);
       resetPipelineState();
     }
   };
 
   const handleFollowUpQuestion = async (userMessage) => {
     try {
+      const callbacks = {
+        addMessage,
+        setCurrentVisualization
+      };
+
       if (userMessage.toLowerCase().includes('convert') || 
           userMessage.toLowerCase().includes('change to') ||
           userMessage.toLowerCase().includes('show as')) {
-        // Handle visualization conversion
-        addMessage('assistant', '🎨 Creating alternative visualization...');
-        const altVizResult = await agentAPI.createAlternativeVisualization(
+        // Handle visualization conversion using modular function
+        const altVizResult = await createAlternativeVisualization(
           userMessage,
-          JSON.stringify(currentData),
-          currentVisualization?.type || 'bar'
+          currentData,
+          currentVisualization?.type || 'bar',
+          callbacks
         );
 
-        if (altVizResult.success) {
-          // Convert backend visualization format to Plotly format
-          const plotSpec = JSON.parse(altVizResult.data.plot_spec);
-          
-          const processedViz = {
-            data: Array.isArray(plotSpec.data) ? plotSpec.data : [plotSpec.data],
-            layout: plotSpec.layout || {
-              title: altVizResult.data.title || 'Alternative Visualization',
-              plot_bgcolor: 'white',
-              paper_bgcolor: 'white',
-              font: { color: 'black' }
-            },
-            type: altVizResult.data.plot_type || 'bar'
-          };
-          
-          setCurrentVisualization(processedViz);
-          addMessage('assistant', '✨ Alternative visualization created!');
+        if (!altVizResult.success) {
+          throw new Error(`Alternative visualization failed: ${altVizResult.error}`);
         }
       } else {
         // Handle data question
@@ -452,13 +425,15 @@ function App() {
           JSON.stringify({ type: currentVisualization?.type || 'unknown' })
         );
 
-        if (answerResult.success) {
-          addMessage('assistant', answerResult.data.answer);
+        if (!answerResult.success) {
+          throw new Error(`Data question analysis failed: ${answerResult.error || 'Unknown error'}`);
         }
+
+        addMessage('assistant', answerResult.data.answer);
       }
     } catch (error) {
       console.error('Error in follow-up flow:', error);
-      addMessage('assistant', 'Sorry, I encountered an error with your follow-up question.');
+      addMessage('assistant', `❌ FOLLOW-UP ERROR: ${error.message}\n\nPlease check the console for detailed error information.`);
     }
   };
 

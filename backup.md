@@ -1,0 +1,146 @@
+// API service for communicating with FastAPI backend
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8000';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('API Error:', error.response.data);
+      throw new Error(error.response.data.detail || 'An error occurred');
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Network Error:', error.request);
+      throw new Error('Network error - please check if the backend is running');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Request Error:', error.message);
+      throw new Error(error.message);
+    }
+  }
+);
+
+// Agent API calls
+export const agentAPI = {
+  // Health Check
+  healthCheck: async () => {
+    const response = await api.get('/health');
+    return response.data;
+  },
+
+  // Get list of available agents
+  getAgentList: async () => {
+    const response = await api.get('/agents/list');
+    return response.data;
+  },
+
+  // Get Database Schema
+  getDatabaseSchema: async () => {
+    const response = await api.get('/config/schema');
+    return response.data;
+  },
+
+  // SQL Generator Agent
+  generateSQL: async (userInput, dbSchema) => {
+    const response = await api.post('/agents/sql-generator', {
+      user_input: userInput,
+      db_schema: dbSchema
+    });
+    return response.data;
+  },
+
+  // Orchestration Agent
+  orchestrateIntent: async (userQuery, previousContext, currentDataContext) => {
+    const response = await api.post('/agents/orchestration', {
+      user_input: userQuery,
+      previous_context: previousContext || '',
+      current_data_context: currentDataContext || '{}'
+    });
+    return response.data;
+  },
+
+  // SQL Review Agent - NOW REAL ENDPOINT
+  reviewSQL: async (initialSQL, dbSchema) => {
+    const response = await api.post('/agents/sql-reviewer', {
+      sql_query: initialSQL,
+      db_schema: dbSchema
+    });
+    return response.data;
+  },
+
+  // Execute SQL Query - NEW REAL ENDPOINT
+  executeSQL: async (sqlQuery) => {
+    const response = await api.post('/agents/execute-sql', {
+      sql_query: sqlQuery
+    });
+    return response.data;
+  },
+
+  // Data Analysis Agent - NOW REAL ENDPOINT
+  analyzeData: async (columns, shape, dtypes, sample_data, user_query) => {
+    const response = await api.post('/agents/data-analysis', {
+      columns: columns,
+      shape: shape,
+      dtypes: dtypes,
+      sample_data: sample_data,
+      user_query: user_query
+    });
+    return response.data;
+  },
+
+  // Visualization Creation Agent - NOW REAL ENDPOINT
+  createVisualization: async (data, user_query, recommended_viz, analysis, key_findings) => {
+    const response = await api.post('/agents/data-visualization', {
+      data: data,
+      user_query: user_query,
+      recommended_viz: recommended_viz,
+      analysis: analysis,
+      key_findings: key_findings
+    });
+    return response.data;
+  },
+
+  // Follow-up Questions Generation - NOW REAL ENDPOINT
+  generateFollowUpQuestions: async (analysis, original_query, key_findings, db_schema) => {
+    const response = await api.post('/agents/follow-up-questions', {
+      analysis: analysis,
+      original_query: original_query,
+      key_findings: key_findings,
+      db_schema: db_schema
+    });
+    return response.data;
+  },
+
+  // Alternative Visualization Creation - NOW REAL ENDPOINT
+  createAlternativeVisualization: async (user_request, current_data, current_chart_type) => {
+    const response = await api.post('/agents/alternative-visualization', {
+      user_request: user_request,
+      current_data: current_data,
+      current_chart_type: current_chart_type
+    });
+    return response.data;
+  },
+
+  // Data Question Answering - NOW REAL ENDPOINT
+  answerDataQuestion: async (question, current_data, data_summary, current_visualization) => {
+    const response = await api.post('/agents/data-question', {
+      user_question: question,
+      current_data: current_data,
+      data_summary: data_summary,
+      chart_info: current_visualization
+    });
+    return response.data;
+  },
+
+};
