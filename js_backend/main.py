@@ -13,22 +13,32 @@ import yaml
 import os
 
 # Import CrewAI agents for real functionality
-import sys
-import os
-# Add the parent directory to Python path to import agents
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-from agents.crew_agents import (
-    sql_generator_crew, 
-    sql_reviewer_crew, 
-    data_analysis_crew,
-    data_visualization_crew,
-    orchestration_crew,
-    data_question_crew,
-    alternative_viz_crew,
-    follow_up_crew
-)
+try:
+    from agents.crew_agents import (
+        sql_generator_crew, 
+        sql_reviewer_crew, 
+        data_analysis_crew,
+        data_visualization_crew,
+        orchestration_crew,
+        data_question_crew,
+        alternative_viz_crew,
+        follow_up_crew
+    )
+    CREW_AI_AVAILABLE = True
+    print("✅ CrewAI agents loaded successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: CrewAI agents not available: {e}")
+    CREW_AI_AVAILABLE = False
+    # Create mock crews for testing
+    from unittest.mock import MagicMock
+    sql_generator_crew = MagicMock()
+    sql_reviewer_crew = MagicMock()
+    data_analysis_crew = MagicMock()
+    data_visualization_crew = MagicMock()
+    orchestration_crew = MagicMock()
+    data_question_crew = MagicMock()
+    alternative_viz_crew = MagicMock()
+    follow_up_crew = MagicMock()
 
 
 app = FastAPI(
@@ -100,6 +110,12 @@ async def get_database_schema():
 async def generate_sql(request: SQLGeneratorRequest):
     """Generate SQL query from natural language input using CrewAI agents"""
     try:
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
+            
         # Load config to get DB schema
         config = load_config()
         db_schema = config.get('db_schema_agent', '')
@@ -140,7 +156,12 @@ async def generate_sql(request: SQLGeneratorRequest):
 async def orchestrate_intent(request: dict):
     """Determine user intent using CrewAI orchestration agent"""
     try:
-        
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
+            
         # Extract user input from request
         user_input = request.get('user_input', '')
         conversation_history = request.get('previous_context', '')
@@ -248,8 +269,12 @@ class SQLReviewRequest(BaseModel):
 async def review_sql_query(request: SQLReviewRequest):
     """Review and optimize SQL query using GPT-4o reviewer agent"""
     try:
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
 
-        
         result = sql_reviewer_crew.kickoff(inputs={
             "sql_query": request.sql_query,
             "db_schema": request.db_schema
@@ -287,13 +312,18 @@ class DataAnalysisRequest(BaseModel):
 async def analyze_data(request: DataAnalysisRequest):
     """Analyze data patterns and recommend visualizations"""
     try:
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
 
         result = data_analysis_crew.kickoff(inputs={
             "columns": request.columns,
             "shape": request.shape,
             "dtypes": request.dtypes,
             "sample_data": request.sample_data,
-            "user_query": request.user_query
+            "user_question": request.user_query
         })
         
         if not result or not hasattr(result, 'pydantic'):
@@ -330,12 +360,16 @@ class VisualizationRequest(BaseModel):
 async def create_visualization(request: VisualizationRequest):
     """Create visualization using data visualization agent"""
     try:
-
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
         
         result = data_visualization_crew.kickoff(inputs={
-            "data": request.data,
-            "user_query": request.user_query,
-            "recommended_viz": request.recommended_viz,
+            "dataframe_json": request.data,
+            "user_question": request.user_query,
+            "recommended_visualizations": request.recommended_viz,
             "analysis": request.analysis,
             "key_findings": request.key_findings
         })
@@ -421,6 +455,11 @@ class AlternativeVisualizationRequest(BaseModel):
 async def create_alternative_visualization(request: AlternativeVisualizationRequest):
     """Create alternative visualization using alternative viz agent"""
     try:
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
 
         result = alternative_viz_crew.kickoff(inputs={
             "user_request": request.user_request,
@@ -464,11 +503,16 @@ class FollowUpRequest(BaseModel):
 async def generate_follow_up_questions(request: FollowUpRequest):
     """Generate follow-up questions using follow-up agent"""
     try:
+        if not CREW_AI_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="CrewAI agents are not available"
+            )
 
         result = follow_up_crew.kickoff(inputs={
-            "analysis": request.analysis,
+            "data_analysis": request.analysis,
             "original_query": request.original_query,
-            "key_findings": request.key_findings,
+            "data_insights": request.key_findings,
             "db_schema": request.db_schema
         })
         
@@ -496,7 +540,8 @@ async def generate_follow_up_questions(request: FollowUpRequest):
 @app.get("/agents/list")
 async def list_available_agents():
     """List all available AI agents and their endpoints"""
-
+    agent_status = "active" if CREW_AI_AVAILABLE else "mock"
+    mode = "crewai" if CREW_AI_AVAILABLE else "mock"
     
     return {
         "agents": [
@@ -504,59 +549,59 @@ async def list_available_agents():
                 "name": "SQL Generator",
                 "endpoint": "/agents/sql-generator",
                 "description": "Converts natural language to SQL queries",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "SQL Reviewer",
                 "endpoint": "/agents/sql-reviewer",
                 "description": "Reviews and optimizes SQL queries",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "SQL Executor",
                 "endpoint": "/agents/execute-sql",
                 "description": "Executes SQL queries against the database",
-                "status": "active"
+                "status": "active"  # This doesn't depend on CrewAI
             },
             {
                 "name": "Data Analysis Agent",
                 "endpoint": "/agents/data-analysis",
                 "description": "Analyzes data patterns and recommends visualizations",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "Data Visualization Agent",
                 "endpoint": "/agents/data-visualization",
                 "description": "Creates visualizations from data",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "Data Question Agent",
                 "endpoint": "/agents/data-question",
                 "description": "Answers questions about current data",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "Alternative Visualization Agent",
                 "endpoint": "/agents/alternative-visualization",
                 "description": "Creates alternative visualizations",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "Follow-up Questions Agent",
                 "endpoint": "/agents/follow-up-questions",
                 "description": "Generates relevant follow-up questions",
-                "status": "active"
+                "status": agent_status
             },
             {
                 "name": "Orchestration Agent", 
                 "endpoint": "/agents/orchestration",
                 "description": "Determines user intent and routes requests",
-                "status": "active"
+                "status": agent_status
             }
         ],
-        "mode": "crewai",
-        "message": "Running with CrewAI agents"
+        "mode": mode,
+        "message": f"Running with {'CrewAI agents' if CREW_AI_AVAILABLE else 'mock agents (CrewAI not available)'}"
     }
 
 if __name__ == "__main__":
