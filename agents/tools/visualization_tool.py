@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import json
 import os
+import asyncio
 from typing import Type, Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
@@ -41,7 +42,7 @@ class DataFrameVisualizationTool(BaseTool):
     """
     args_schema: Type[BaseModel] = VisualizationInput
 
-    def _run(self, dataframe_json: str, plot_type: str, x_column: str = "", y_column: str = "", 
+    async def _run(self, dataframe_json: str, plot_type: str, x_column: str = "", y_column: str = "", 
              color_column: str = "", title: str = "", aggregation: str = "sum", 
              transformation: str = "", current_chart_type: str = "", target_plot_type: str = "") -> str:
         """
@@ -74,12 +75,12 @@ class DataFrameVisualizationTool(BaseTool):
             effective_target_type = target_plot_type if target_plot_type else plot_type
             
             # Apply intelligent transformations based on chart type conversion
-            df_transformed = self._apply_intelligent_transformations(
+            df_transformed = await self._apply_intelligent_transformations(
                 df, effective_target_type, current_chart_type, x_column, y_column, color_column, transformation
             )
             
             # Generate plot specification based on target plot type
-            plot_spec = self._generate_plot_spec(df_transformed, effective_target_type, x_column, y_column, 
+            plot_spec = await self._generate_plot_spec(df_transformed, effective_target_type, x_column, y_column, 
                                                 color_column, title, aggregation)
             
             return json.dumps(plot_spec, indent=2)
@@ -87,7 +88,7 @@ class DataFrameVisualizationTool(BaseTool):
         except Exception as e:
             return json.dumps({"error": f"Error creating visualization: {str(e)}"})
 
-    def _apply_intelligent_transformations(self, df: pd.DataFrame, target_plot_type: str, 
+    async def   _apply_intelligent_transformations(self, df: pd.DataFrame, target_plot_type: str, 
                                          current_plot_type: str, x_column: str, y_column: str, 
                                          color_column: str, transformation: str) -> pd.DataFrame:
         """Apply intelligent data transformations based on chart type conversion."""
@@ -237,7 +238,7 @@ class DataFrameVisualizationTool(BaseTool):
             # If transformation fails, return original data
             return df
 
-    def _generate_plot_spec(self, df: pd.DataFrame, plot_type: str, x_column: str, 
+    async def _generate_plot_spec(self, df: pd.DataFrame, plot_type: str, x_column: str, 
                            y_column: str, color_column: str, title: str, aggregation: str) -> Dict[str, Any]:
         """Generate plot specification dictionary."""
         
@@ -252,27 +253,27 @@ class DataFrameVisualizationTool(BaseTool):
             y_column = numeric_columns[0]
         
         # Prepare data based on plot type
-        plot_data = self._prepare_plot_data(df, plot_type, x_column, y_column, color_column, aggregation)
+        plot_data = await self._prepare_plot_data(df, plot_type, x_column, y_column, color_column, aggregation)
         
         # Generate plot specification
         if plot_type == "bar":
-            return self._create_bar_spec(plot_data, x_column, y_column, color_column, title)
+            return await self._create_bar_spec(plot_data, x_column, y_column, color_column, title)
         elif plot_type == "line":
-            return self._create_line_spec(plot_data, x_column, y_column, color_column, title)
+            return await self._create_line_spec(plot_data, x_column, y_column, color_column, title)
         elif plot_type == "scatter":
-            return self._create_scatter_spec(plot_data, x_column, y_column, color_column, title)
+            return await self._create_scatter_spec(plot_data, x_column, y_column, color_column, title)
         elif plot_type == "pie":
-            return self._create_pie_spec(plot_data, x_column, y_column, title)
+            return await self._create_pie_spec(plot_data, x_column, y_column, title)
         elif plot_type == "histogram":
-            return self._create_histogram_spec(plot_data, x_column, title)
+            return await self._create_histogram_spec(plot_data, x_column, title)
         elif plot_type == "boxplot":
-            return self._create_boxplot_spec(plot_data, x_column, y_column, title)
+            return await self._create_boxplot_spec(plot_data, x_column, y_column, title)
         elif plot_type == "heatmap":
-            return self._create_heatmap_spec(plot_data, title)
+            return await self._create_heatmap_spec(plot_data, title)
         else:
             return {"error": f"Unknown plot type: {plot_type}"}
 
-    def _prepare_plot_data(self, df: pd.DataFrame, plot_type: str, x_column: str, 
+    async def _prepare_plot_data(self, df: pd.DataFrame, plot_type: str, x_column: str, 
                           y_column: str, color_column: str, aggregation: str) -> Dict[str, Any]:
         """Prepare data for plotting based on plot type and aggregation."""
         
@@ -338,7 +339,7 @@ class DataFrameVisualizationTool(BaseTool):
                 result["color"] = df[color_column].tolist()
             return result
 
-    def _create_bar_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+    async def _create_bar_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
         """Create bar chart specification."""
         
         # Check if this is normalized data (values likely sum to 100 per group)
@@ -392,7 +393,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_line_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+    async def _create_line_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
         """Create line chart specification."""
         return {
             "type": "line",
@@ -411,7 +412,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_scatter_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
+    async def _create_scatter_spec(self, data: Dict, x_column: str, y_column: str, color_column: str, title: str) -> Dict[str, Any]:
         """Create scatter plot specification."""
         return {
             "type": "scatter",
@@ -430,7 +431,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_pie_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
+    async def _create_pie_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
         """Create pie chart specification."""
         # Check if we have percentage data from transformations
         percentage_col = f'{y_column}_percentage'
@@ -468,7 +469,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_histogram_spec(self, data: Dict, x_column: str, title: str) -> Dict[str, Any]:
+    async def _create_histogram_spec(self, data: Dict, x_column: str, title: str) -> Dict[str, Any]:
         """Create histogram specification."""
         return {
             "type": "histogram",
@@ -486,7 +487,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_boxplot_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
+    async def _create_boxplot_spec(self, data: Dict, x_column: str, y_column: str, title: str) -> Dict[str, Any]:
         """Create boxplot specification."""
         return {
             "type": "box",
@@ -504,7 +505,7 @@ class DataFrameVisualizationTool(BaseTool):
             "config": {"responsive": True}
         }
 
-    def _create_heatmap_spec(self, data: Dict, title: str) -> Dict[str, Any]:
+    async def _create_heatmap_spec(self, data: Dict, title: str) -> Dict[str, Any]:
         """Create heatmap specification."""
         return {
             "type": "heatmap",
@@ -518,3 +519,4 @@ class DataFrameVisualizationTool(BaseTool):
             },
             "config": {"responsive": True}
         }
+
