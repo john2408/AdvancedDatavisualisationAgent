@@ -2,8 +2,10 @@ from crewai import Agent, Task, Crew
 from pydantic import BaseModel, Field
 from typing import List
 from agents.tools.visualization_tool import DataFrameVisualizationTool
+from agents.tools.improved_viz_tool import AdvVisualizationTool
 import yaml
 import os
+
 
 
 # Define file paths for YAML configurations relative to this file
@@ -62,6 +64,9 @@ class FollowUpQuestions(BaseModel):
     questions: List[str] = Field(..., description="List of relevant follow-up questions")
     categories: List[str] = Field(..., description="Categories of the follow-up questions (e.g., 'trends', 'comparisons')")
 
+class ChartTypeSelection(BaseModel):
+    chart_type: str = Field(..., description="The most appropriate chart type for the data")
+
 # Creating Agents
 query_generator_agent = Agent(
   config=agents_config['query_generator_agent']
@@ -81,11 +86,15 @@ data_analyst_agent = Agent(
 
 visualization_agent = Agent(
   config=agents_config['visualization_agent'],
-  tools=[DataFrameVisualizationTool()]
+  tools=[AdvVisualizationTool()]
 )
 
 orchestration_agent = Agent(
   config=agents_config['orchestration_agent']
+)
+
+chart_type_selection_agent = Agent(
+  config=agents_config['chart_type_selection_agent']
 )
 
 # Creating Tasks
@@ -144,6 +153,13 @@ follow_up_questions_task = Task(
   output_pydantic=FollowUpQuestions
 )
 
+chart_type_selection_task = Task(
+  config=tasks_config['chart_type_selection_agent_task'],
+  agent=chart_type_selection_agent,
+  output_pydantic=ChartTypeSelection
+)
+
+
 # Creating Crew objects for import
 sql_generator_crew = Crew(
     agents=[query_generator_agent],
@@ -198,3 +214,11 @@ follow_up_crew = Crew(
     tasks=[follow_up_questions_task],
     verbose=True
 )
+
+chart_type_crew = Crew(
+  agents=[chart_type_selection_agent],
+  tasks=[chart_type_selection_task],
+  verbose=True
+)
+
+
