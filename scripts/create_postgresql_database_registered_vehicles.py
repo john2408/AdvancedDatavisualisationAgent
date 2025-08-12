@@ -44,26 +44,25 @@ logger = logging.getLogger(__name__)
 # DATABASE CONFIGURATION
 # Update these values with your PostgreSQL connection details
 DATABASE_CONFIG = {
-    'host': 'localhost',           # For IBM Cloud: hostname from service credentials
-    'port': 5432,                  # For IBM Cloud: port from service credentials (usually 30XXX)
-    'database': 'registered_vehicles',  # For IBM Cloud: database name from service credentials
-    'user': 'postgres',            # For IBM Cloud: username from service credentials
-    'password': 'password',        # For IBM Cloud: password from service credentials
-    'sslmode': 'prefer',           # For IBM Cloud: use 'require' for secure connections
-    'connect_timeout': 30,         # Connection timeout in seconds
+    'host': '77ffc5dd-8640-4646-a7a6-beb1dea99edb.bn2a2uid0up8mv7mv2ig.private.databases.appdomain.cloud',
+    'port': 31173,
+    'database': 'ibmclouddb',
+    'user': 'ibm_cloud_a0f965b9_f907_4e43_b759_7f77e30a3428',
+    'password': 'n5YjEW7cXD0krCNYEJBukebpo5mdfD2A',
+    'sslmode': 'verify-full',
+    'sslcert': 'fa1498a3-0bba-11ea-9a2f-deb1275e52d0',
+    'connect_timeout': 30
 }
 
-# For IBM Cloud PostgreSQL with SSL:
+# Local development configuration (commented out)
 # DATABASE_CONFIG = {
-#     'host': 'your-instance.databases.appdomain.cloud',
-#     'port': 30XXX,  # Port from your service credentials
-#     'database': 'ibmclouddb',  # Usually 'ibmclouddb' for IBM Cloud
-#     'user': 'ibm_cloud_user',  # Username from service credentials
-#     'password': 'your_password',  # Password from service credentials
-#     'sslmode': 'require',
-#     'sslcert': 'path/to/cert.pem',  # Optional: SSL certificate path
-#     'sslkey': 'path/to/key.pem',   # Optional: SSL key path
-#     'sslrootcert': 'path/to/ca.pem',  # Optional: Root certificate path
+#     'host': 'localhost',
+#     'port': 5432,
+#     'database': 'market_share',
+#     'user': 'postgres',
+#     'password': 'password',
+#     'sslmode': 'prefer',
+#     'connect_timeout': 30,
 # }
 
 
