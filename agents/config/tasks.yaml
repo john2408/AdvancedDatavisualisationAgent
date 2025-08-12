@@ -33,8 +33,182 @@ compliance_task:
   expected_output: >
     A markdown-formatted compliance report listing any flagged issues, or stating that the query is compliant. Include a clear verdict at the top (e.g., "Compliant" or "Issues found").
 
+data_analysis_task:
+  description: |
+    Analyze the provided DataFrame and provide insights and visualization recommendations.
+    
+    DATAFRAME INFORMATION:
+    - Columns: {columns}
+    - Shape: {shape}
+    - Data types: {dtypes}
+    - Sample data: {sample_data}
+    
+    USER QUESTION: {user_question}
+    
+    Your analysis should include:
+    1. Key insights from the data that answer the user's question
+    2. Data patterns, trends, or anomalies you observe
+    3. Recommended visualization types that would best represent this data
+    4. Suggested columns for x-axis, y-axis, and color grouping
+    5. Any data transformations or aggregations that would be helpful
+    
+    Consider the following visualization types and when to use them:
+    - Bar charts: For categorical comparisons, rankings, and counts
+    - Line charts: For time series data and trends over time
+    - Scatter plots: For relationships between two continuous variables
+    - Pie charts: For showing parts of a whole (limited categories)
+    - Histograms: For distribution of continuous variables
+    - Box plots: For showing distribution and outliers
+    - Heatmaps: For correlation matrices or 2D data density
+  expected_output: A comprehensive data analysis with key insights and specific visualization recommendations including suggested chart types and column assignments.
+
+visualization_task:
+  description: |
+    Create the best visualization for the analyzed data based on the provided analysis recommendations.
+    
+    DATA ANALYSIS: {analysis}
+    RECOMMENDED VISUALIZATIONS: {recommended_visualizations}
+    KEY FINDINGS: {key_findings}
+    DATAFRAME JSON: {dataframe_json}
+    USER QUESTION: {user_question}
+    
+    Your task:
+    1. Review the data analysis and recommendations provided
+    2. Choose the most appropriate visualization type from: bar, line, scatter, pie, histogram, boxplot, heatmap
+    3. Select the best columns for x-axis, y-axis, and color grouping based on the analysis
+    4. Determine appropriate aggregation method if needed (sum, count, mean, max, min)
+    5. Create a clear and descriptive title that reflects the user's question
+    6. Use the DataFrame Visualization Tool to generate the plot specification
+    
+    Guidelines for plot type selection:
+    - Use BAR charts for: categorical comparisons, rankings, counts by category
+    - Use LINE charts for: time series, trends over sequential data
+    - Use SCATTER plots for: relationships between two continuous variables
+    - Use PIE charts for: proportions/percentages with few categories (<=6)
+    - Use HISTOGRAM for: distribution of single continuous variable
+    - Use BOXPLOT for: distribution analysis, outlier detection
+    - Use HEATMAP for: correlation analysis, 2D density data
+    
+    Column selection tips:
+    - X-axis: Categories, time periods, or continuous variables for scatter plots
+    - Y-axis: Metrics, counts, or continuous values to measure
+    - Color: Additional categorical grouping for deeper insights
+    
+    IMPORTANT: Use the DataFrame Visualization Tool with the dataframe_json to create the actual plot specification.
+  expected_output: A complete visualization specification including plot type, column selections, aggregation method, title, and the generated plot JSON specification.
+
 interpret_task:
   description: >
     Interpret the output of query {ReviewedSQLQuery}.
   expected_output: A stakeholder-friendly explanation of trends or findings.
+
+orchestration_task:
+  description: |
+    Analyze the user's query and conversation context to determine the appropriate action:
+    
+    USER QUERY: {user_query}
+    CONVERSATION HISTORY: {conversation_history}
+    CURRENT DATA CONTEXT: {current_data_context}
+    
+    Determine if this is:
+    1. NEW_QUERY: A completely new data request requiring SQL generation and analysis
+    2. FOLLOW_UP: A question about existing data that can be answered using current results
+    
+    For NEW_QUERY: Return "action_type": "new_query"
+    For FOLLOW_UP: Return "action_type": "follow_up"
+    
+    Consider these indicators:
+    - NEW_QUERY: Keywords like "show me", "what are", "compare", "analyze", requesting different data
+    - FOLLOW_UP: Keywords like "why", "explain", "what does this mean", "tell me more", referencing current chart/table
+  expected_output: A decision with action_type and reasoning for the classification.
+
+data_question_answering_task:
+  description: |
+    Answer questions about the current data visualization and table results.
+    
+    USER QUESTION: {user_question}
+    CURRENT DATA: {current_data}
+    DATA SUMMARY: {data_summary}
+    CHART INFORMATION: {chart_info}
+    
+    Provide a comprehensive answer that:
+    1. Directly addresses the user's question
+    2. References specific data points from the table/chart
+    3. Explains patterns, trends, or insights
+    4. Provides context and business implications
+    
+    Be specific and use actual data values when possible.
+  expected_output: A detailed, data-driven answer to the user's question about the current visualization and data.
+
+alternative_visualization_task:
+  description: |
+    Create an alternative visualization for the current data based on user request.
+    
+    USER REQUEST: {user_request}
+    CURRENT DATA: {current_data}
+    CURRENT CHART TYPE: {current_chart_type}
+    
+    Generate a different visualization that:
+    1. Uses the same data but with a different chart type
+    2. Highlights different aspects of the data
+    3. Provides alternative insights
+    4. AUTOMATICALLY HANDLES DATA TRANSFORMATIONS when switching chart types
+    
+    IMPORTANT TRANSFORMATION RULES:
+    - Bar chart → Pie chart: Convert absolute values to percentages, ensure single value per category
+    - Line chart → Bar chart: Aggregate time series data appropriately
+    - Scatter plot → Line chart: Sort data by x-axis for proper line connection
+    - Any chart → Pie chart: Calculate percentages of total, limit to top categories if many exist
+    - Stacked chart → Grouped chart: Restructure data grouping appropriately
+    
+    CRITICAL: When calling DataFrameVisualizationTool, you MUST analyze the user request and pass the transformation parameter:
+    
+    TRANSFORMATION DETECTION AND PARAMETER MAPPING:
+    1. "Convert to pie chart" → transformation="to_pie" AND target_plot_type="pie"
+    2. "Show as percentages" → transformation="normalize"
+    3. "Change to time series" → transformation="to_line" AND target_plot_type="line"
+    4. "Make it a comparison chart" → transformation="convert_chart_type"
+    5. "Simplify the chart" → transformation="simplify"
+    6. "Normalize the plot", "normalize the data", "normalized" → transformation="normalize"
+    7. "Show normalized stacked bars" → transformation="normalize"
+    8. "Convert to bar chart" → transformation="convert_chart_type" AND target_plot_type="bar"
+    9. "Change to scatter plot" → transformation="convert_chart_type" AND target_plot_type="scatter"
+    
+    CHART CONVERSION PARAMETER RULES:
+    - Use target_plot_type parameter ONLY when user explicitly requests converting from one chart type to another
+    - Examples requiring target_plot_type: "convert to", "change to", "make it a [chart type]", "transform to"
+    - For new visualizations (not conversions), use plot_type parameter only
+    - target_plot_type enables intelligent data transformations for seamless chart type conversions
+    
+    MANDATORY: Always pass the transformation parameter when calling the tool. Analyze user request for these keywords.
+    
+    Use the DataFrame Visualization Tool with appropriate data preprocessing and transformation parameter.
+  expected_output: A new visualization specification with different chart type, proper data transformations, and enhanced perspective on the same data.
+
+follow_up_questions_task:
+  description: |
+    Generate relevant follow-up questions based on the current data analysis and available database schema.
+    
+    CURRENT DATA ANALYSIS: {data_analysis}
+    USER'S ORIGINAL QUERY: {original_query}
+    DATA INSIGHTS: {data_insights}
+    DATABASE SCHEMA: {db_schema}
+    
+    Generate 3-4 interesting follow-up questions that:
+    1. Explore deeper insights from the current data
+    2. Suggest related analysis directions using available tables/columns from the schema
+    3. Are specific and actionable based on the database structure
+    4. Would provide additional business value
+    5. Reference actual table and column names from the schema when relevant
+    
+    Consider the available data sources in the schema to suggest:
+    - Cross-table analysis opportunities
+    - Time-based trends if date columns are available
+    - Categorical breakdowns using dimension tables
+    - Aggregation possibilities using fact tables
+    - Comparative analysis between different entities
+    
+    Format as a list of questions that could be turned into clickable buttons.
+    Make sure each question is feasible given the current database schema.
+  expected_output: A list of 3-4 relevant, specific follow-up questions that would provide deeper insights into the current data and leverage the available database schema.
     

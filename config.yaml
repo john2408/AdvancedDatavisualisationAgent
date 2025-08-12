@@ -1,0 +1,278 @@
+db_path: "data/registered_vehicles.sqlite"
+db_schema_agent: |
+  # 🚗 Vehicle Registration Database (Traditional Star Schema)
+  
+  ## 📊 Database Overview
+  This database contains **UK vehicle registration data for 2024** organized in a traditional star schema design. It tracks actual vehicle registration counts for different manufacturers (OEMs) across various dimensions including time, geography, and vehicle characteristics.
+  
+  **Key Metrics Available:**
+  - � Vehicle registration counts per OEM (monthly granularity)
+  - � Registration volumes by vehicle type and fuel
+  - 🌍 Geographic analysis (country and district level)
+  - 📅 Time-series registration trends
+  
+  **Traditional Star Schema Design:**
+  - ✅ **Normalized Fact Table**: Contains only foreign keys and measures
+  - ✅ **Rich Dimension Tables**: All descriptive attributes in separate dimensions
+  - ✅ **Join-Based Queries**: All analysis requires joins for descriptive data
+  
+  ---
+  
+  ## 🗃️ Traditional Star Schema Structure
+  
+  ### 📊 **FactRegisteredVehicles** - Core Fact Table (NORMALIZED)
+  **Primary Key**: vehicle_count_id (TEXT)
+  **Foreign Keys**: time_key, oem_key, vehicle_key, geography_country_key, geography_district_key
+  **Measure**: vehicle_count (INTEGER) - Number of vehicles registered
+  
+  **⚠️ IMPORTANT**: This fact table contains ONLY foreign keys and measures. All descriptive attributes (OEM names, vehicle types, geographic names, etc.) must be accessed through dimension table joins.
+  
+  ### 📅 **DimTime** - Time Dimension
+  **Primary Key**: time_key (INTEGER - Format: YYYYMM, e.g., 202401)
+  **Columns**: year_report, month_report, year_month, quarter, year_quarter
+  **Purpose**: Temporal analysis and trend tracking
+  **Sample**: 202401 → January 2024, Q1 2024
+  
+  ### 🏭 **DimOEM** - Vehicle Manufacturers
+  **Primary Key**: oem_key (INTEGER)
+  **Columns**: oem_name, oem_category, country_origin
+  **Purpose**: Manufacturer information with business categorization
+  **Categories**: Luxury (BMW, Mercedes), Premium (Volvo), Mass Market (Ford, Toyota)
+  **Sample**: BMW → Luxury, Germany; Tesla → Electric Specialist, USA
+  
+  ### 🚗 **DimVehicle** - Vehicle Types
+  **Primary Key**: vehicle_key (INTEGER)
+  **Columns**: body_type, fuel_type, vehicle_desc
+  **Purpose**: Vehicle characteristics and specifications
+  **Body Types**: SEDAN, SUV, ESTATE, COUPE, MPV, CABRIO, SPORTSCOUPE
+  **Fuel Types**: PETROL, DIESEL, ELECTRIC, HYBRID, PLUG-IN HYBRID
+  **Sample**: "SEDAN - PETROL", "SUV - ELECTRIC"
+  
+  ### 🌍 **DimGeographyCountry** - Countries
+  **Primary Key**: geography_country_key (INTEGER)
+  **Columns**: country_name, country_code
+  **Purpose**: Country-level geographic analysis
+  **Sample**: England (GBR), Scotland (GBR), Wales (GBR), Northern Ireland (GBR)
+  
+  ### 📍 **DimGeographyDistrict** - Detailed Locations
+  **Primary Key**: geography_district_key (INTEGER)
+  **Columns**: country_name, region_name, district_postcode, district_town_name, full_location_path
+  **Purpose**: Granular geographic analysis down to district/town level
+  **Sample**: "England/Greater London/SW1A/Westminster"
+  
+  ---
+  
+  ## � Query Patterns (JOIN-BASED ANALYSIS)
+  
+  **🔍 All queries require joins to access descriptive attributes:**
+  
+  1. **OEM Registration Volumes**: Total vehicles by manufacturer
+     ```sql
+     SELECT o.oem_name, o.oem_category, SUM(f.vehicle_count) as total_vehicles
+     FROM FactRegisteredVehicles f
+     JOIN DimOEM o ON f.oem_key = o.oem_key
+     GROUP BY o.oem_name, o.oem_category
+     ORDER BY total_vehicles DESC;
+     ```
+  
+  2. **Monthly Registration Trends**: Track registrations over time
+     ```sql
+     SELECT t.year_report, t.month_report, o.oem_name, SUM(f.vehicle_count) as monthly_registrations
+     FROM FactRegisteredVehicles f
+     JOIN DimTime t ON f.time_key = t.time_key
+     JOIN DimOEM o ON f.oem_key = o.oem_key
+     WHERE o.oem_name IN ('BMW', 'AUDI', 'MERCEDES-BENZ')
+     GROUP BY t.year_report, t.month_report, o.oem_name;
+     ```
+  
+  3. **Electric Vehicle Analysis**: Geographic EV adoption patterns
+     ```sql
+     SELECT gc.country_name, gd.region_name, SUM(f.vehicle_count) as ev_registrations
+     FROM FactRegisteredVehicles f
+     JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key
+     JOIN DimGeographyCountry gc ON f.geography_country_key = gc.geography_country_key
+     JOIN DimGeographyDistrict gd ON f.geography_district_key = gd.geography_district_key
+     WHERE v.fuel_type = 'ELECTRIC'
+     GROUP BY gc.country_name, gd.region_name;
+     ```
+  
+  4. **Market Share Calculation**: Dynamic market share analysis
+     ```sql
+     WITH country_totals AS (
+       SELECT geography_country_key, time_key, SUM(vehicle_count) as total_country_vehicles
+       FROM FactRegisteredVehicles GROUP BY geography_country_key, time_key
+     )
+     SELECT o.oem_name, gc.country_name, t.year_month,
+            SUM(f.vehicle_count) as oem_vehicles,
+            ct.total_country_vehicles,
+            ROUND((SUM(f.vehicle_count) * 100.0 / ct.total_country_vehicles), 2) as market_share_percent
+     FROM FactRegisteredVehicles f
+     JOIN DimOEM o ON f.oem_key = o.oem_key
+     JOIN DimGeographyCountry gc ON f.geography_country_key = gc.geography_country_key
+     JOIN DimTime t ON f.time_key = t.time_key
+     JOIN country_totals ct ON f.geography_country_key = ct.geography_country_key AND f.time_key = ct.time_key
+     GROUP BY o.oem_name, gc.country_name, t.year_month, ct.total_country_vehicles;
+     ```
+  
+  **📈 Business Questions You Can Answer:**
+  - Which OEMs have the highest registration volumes?
+  - How do monthly registration patterns vary by manufacturer?
+  - Where are electric vehicles being registered most frequently?
+  - What is the market share of luxury vs mass market brands?
+  - Which regions show the strongest growth trends?
+  
+  ---
+  
+  ## 🎯 Performance & Query Guidelines
+  
+  **✅ Best Practices:**
+  - **Always Join Dimensions**: Fact table alone provides no descriptive context
+  - **Filter Early**: Apply WHERE clauses on dimension attributes
+  - **Use Indexes**: Foreign key indexes optimize join performance
+  - **Aggregate Properly**: Use GROUP BY with dimension attributes
+  
+  **⚡ Performance Notes:**
+  - All foreign keys are indexed for optimal join performance
+  - Country-level queries faster than district-level (less granular)
+  - Time-based filtering is highly optimized
+  - Complex aggregations benefit from CTEs (Common Table Expressions)
+  
+  **📊 Data Volume:**
+  - ~319K registration records in fact table
+  - 12 months of data (2024: January-December)
+  - 13 unique OEMs across all categories
+  - 28+ unique vehicle type combinations
+  - 7 countries with 2,777+ districts
+  
+  **🔧 Traditional Star Schema Benefits:**
+  - **Data Consistency**: Single source of truth for all attributes
+  - **Storage Efficiency**: Minimal redundancy through normalization
+  - **Analytical Flexibility**: Rich joins enable complex analysis
+  - **Scalability**: Optimized for large-scale analytical workloads
+
+db_schema_user: |
+  # 🚗 UK Vehicle Registration Analytics (Traditional Star Schema)
+  
+  ## 📊 What Can You Analyze?
+  
+  This database contains **UK vehicle registration data for 2024** in a traditional star schema design. You can explore actual vehicle registration counts (not percentages) for different manufacturers across time, geography, and vehicle characteristics. All queries require joins between fact and dimension tables.
+  
+  ---
+  
+  ## 📈 Available Data & Analytics
+  
+  ### � **OEM Performance Analysis**
+  Ask about vehicle manufacturers and their registration volumes:
+  
+  **Registration Volume Questions:**
+  - *"Which car manufacturers registered the most vehicles in 2024?"*
+  - *"How did BMW's registration volumes change month by month?"*
+  - *"Compare Tesla vs traditional luxury brands registration counts"*
+  - *"Show me the top 10 OEMs by total registrations"*
+  
+  **Market Share Calculations:**
+  - *"Calculate market share for each OEM by country"*
+  - *"Which manufacturer has the highest market share in Scotland?"*
+  - *"Show market share trends for electric vehicle manufacturers"*
+  
+  ### 🚗 **Vehicle Type Insights**
+  Analyze vehicle characteristics and preferences:
+  
+  **Body Type Analysis:**
+  - *"Which body type is most popular - SUV, Sedan, or Estate?"*
+  - *"How do SUV registrations compare across different months?"*
+  - *"Show coupe registrations by luxury vs mass market brands"*
+  
+  **Fuel Type Trends:**
+  - *"How many electric vehicles were registered in 2024?"*
+  - *"Compare petrol vs electric vehicle adoption by region"*
+  - *"Which OEMs are leading in hybrid vehicle registrations?"*
+  - *"Show the growth trend of electric vehicle registrations"*
+  
+  ### 📅 **Time-Based Analysis**
+  Explore seasonal patterns and monthly trends:
+  
+  **Monthly Patterns:**
+  - *"Which months had the highest vehicle registrations?"*
+  - *"Show quarterly registration trends for BMW"*
+  - *"Compare January vs December registration volumes"*
+  
+  **Seasonal Insights:**
+  - *"How do luxury car registrations vary by season?"*
+  - *"Show monthly electric vehicle registration trends"*
+  - *"Which quarter has the strongest registration performance?"*
+  
+  ### 🌍 **Geographic Analysis**
+  Dive deep into regional registration patterns:
+  
+  **Country-Level Insights:**
+  - *"Which country has the highest vehicle registrations?"*
+  - *"Compare England vs Scotland vehicle preferences"*
+  - *"Show luxury vehicle registrations by country"*
+  
+  **District-Level Analysis:**
+  - *"Which districts register the most electric vehicles?"*
+  - *"Find the top regions for BMW registrations"*
+  - *"Compare urban vs rural registration patterns"*
+  - *"Show district-level market share for Tesla"*
+  
+  ---
+  
+  ## 🎯 Example Questions You Can Ask
+  
+  **📊 Registration Volume & Rankings:**
+  - "What are the top 10 car manufacturers by registration volume?"
+  - "Which OEMs registered more than 10,000 vehicles?"
+  - "Show me the registration volume ranking by month"
+  
+  **🏆 Market Share Analysis:**
+  - "Calculate BMW's market share in England for 2024"
+  - "Which manufacturer has the highest market share in each country?"
+  - "Show market share evolution for electric vehicle brands"
+  
+  **� Vehicle Preferences:**
+  - "What's the most popular vehicle type combination?"
+  - "How many SUV electric vehicles were registered?"
+  - "Compare diesel vs petrol registrations by region"
+  
+  **📍 Geographic Patterns:**
+  - "Which regions prefer luxury vehicles?"
+  - "Where are electric vehicles being registered most?"
+  - "Show registration hotspots for each manufacturer"
+  
+  **� Trends & Growth:**
+  - "How did electric vehicle registrations grow month by month?"
+  - "Which OEMs showed the strongest growth in Q4?"
+  - "Compare year-over-year trends (if multiple years available)"
+  
+  **🔍 Detailed Analytics:**
+  - "Show Tesla's district-level performance across the UK"
+  - "Calculate monthly market share for premium brands"
+  - "Find districts where luxury cars dominate"
+  
+  ---
+  
+  ## 💡 Important Query Guidelines
+  
+  **� Join-Based Analysis Required:**
+  - All descriptive data requires joins with dimension tables
+  - Fact table contains only foreign keys and registration counts
+  - Use dimension tables for names, categories, and descriptions
+  
+  **🎨 Request Visualizations:**
+  - "Show as a chart/graph/visualization"
+  - "Create a dashboard showing..."
+  - "Visualize the trend of..."
+  - "Plot registration volumes over time"
+  
+  **📊 Specify Analysis Level:**
+  - "At country level" vs "at district level"
+  - "Monthly analysis" vs "quarterly trends"
+  - "By manufacturer category" (Luxury, Mass Market, etc.)
+  
+  **⚡ Performance Tips:**
+  - Specify time periods for faster queries: "in Q2 2024", "for January"
+  - Be specific about brands: "BMW, Audi, Mercedes-Benz"
+  - Choose geographic scope: "in England", "across all countries"
+  
+  **Data Coverage:** 2024 vehicle registrations | 319K records | 13 manufacturers | 28+ vehicle types | 7 countries | 2,777+ districts
