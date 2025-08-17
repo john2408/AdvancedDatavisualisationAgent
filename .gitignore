@@ -5,6 +5,7 @@ data/data.csv
 data/market_share.sqlite
 js_frontend/*
 archive/
+.streamlit/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -4,6 +4,7 @@ import time
 import json
 from datetime import datetime
 from frontend.utils import load_multiple_css
+from frontend.voice_components import create_voice_input_interface, display_voice_status
 from agents.crew_agents import (
     sql_generator_crew, 
     sql_reviewer_crew, 
@@ -913,11 +914,22 @@ if "conversation_mode" not in st.session_state:
 with st.sidebar:
     st.title("📊 Visualization Agent")
     st.markdown("#### Chat with Your Database")
-    st.markdown("<p style='color: #6B7280 !important;'>AI-powered SQL generation and visualization</p>", unsafe_allow_html=True)
+    st.divider()
+
+    # Voice Input Interface
+    voice_query = create_voice_input_interface()
+    if voice_query:
+        st.session_state.run_query = voice_query
+        st.rerun()
+    
+    # Optional: Add voice status expander for troubleshooting
+    with st.expander("🔧 Voice Setup", expanded=False):
+        display_voice_status()
+    
     st.divider()
 
     # Chat history display area
-    chat_container = st.container(height=350)
+    chat_container = st.container(height=280)  # Further reduced for voice status
     with chat_container:
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
@@ -925,7 +937,7 @@ with st.sidebar:
                 st.caption(message["time"])
 
     # Chat input
-    if prompt := st.chat_input("Ask about your database..."):
+    if prompt := st.chat_input("Type or speak your question..."):
         st.session_state.run_query = prompt
 
 
