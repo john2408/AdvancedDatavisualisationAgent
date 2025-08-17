@@ -782,15 +782,15 @@ def display_welcome_message():
     
     st.write("") # Spacer
     cols = st.columns([1, 1, 1, 1.5]) # Adjust column ratios for centering
-    with cols[0]:
-        if st.button("Which car manufacturers registered the most vehicles?"):
-            st.session_state.run_query = "Which car manufacturers registered the most vehicles?"
+    with cols[0]: 
+        if st.button("What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"):
+            st.session_state.run_query = "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"
     with cols[1]:
-        if st.button("How many electric vehicles were registered?"):
+        if st.button("Which car manufacturers registered the most vehicles?"):
             st.session_state.run_query = "How many electric vehicles were registered?"
     with cols[2]:
-        if st.button("Which months had the highest vehicle registrations?"):
-            st.session_state.run_query = "Which months had the highest vehicle registrations?"
+        if st.button("How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"):
+            st.session_state.run_query = "How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"
 
 def display_visualization(viz_data):
     """Displays the chart and summaries in the main panel."""

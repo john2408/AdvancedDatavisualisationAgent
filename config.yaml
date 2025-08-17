@@ -3,13 +3,20 @@ db_schema_agent: |
   # 🚗 Vehicle Registration Database (Traditional Star Schema)
   
   ## 📊 Database Overview
-  This database contains **UK vehicle registration data for 2024** organized in a traditional star schema design. It tracks actual vehicle registration counts for different manufacturers (OEMs) across various dimensions including time, geography, and vehicle characteristics.
+  This database contains **UK vehicle registration data for 2023 and 2024** organized in a traditional star schema design. It tracks actual vehicle registration counts for dif  **📈 Trends & Growth:**
+  - "How did electric vehicle registrations grow month by month?"
+  - "Which OEMs showed the strongest growth in Q4?"
+  - "Compare year-over-year trends between 2023 and 2024"
+  - **"What are the monthly growth rates for Tesla between both years?"**
+  - **"Which quarters showed the biggest year-over-year improvements?"**
+  - **"Show the progression of electric vehicle adoption from 2023 to 2024"**nt manufacturers (OEMs) across various dimensions including time, geography, and vehicle characteristics, enabling comprehensive year-over-year analysis.
   
   **Key Metrics Available:**
-  - � Vehicle registration counts per OEM (monthly granularity)
-  - � Registration volumes by vehicle type and fuel
+  - 🚗 Vehicle registration counts per OEM (monthly granularity across 2023-2024)
+  - 📊 Registration volumes by vehicle type and fuel
   - 🌍 Geographic analysis (country and district level)
-  - 📅 Time-series registration trends
+  - 📅 Time-series registration trends and year-over-year comparisons
+  - 📈 Annual growth rates and quarterly comparisons
   
   **Traditional Star Schema Design:**
   - ✅ **Normalized Fact Table**: Contains only foreign keys and measures
@@ -28,10 +35,11 @@ db_schema_agent: |
   **⚠️ IMPORTANT**: This fact table contains ONLY foreign keys and measures. All descriptive attributes (OEM names, vehicle types, geographic names, etc.) must be accessed through dimension table joins.
   
   ### 📅 **DimTime** - Time Dimension
-  **Primary Key**: time_key (INTEGER - Format: YYYYMM, e.g., 202401)
+  **Primary Key**: time_key (INTEGER - Format: YYYYMM, e.g., 202301, 202401)
   **Columns**: year_report, month_report, year_month, quarter, year_quarter
-  **Purpose**: Temporal analysis and trend tracking
-  **Sample**: 202401 → January 2024, Q1 2024
+  **Purpose**: Temporal analysis, trend tracking, and year-over-year comparisons
+  **Coverage**: 2023-2024 (24 months total)
+  **Sample**: 202301 → January 2023, Q1 2023; 202401 → January 2024, Q1 2024
   
   ### 🏭 **DimOEM** - Vehicle Manufacturers
   **Primary Key**: oem_key (INTEGER)
@@ -114,12 +122,45 @@ db_schema_agent: |
      GROUP BY o.oem_name, gc.country_name, t.year_month, ct.total_country_vehicles;
      ```
   
+  5. **Year-over-Year Analysis**: Compare 2023 vs 2024 performance
+     ```sql
+     SELECT o.oem_name, v.fuel_type, t.year_report,
+            SUM(f.vehicle_count) as annual_registrations,
+            LAG(SUM(f.vehicle_count)) OVER (PARTITION BY o.oem_name, v.fuel_type ORDER BY t.year_report) as prev_year,
+            ROUND(((SUM(f.vehicle_count) - LAG(SUM(f.vehicle_count)) OVER (PARTITION BY o.oem_name, v.fuel_type ORDER BY t.year_report)) * 100.0 / 
+                   LAG(SUM(f.vehicle_count)) OVER (PARTITION BY o.oem_name, v.fuel_type ORDER BY t.year_report)), 2) as yoy_growth_percent
+     FROM FactRegisteredVehicles f
+     JOIN DimOEM o ON f.oem_key = o.oem_key
+     JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key
+     JOIN DimTime t ON f.time_key = t.time_key
+     WHERE v.fuel_type = 'ELECTRIC'
+     GROUP BY o.oem_name, v.fuel_type, t.year_report
+     ORDER BY o.oem_name, t.year_report;
+     ```
+  
+  6. **Quarterly Comparisons**: Q1 2023 vs Q1 2024 analysis
+     ```sql
+     SELECT o.oem_name, v.fuel_type, t.year_quarter,
+            SUM(f.vehicle_count) as quarterly_registrations
+     FROM FactRegisteredVehicles f
+     JOIN DimOEM o ON f.oem_key = o.oem_key
+     JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key
+     JOIN DimTime t ON f.time_key = t.time_key
+     WHERE o.oem_name = 'BMW' AND v.fuel_type = 'PETROL' 
+           AND t.year_quarter IN ('2023-Q1', '2024-Q1')
+     GROUP BY o.oem_name, v.fuel_type, t.year_quarter;
+     ```
+  
   **📈 Business Questions You Can Answer:**
   - Which OEMs have the highest registration volumes?
   - How do monthly registration patterns vary by manufacturer?
   - Where are electric vehicles being registered most frequently?
   - What is the market share of luxury vs mass market brands?
   - Which regions show the strongest growth trends?
+  - **What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?**
+  - **How did BMW's petrol vehicle registrations change from Q1 2023 to Q1 2024?**
+  - **Which manufacturers showed the biggest improvement from 2023 to 2024?**
+  - **What seasonal patterns differ between 2023 and 2024?**
   
   ---
   
@@ -138,8 +179,8 @@ db_schema_agent: |
   - Complex aggregations benefit from CTEs (Common Table Expressions)
   
   **📊 Data Volume:**
-  - ~319K registration records in fact table
-  - 12 months of data (2024: January-December)
+  - ~625K registration records in fact table (2023-2024 combined)
+  - 24 months of data (2023: January-December, 2024: January-December)
   - 13 unique OEMs across all categories
   - 28+ unique vehicle type combinations
   - 7 countries with 2,777+ districts
@@ -155,7 +196,10 @@ db_schema_user: |
   
   ## 📊 What Can You Analyze?
   
-  This database contains **UK vehicle registration data for 2024** in a traditional star schema design. You can explore actual vehicle registration counts (not percentages) for different manufacturers across time, geography, and vehicle characteristics. All queries require joins between fact and dimension tables.
+  This database contains **UK vehicle registration data for 2023 and 2024** in a traditional star schema design. You can explore actual vehicle registration counts (not percentages) for different manufacturers across time, geography, and vehicle characteristics. All queries require joins between fact and dimension tables.
+  
+  **🎯 NEW: Year-over-Year Analysis Capability**
+  With two complete years of data, you can now perform comprehensive comparisons between 2023 and 2024, analyze growth trends, and identify seasonal patterns across both years.
   
   ---
   
@@ -166,14 +210,18 @@ db_schema_user: |
   
   **Registration Volume Questions:**
   - *"Which car manufacturers registered the most vehicles in 2024?"*
-  - *"How did BMW's registration volumes change month by month?"*
+  - *"How did BMW's registration volumes change month by month in 2024?"*
   - *"Compare Tesla vs traditional luxury brands registration counts"*
-  - *"Show me the top 10 OEMs by total registrations"*
+  - *"Show me the top 10 OEMs by total registrations across 2023-2024"*
+  - **"What is the year-over-year trend for electric vehicles 2023 vs 2024?"**
+  - **"Which OEMs showed the biggest growth from 2023 to 2024?"**
   
   **Market Share Calculations:**
   - *"Calculate market share for each OEM by country"*
   - *"Which manufacturer has the highest market share in Scotland?"*
   - *"Show market share trends for electric vehicle manufacturers"*
+  - **"How did Tesla's market share change from 2023 to 2024?"**
+  - **"Compare luxury brand market share performance between both years"**
   
   ### 🚗 **Vehicle Type Insights**
   Analyze vehicle characteristics and preferences:
@@ -188,19 +236,52 @@ db_schema_user: |
   - *"Compare petrol vs electric vehicle adoption by region"*
   - *"Which OEMs are leading in hybrid vehicle registrations?"*
   - *"Show the growth trend of electric vehicle registrations"*
+  - **"What is the year-over-year growth rate for electric vehicles?"**
+  - **"How did diesel vehicle registrations decline from 2023 to 2024?"**
+  
+  ### 🔄 **Year-over-Year Analysis (NEW)**
+  Leverage two complete years of data for comprehensive comparisons:
+  
+  **Annual Growth Analysis:**
+  - **"What is the year-to-year trend for electric vehicles 2023 vs 2024?"**
+  - **"Which fuel type showed the highest growth rate between years?"**
+  - **"Calculate the annual growth percentage for each OEM"**
+  - **"Show the year-over-year change in total vehicle registrations"**
+  
+  **Quarterly Comparisons:**
+  - **"What is the 2024 Q1 and 2023 Q1 change for petrol vehicles for BMW?"**
+  - **"Compare Q4 2023 vs Q4 2024 luxury vehicle registrations"**
+  - **"How did electric vehicle adoption in Q2 change between years?"**
+  - **"Show quarterly growth trends for Tesla across both years"**
+  
+  **Monthly Year-over-Year:**
+  - **"Compare January 2023 vs January 2024 registration volumes"**
+  - **"Which months showed the biggest year-over-year improvements?"**
+  - **"How did BMW's monthly performance change between years?"**
+  - **"Show month-by-month growth rates for electric vehicles"**
+  
+  **Market Share Evolution:**
+  - **"How did electric vehicle market share evolve from 2023 to 2024?"**
+  - **"Which OEMs gained or lost market share between years?"**
+  - **"Compare luxury vs mass market brand performance year-over-year"**
+  - **"Show regional market share changes between 2023 and 2024"**
   
   ### 📅 **Time-Based Analysis**
-  Explore seasonal patterns and monthly trends:
+  Explore seasonal patterns and monthly trends across both years:
   
   **Monthly Patterns:**
-  - *"Which months had the highest vehicle registrations?"*
+  - *"Which months had the highest vehicle registrations in 2024?"*
   - *"Show quarterly registration trends for BMW"*
   - *"Compare January vs December registration volumes"*
+  - **"How do monthly patterns in 2024 compare to 2023?"**
+  - **"Which months showed consistent performance across both years?"**
   
   **Seasonal Insights:**
   - *"How do luxury car registrations vary by season?"*
   - *"Show monthly electric vehicle registration trends"*
   - *"Which quarter has the strongest registration performance?"*
+  - **"Compare seasonal patterns between 2023 and 2024"**
+  - **"Did the seasonality of electric vehicle sales change between years?"**
   
   ### 🌍 **Geographic Analysis**
   Dive deep into regional registration patterns:
@@ -224,11 +305,23 @@ db_schema_user: |
   - "What are the top 10 car manufacturers by registration volume?"
   - "Which OEMs registered more than 10,000 vehicles?"
   - "Show me the registration volume ranking by month"
+  - **"Which manufacturers improved their ranking from 2023 to 2024?"**
+  - **"What are the top 5 OEMs by total registrations across both years?"**
   
   **🏆 Market Share Analysis:**
   - "Calculate BMW's market share in England for 2024"
   - "Which manufacturer has the highest market share in each country?"
   - "Show market share evolution for electric vehicle brands"
+  - **"How did market share distribution change from 2023 to 2024?"**
+  - **"Which OEMs gained the most market share between years?"**
+  
+  **🔄 Year-over-Year Growth Analysis:**
+  - **"What is the year-to-year trend for electric vehicles 2023 vs 2024?"**
+  - **"What is the 2024 Q1 and 2023 Q1 change for petrol vehicles for BMW?"**
+  - **"Which fuel type showed the highest growth rate from 2023 to 2024?"**
+  - **"Calculate the percentage change in registrations for each OEM between years"**
+  - **"Show the year-over-year growth for luxury vs mass market brands"**
+  - **"How did electric vehicle adoption change by country between 2023 and 2024?"**
   
   **� Vehicle Preferences:**
   - "What's the most popular vehicle type combination?"
@@ -271,8 +364,10 @@ db_schema_user: |
   - "By manufacturer category" (Luxury, Mass Market, etc.)
   
   **⚡ Performance Tips:**
-  - Specify time periods for faster queries: "in Q2 2024", "for January"
+  - Specify time periods for faster queries: "in Q2 2024", "for January 2023"
   - Be specific about brands: "BMW, Audi, Mercedes-Benz"
   - Choose geographic scope: "in England", "across all countries"
+  - **For year-over-year analysis: "compare 2023 vs 2024", "growth from 2023 to 2024"**
+  - **Use specific quarters: "Q1 2023 vs Q1 2024", "2024Q1 and 2023Q1"**
   
-  **Data Coverage:** 2024 vehicle registrations | 319K records | 13 manufacturers | 28+ vehicle types | 7 countries | 2,777+ districts
+  **Data Coverage:** 2023-2024 vehicle registrations | 625K records | 13 manufacturers | 28+ vehicle types | 7 countries | 2,777+ districts | 24 months total
