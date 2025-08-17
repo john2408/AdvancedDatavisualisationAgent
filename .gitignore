@@ -9,6 +9,7 @@ js_frontend/*
 __pycache__/
 *.py[cod]
 *$py.class
+*.pem
 
 # C extensions
 *.so
