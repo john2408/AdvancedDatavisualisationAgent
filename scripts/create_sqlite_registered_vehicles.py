@@ -198,7 +198,7 @@ class StarSchemaToSQLite:
         """Load data from parquet file into SQLite table."""
         if table_name == 'FactRegisteredVehicles':
             # For the fact table, load from the flat data file
-            parquet_path = os.path.join(os.path.dirname(self.star_schema_dir), "fact_registered_vehicles.parquet")
+            parquet_path = os.path.join(os.path.dirname(self.star_schema_dir), "fact_registered_vehicles_2023_2024.parquet")
         else:
             # For dimension tables, load from star schema directory
             parquet_path = os.path.join(self.star_schema_dir, f"{table_name}.parquet")
@@ -217,9 +217,17 @@ class StarSchemaToSQLite:
         for col in df.columns:
             if df[col].dtype == 'datetime64[ns]':
                 df[col] = df[col].dt.strftime('%Y-%m-%d')
+        
+        # Temporarily disable foreign key constraints for bulk insert
+        if table_name == 'FactRegisteredVehicles':
+            self.connection.execute("PRAGMA foreign_keys = OFF")
                 
         # Insert data into SQLite (tables are already clean)
         df.to_sql(table_name, self.connection, if_exists='append', index=False)
+        
+        # Re-enable foreign key constraints
+        if table_name == 'FactRegisteredVehicles':
+            self.connection.execute("PRAGMA foreign_keys = ON")
         
         logger.info(f"Loaded {len(df):,} records into {table_name}")
         
@@ -300,11 +308,49 @@ class StarSchemaToSQLite:
         logger.info(f"  oem_key nulls: {df['oem_key'].isnull().sum()}")
         logger.info(f"  vehicle_key nulls: {df['vehicle_key'].isnull().sum()}")
         logger.info(f"  geography_country_key nulls: {df['geography_country_key'].isnull().sum()}")
+        if 'geography_district_key' in df.columns:
+            logger.info(f"  geography_district_key nulls: {df['geography_district_key'].isnull().sum()}")
         
-        # Fill missing foreign keys with default values
-        df['oem_key'] = df['oem_key'].fillna(-1)  # -1 for unknown OEM
-        df['vehicle_key'] = df['vehicle_key'].fillna(-1)  # -1 for unknown vehicle
-        df['geography_country_key'] = df['geography_country_key'].fillna(-1)  # -1 for unknown country
+        # Fill missing foreign keys with default values and convert to integers
+        df['oem_key'] = df['oem_key'].fillna(-1).astype(int)  # -1 for unknown OEM
+        df['vehicle_key'] = df['vehicle_key'].fillna(-1).astype(int)  # -1 for unknown vehicle
+        df['geography_country_key'] = df['geography_country_key'].fillna(-1).astype(int)  # -1 for unknown country
+        if 'geography_district_key' in df.columns:
+            df['geography_district_key'] = df['geography_district_key'].fillna(-1).astype(int)  # -1 for unknown district
+        
+        # Final verification of foreign key values
+        logger.info("Final foreign key verification:")
+        logger.info(f"  oem_key - min: {df['oem_key'].min()}, max: {df['oem_key'].max()}, nulls: {df['oem_key'].isnull().sum()}")
+        logger.info(f"  vehicle_key - min: {df['vehicle_key'].min()}, max: {df['vehicle_key'].max()}, nulls: {df['vehicle_key'].isnull().sum()}")
+        logger.info(f"  geography_country_key - min: {df['geography_country_key'].min()}, max: {df['geography_country_key'].max()}, nulls: {df['geography_country_key'].isnull().sum()}")
+        if 'geography_district_key' in df.columns:
+            logger.info(f"  geography_district_key - min: {df['geography_district_key'].min()}, max: {df['geography_district_key'].max()}, nulls: {df['geography_district_key'].isnull().sum()}")
+        
+        # Check if all foreign keys exist in dimension tables
+        # Check OEM keys
+        valid_oem_keys = set(pd.read_sql("SELECT oem_key FROM DimOEM", self.connection)['oem_key'])
+        invalid_oem_keys = set(df['oem_key'].unique()) - valid_oem_keys
+        if invalid_oem_keys:
+            logger.warning(f"Invalid OEM keys found: {invalid_oem_keys}")
+        
+        # Check vehicle keys  
+        valid_vehicle_keys = set(pd.read_sql("SELECT vehicle_key FROM DimVehicle", self.connection)['vehicle_key'])
+        invalid_vehicle_keys = set(df['vehicle_key'].unique()) - valid_vehicle_keys
+        if invalid_vehicle_keys:
+            logger.warning(f"Invalid vehicle keys found: {invalid_vehicle_keys}")
+        
+        # Check country keys
+        valid_country_keys = set(pd.read_sql("SELECT geography_country_key FROM DimGeographyCountry", self.connection)['geography_country_key'])
+        invalid_country_keys = set(df['geography_country_key'].unique()) - valid_country_keys
+        if invalid_country_keys:
+            logger.warning(f"Invalid country keys found: {invalid_country_keys}")
+        
+        # Check district keys
+        if 'geography_district_key' in df.columns:
+            valid_district_keys = set(pd.read_sql("SELECT geography_district_key FROM DimGeographyDistrict", self.connection)['geography_district_key'])
+            invalid_district_keys = set(df['geography_district_key'].unique()) - valid_district_keys
+            if invalid_district_keys:
+                logger.warning(f"Invalid district keys found: {invalid_district_keys}")
         
         # Select only the columns needed for the traditional star schema fact table
         fact_columns = [
@@ -348,6 +394,12 @@ class StarSchemaToSQLite:
         self.connection.execute("""
             INSERT OR IGNORE INTO DimGeographyCountry (geography_country_key, country_name, country_code)
             VALUES (-1, 'Unknown', 'UNK')
+        """)
+        
+        # Add Unknown District
+        self.connection.execute("""
+            INSERT OR IGNORE INTO DimGeographyDistrict (geography_district_key, country_name, country_code, region_name, district_postcode, district_town_name, full_location_path)
+            VALUES (-1, 'Unknown', 'UNK', 'Unknown', 'UNK', 'Unknown', 'Unknown/Unknown/Unknown')
         """)
         
         self.connection.commit()
@@ -631,7 +683,7 @@ def main():
         raise FileNotFoundError(f"Star schema directory not found: {star_schema_dir}")
         
     # Check if the fact registered vehicles file exists
-    fact_file_path = os.path.join(project_root, "data", "fact_registered_vehicles.parquet")
+    fact_file_path = os.path.join(project_root, "data", "fact_registered_vehicles_2023_2024.parquet")
     if not os.path.exists(fact_file_path):
         raise FileNotFoundError(f"Fact registered vehicles file not found: {fact_file_path}")
         

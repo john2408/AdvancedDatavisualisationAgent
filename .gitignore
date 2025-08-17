@@ -4,6 +4,7 @@ data/data.csv
 .DS_Store
 data/market_share.sqlite
 js_frontend/*
+archive/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

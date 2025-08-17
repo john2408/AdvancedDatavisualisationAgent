@@ -3,17 +3,17 @@ VEHICLE REGISTERED DATA SQLITE DATABASE CREATION SUMMARY
 TRADITIONAL STAR SCHEMA
 ======================================================================
 
-Database file: /Users/johtorr/Documents/Repos/AdvancedDatavisualisationAgent/registered_vehicles.sqlite
-Created at: 2025-07-27 19:22:50
+Database file: /Users/JOHTORR/Repos/AdvancedDatavisualisationAgent/registered_vehicles.sqlite
+Created at: 2025-08-17 12:31:28
 
 TABLE RECORD COUNTS:
 ------------------------------
-DimTime                   (Dimension): 12 records
+DimTime                   (Dimension): 24 records
 DimOEM                    (Dimension): 14 records
 DimVehicle                (Dimension): 29 records
 DimGeographyCountry       (Dimension): 8 records
-DimGeographyDistrict      (Dimension): 2,777 records
-FactRegisteredVehicles    (Fact): 318,795 records
+DimGeographyDistrict      (Dimension): 2,778 records
+FactRegisteredVehicles    (Fact): 625,476 records
 
 DATA QUALITY CHECKS:
 ------------------------------
@@ -24,26 +24,26 @@ Invalid vehicle counts: 0
 SAMPLE QUERY RESULTS:
 ------------------------------
 Top 5 OEMs by Total Vehicle Registrations:
-  BMW (Luxury): 125,265 vehicles, 65,252 records
-  AUDI (Luxury): 122,431 vehicles, 75,914 records
-  MERCEDES-BENZ (Luxury): 101,969 vehicles, 62,696 records
-  VOLVO (Premium): 66,408 vehicles, 34,455 records
-  MINI (Mass Market): 46,975 vehicles, 35,862 records
+  BMW (Luxury): 243,595 vehicles, 126,154 records
+  AUDI (Luxury): 238,417 vehicles, 150,290 records
+  MERCEDES-BENZ (Luxury): 199,565 vehicles, 123,246 records
+  VOLVO (Premium): 129,348 vehicles, 66,974 records
+  MINI (Mass Market): 92,403 vehicles, 70,704 records
 
 Top 5 Vehicle Types by Registration Count:
-  ESTATE - PETROL: 114,865 vehicles, 9 OEMs
-  SUV - PETROL: 94,236 vehicles, 8 OEMs
-  SUV - ELECTRIC: 75,478 vehicles, 8 OEMs
-  SUV - PETROL/ELECTRIC: 39,023 vehicles, 7 OEMs
-  SEDAN - PETROL: 36,238 vehicles, 8 OEMs
+  ESTATE - PETROL: 223,085 vehicles, 9 OEMs
+  SUV - PETROL: 184,666 vehicles, 8 OEMs
+  SUV - ELECTRIC: 147,128 vehicles, 8 OEMs
+  SUV - PETROL/ELECTRIC: 75,996 vehicles, 7 OEMs
+  SEDAN - PETROL: 71,208 vehicles, 8 OEMs
 
 Monthly Registration Trends (first 6 months):
-  2024-01: 36,484 registrations, 13 OEMs
-  2024-02: 20,919 registrations, 13 OEMs
-  2024-03: 84,109 registrations, 13 OEMs
-  2024-04: 37,829 registrations, 13 OEMs
-  2024-05: 41,624 registrations, 13 OEMs
-  2024-06: 49,380 registrations, 13 OEMs
+  2023-01: 32,777 registrations, 13 OEMs
+  2023-02: 18,805 registrations, 13 OEMs
+  2023-03: 75,221 registrations, 13 OEMs
+  2023-04: 35,051 registrations, 13 OEMs
+  2023-05: 38,331 registrations, 13 OEMs
+  2023-06: 45,268 registrations, 13 OEMs
 
 DATABASE READY FOR:
 --------------------
