@@ -1,15 +1,36 @@
 db_path: "data/registered_vehicles.sqlite"
 db_schema_agent: |
-  # 🚗 Vehicle Registration Database (Traditional Star Schema)
+  # 🚗 Vehicle Registration Database (Traditio  4. **Market Share Calculation**: Dynamic market share analysis
+     ```sql
+     WITH country_totals AS (
+       SELECT geography_country_key, time_key, SUM(vehicle_count) as total_country_vehicles
+       FROM FactRegisteredVehicles GROUP B  **📍 Geographic Patterns:**
+  - "Which regions prefer luxury vehicles?"
+  - "Where are electric vehicles being registered most?"
+  - "Show registration hotspots for each manufacturer"
   
-  ## 📊 Database Overview
-  This database contains **UK vehicle registration data for 2023 and 2024** organized in a traditional star schema design. It tracks actual vehicle registration counts for dif  **📈 Trends & Growth:**
+  **📊 Trends & Growth:**
   - "How did electric vehicle registrations grow month by month?"
   - "Which OEMs showed the strongest growth in Q4?"
   - "Compare year-over-year trends between 2023 and 2024"
-  - **"What are the monthly growth rates for Tesla between both years?"**
-  - **"Which quarters showed the biggest year-over-year improvements?"**
-  - **"Show the progression of electric vehicle adoption from 2023 to 2024"**nt manufacturers (OEMs) across various dimensions including time, geography, and vehicle characteristics, enabling comprehensive year-over-year analysis.
+  - "Plot monthly registration trends using year_month for time series visualization"
+  - "Show continuous growth curves for Tesla using datetime timeline"
+  
+  **🔍 Detailed Analytics:**
+  - "Show Tesla's district-level performance across the UK"
+  - "Calculate monthly market share for premium brands"
+  - "Find districts where luxury cars dominate"
+  - "Create time series visualization of market trends using year_month column"
+
+  ## 📊 Database Overview
+  This database contains **UK vehicle registration data for 2023 and 2024** organized in a traditional star schema design. It tracks actual vehicle registration counts for dif  **� Trends & Growth:**
+  - "How did electric vehicle registrations grow month by month?"
+  - "Which OEMs showed the strongest growth in Q4?"
+  - "Compare year-over-year trends between 2023 and 2024"
+  - "Plot registration trends over time using year_month for continuous visualization"
+  - "Show monthly growth rates for Tesla between both years using time series"
+  - "Which quarters showed the biggest year-over-year improvements?"
+  - "Show the progression of electric vehicle adoption from 2023 to 2024"nt manufacturers (OEMs) across various dimensions including time, geography, and vehicle characteristics, enabling comprehensive year-over-year analysis.
   
   **Key Metrics Available:**
   - 🚗 Vehicle registration counts per OEM (monthly granularity across 2023-2024)
@@ -36,10 +57,11 @@ db_schema_agent: |
   
   ### 📅 **DimTime** - Time Dimension
   **Primary Key**: time_key (INTEGER - Format: YYYYMM, e.g., 202301, 202401)
-  **Columns**: year_report, month_report, year_month, quarter, year_quarter
+  **Columns**: year_report, month_report, year_month (datetime64[ns]), quarter, year_quarter
   **Purpose**: Temporal analysis, trend tracking, and year-over-year comparisons
   **Coverage**: 2023-2024 (24 months total)
   **Sample**: 202301 → January 2023, Q1 2023; 202401 → January 2024, Q1 2024
+  **⚡ Time Series Plotting**: Use `year_month` datetime column for continuous time series visualization
   
   ### 🏭 **DimOEM** - Vehicle Manufacturers
   **Primary Key**: oem_key (INTEGER)
@@ -85,12 +107,13 @@ db_schema_agent: |
   
   2. **Monthly Registration Trends**: Track registrations over time
      ```sql
-     SELECT t.year_report, t.month_report, o.oem_name, SUM(f.vehicle_count) as monthly_registrations
+     SELECT t.year_month, o.oem_name, SUM(f.vehicle_count) as monthly_registrations
      FROM FactRegisteredVehicles f
      JOIN DimTime t ON f.time_key = t.time_key
      JOIN DimOEM o ON f.oem_key = o.oem_key
      WHERE o.oem_name IN ('BMW', 'AUDI', 'MERCEDES-BENZ')
-     GROUP BY t.year_report, t.month_report, o.oem_name;
+     GROUP BY t.year_month, o.oem_name
+     ORDER BY t.year_month;
      ```
   
   3. **Electric Vehicle Analysis**: Geographic EV adoption patterns
@@ -138,7 +161,7 @@ db_schema_agent: |
      ORDER BY o.oem_name, t.year_report;
      ```
   
-  6. **Quarterly Comparisons**: Q1 2023 vs Q1 2024 analysis
+  6. **Quarterly Comparisons**: Q1 2023 vs Q1 2024 analysis for BMW and PETROL Vehicles
      ```sql
      SELECT o.oem_name, v.fuel_type, t.year_quarter,
             SUM(f.vehicle_count) as quarterly_registrations
@@ -275,15 +298,15 @@ db_schema_user: |
   - *"Compare January vs December registration volumes"*
   - **"How do monthly patterns in 2024 compare to 2023?"**
   - **"Which months showed consistent performance across both years?"**
-  
+  - **"Plot monthly registration trends using year_month for continuous time series"**
+
   **Seasonal Insights:**
   - *"How do luxury car registrations vary by season?"*
-  - *"Show monthly electric vehicle registration trends"*
+  - *"Show monthly electric vehicle registration trends using year_month timeline"*
   - *"Which quarter has the strongest registration performance?"*
   - **"Compare seasonal patterns between 2023 and 2024"**
   - **"Did the seasonality of electric vehicle sales change between years?"**
-  
-  ### 🌍 **Geographic Analysis**
+  - **"Create time series plot of EV adoption using year_month column"**  ### 🌍 **Geographic Analysis**
   Dive deep into regional registration patterns:
   
   **Country-Level Insights:**
@@ -369,5 +392,7 @@ db_schema_user: |
   - Choose geographic scope: "in England", "across all countries"
   - **For year-over-year analysis: "compare 2023 vs 2024", "growth from 2023 to 2024"**
   - **Use specific quarters: "Q1 2023 vs Q1 2024", "2024Q1 and 2023Q1"**
+  - **For time series plots: "plot over year_month", "show trends using datetime column"**
+  - **Use year_month for continuous time visualization instead of separate year/month filters**
   
   **Data Coverage:** 2023-2024 vehicle registrations | 625K records | 13 manufacturers | 28+ vehicle types | 7 countries | 2,777+ districts | 24 months total

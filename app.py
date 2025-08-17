@@ -786,8 +786,8 @@ def display_welcome_message():
         if st.button("What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"):
             st.session_state.run_query = "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"
     with cols[1]:
-        if st.button("Which car manufacturers registered the most vehicles?"):
-            st.session_state.run_query = "How many electric vehicles were registered?"
+        if st.button("What are the monthly registrations in total since 2023?"):
+            st.session_state.run_query = "What are the monthly registrations in total since 2023?"
     with cols[2]:
         if st.button("How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"):
             st.session_state.run_query = "How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"
