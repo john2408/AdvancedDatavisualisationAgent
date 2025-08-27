@@ -1,0 +1,75 @@
+openapi: 3.0.0
+info:
+  title: Web Crawling Tool
+  description: A tool that takes a query, searches the web using a search API, scrapes content from the top results, and returns a summary for an AI agent.
+  version: 1.0.0
+
+# The server URL points to your deployed Code Engine function.
+servers:
+  - url: https://web-crawling-function-v3.1zjf0upfwqwy.us-south.codeengine.appdomain.cloud
+
+# Defines the available API endpoints. For a CE function, it's just the root path '/'.
+paths:
+  /:
+    post:
+      summary: Crawl the web for a given query
+      description: Provides context to an AI agent by searching the web for a user's query and summarizing the findings from top results.
+      operationId: crawlWebForQuery # A unique ID for this operation.
+
+      # Describes the request body the function expects.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: "The search term or question to investigate."
+                  example: "What are the latest advancements in AI for healthcare?"
+              required:
+                - query
+
+      # Describes the possible responses from the function.
+      responses:
+        '200':
+          description: Successfully retrieved and summarized web content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: "Bad Request. The required 'query' parameter was missing."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error. Could be an issue with the API key or an upstream service."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# Reusable schema definitions to keep the file clean.
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: "The combined text content scraped from the top search results."
+        sources:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: "A list of the URLs that were successfully scraped."
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A message describing the error that occurred."

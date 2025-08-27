@@ -218,3 +218,4 @@ logs/
 # API keys and secrets
 .secrets/
 api_keys.txt
+/mac_venv
