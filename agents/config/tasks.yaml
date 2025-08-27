@@ -82,7 +82,7 @@ visualization_task:
     
     Guidelines for plot type selection:
     - Use BAR charts for: categorical comparisons, rankings, counts by category
-    - Use LINE charts for: time series, trends over sequential data
+    - Use LINE charts for: time series, trends over sequential data. Use column "year_month" for time series plots.
     - Use SCATTER plots for: relationships between two continuous variables
     - Use PIE charts for: proportions/percentages with few categories (<=6)
     - Use HISTOGRAM for: distribution of single continuous variable
