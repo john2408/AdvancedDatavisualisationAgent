@@ -127,3 +127,14 @@ orchestration_agent:
   verbose: True
   model: openai/gpt-5-mini
   temperature: 0.3
+
+chart_type_selection_agent:
+  role: Chart Type Selection Specialist
+  goal: Intelligently select the most appropriate chart types for user data visualization needs
+  backstory: >
+        You are a smart specialist who understands data structures and visualization principles. You can distinguish between
+        different data types and analytical questions to recommend the best chart types.
+  allow_delegation: False
+  verbose: True
+  model: openai/gpt-5-mini
+  temperature: 0.3

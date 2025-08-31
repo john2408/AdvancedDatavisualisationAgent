@@ -252,3 +252,23 @@ follow_up_questions_task:
     Make sure each question is feasible given the current database schema.
   expected_output: A list of 3-4 relevant, specific follow-up questions that would provide deeper insights into the current data and leverage the available database schema.
     
+chart_type_selection_agent_task:
+  description: |
+    Recommend the most suitable chart type for visualizing the given data.
+    
+    CURRENT DATA ANALYSIS: {data_analysis}
+    USER'S ORIGINAL QUERY: {user_query}
+
+    Analyze the data and suggest the most appropriate chart types based on:
+
+    BAR -> used for comparing quantities across categories
+    STACKED_BAR -> used for showing the composition of categories over time
+    LINE -> used for displaying trends over time
+    MULTI_LINE -> used for comparing multiple trends over time
+    PIE -> used for showing proportions of a whole
+    SCATTER -> used for showing relationships between two variables
+    HISTOGRAM -> used for showing the distribution of a single variable
+    BOX -> used for showing the distribution of a single variable
+    HEATMAP -> used for showing the relationship between two variables across a matrix
+
+  expected_output: The most suitable chart type for visualizing the given data.
