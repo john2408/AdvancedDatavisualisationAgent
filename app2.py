@@ -210,7 +210,6 @@ def generate_alternative_visualization(user_request: str, current_data: pd.DataF
             "summary": f"Failed to create alternative visualization: {str(e)}"
         }
 
-
 def generate_follow_up_questions(data_analysis: str, original_query: str, data_insights: list, db_schema: str) -> dict:
     """Generate relevant follow-up questions based on available data schema."""
     try:
@@ -323,6 +322,10 @@ def step_3_execute_query(reviewed_sql: str) -> dict:
         if query_result is not None and isinstance(query_result, pd.DataFrame) and not query_result.empty:
             if "Error" not in query_result.columns:
                 st.success(f"✅ Query executed successfully! Retrieved {len(query_result)} rows.")
+                
+                # Store query result for debugging
+                query_result.to_json("./.app_debugger/executed_query_result.json", orient="columns")
+
                 return {
                     "success": True,
                     "query_result": query_result,

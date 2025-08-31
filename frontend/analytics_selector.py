@@ -17,15 +17,15 @@ from enum import Enum
 
 class ChartType(Enum):
     """Supported chart types."""
-    BAR = "bar"
-    STACKED_BAR = "stacked_bar"
-    LINE = "line"
-    MULTI_LINE = "multi_line"
-    PIE = "pie"
-    SCATTER = "scatter"
-    HISTOGRAM = "histogram"
-    BOX = "box"
-    HEATMAP = "heatmap"
+    BAR = "BAR"
+    STACKED_BAR = "STACKED_BAR"
+    LINE = "LINE"
+    MULTI_LINE = "MULTI_LINE"
+    PIE = "PIE"
+    SCATTER = "SCATTER"
+    HISTOGRAM = "HISTOGRAM"
+    BOX = "BOX"
+    HEATMAP = "HEATMAP"
 
 class ChartPlan(BaseModel):
     """Chart plan model for deterministic plot building."""
@@ -127,29 +127,29 @@ def create_chart_plan(df: pd.DataFrame, user_query: str) -> ChartPlan:
     
     # Build chart plan based on the selected chart type
     if chart_type == ChartType.BAR.value:
-        return _create_bar_chart_plan(df, user_query, analysis)
+        return _create_bar_chart_plan(analysis)
     elif chart_type == ChartType.STACKED_BAR.value:
-        return _create_stacked_bar_chart_plan(df, user_query, analysis)
+        return _create_stacked_bar_chart_plan(analysis)
     elif chart_type == ChartType.LINE.value:
-        return _create_line_chart_plan(df, user_query, analysis)
+        return _create_line_chart_plan(analysis)
     elif chart_type == ChartType.MULTI_LINE.value:
-        return _create_multi_line_chart_plan(df, user_query, analysis)
+        return _create_multi_line_chart_plan(analysis)
     elif chart_type == ChartType.PIE.value:
-        return _create_pie_chart_plan(df, user_query, analysis)
+        return _create_pie_chart_plan(analysis)
     elif chart_type == ChartType.SCATTER.value:
-        return _create_scatter_chart_plan(df, user_query, analysis)
+        return _create_scatter_chart_plan(analysis)
     elif chart_type == ChartType.HISTOGRAM.value:
-        return _create_histogram_chart_plan(df, user_query, analysis)
+        return _create_histogram_chart_plan(analysis)
     elif chart_type == ChartType.BOX.value:
-        return _create_box_chart_plan(df, user_query, analysis)
+        return _create_box_chart_plan(analysis)
     elif chart_type == ChartType.HEATMAP.value:
-        return _create_heatmap_chart_plan(df, user_query, analysis)
+        return _create_heatmap_chart_plan(analysis)
     else:
         # Fallback to bar chart if unknown type
-        return _create_bar_chart_plan(df, user_query, analysis)
+        return _create_bar_chart_plan(analysis)
 
 
-def _create_bar_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_bar_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a bar chart plan."""
     categorical_cols = analysis['categorical_columns']
     numeric_cols = analysis['numeric_columns']
@@ -165,7 +165,7 @@ def _create_bar_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) ->
     )
 
 
-def _create_stacked_bar_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_stacked_bar_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a stacked bar chart plan."""
     categorical_cols = analysis['categorical_columns']
     numeric_cols = analysis['numeric_columns']
@@ -183,7 +183,7 @@ def _create_stacked_bar_chart_plan(df: pd.DataFrame, user_query: str, analysis: 
     )
 
 
-def _create_line_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_line_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a line chart plan."""
     date_cols = analysis['date_columns']
     numeric_cols = analysis['numeric_columns']
@@ -200,7 +200,7 @@ def _create_line_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -
     )
 
 
-def _create_multi_line_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_multi_line_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a multi-line chart plan."""
     date_cols = analysis['date_columns']
     numeric_cols = analysis['numeric_columns']
@@ -221,7 +221,7 @@ def _create_multi_line_chart_plan(df: pd.DataFrame, user_query: str, analysis: D
     )
 
 
-def _create_pie_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_pie_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a pie chart plan."""
     categorical_cols = analysis['categorical_columns']
     numeric_cols = analysis['numeric_columns']
@@ -238,7 +238,7 @@ def _create_pie_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) ->
     )
 
 
-def _create_scatter_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_scatter_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a scatter chart plan."""
     numeric_cols = analysis['numeric_columns']
     categorical_cols = analysis['categorical_columns']
@@ -256,7 +256,7 @@ def _create_scatter_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict
     )
 
 
-def _create_histogram_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_histogram_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a histogram chart plan."""
     numeric_cols = analysis['numeric_columns']
     
@@ -270,7 +270,7 @@ def _create_histogram_chart_plan(df: pd.DataFrame, user_query: str, analysis: Di
     )
 
 
-def _create_box_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_box_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a box chart plan."""
     numeric_cols = analysis['numeric_columns']
     categorical_cols = analysis['categorical_columns']
@@ -286,7 +286,7 @@ def _create_box_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) ->
     )
 
 
-def _create_heatmap_chart_plan(df: pd.DataFrame, user_query: str, analysis: Dict) -> ChartPlan:
+def _create_heatmap_chart_plan(analysis: Dict) -> ChartPlan:
     """Create a heatmap chart plan."""
     numeric_cols = analysis['numeric_columns']
     categorical_cols = analysis['categorical_columns']
