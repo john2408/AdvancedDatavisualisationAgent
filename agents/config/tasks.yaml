@@ -261,7 +261,7 @@ chart_type_selection_agent_task:
 
     Analyze the data and suggest the most appropriate chart types based on:
 
-    BAR -> used for comparing quantities across categories
+    BAR -> used for comparing quantities across categories. Use also for question like "Year over Year Growth" or "Quarter to Quarter Growth"
     STACKED_BAR -> used for showing the composition of categories over time
     LINE -> used for displaying trends over time
     MULTI_LINE -> used for comparing multiple trends over time

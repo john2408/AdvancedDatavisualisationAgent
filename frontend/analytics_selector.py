@@ -154,8 +154,19 @@ def _create_bar_chart_plan(analysis: Dict) -> ChartPlan:
     categorical_cols = analysis['categorical_columns']
     numeric_cols = analysis['numeric_columns']
     
-    x_col = categorical_cols[0] if categorical_cols else numeric_cols[0]
-    y_col = numeric_cols[0] if numeric_cols else categorical_cols[0]
+    # For bar charts, we need a categorical x-axis and numeric y-axis
+    if categorical_cols:
+        x_col = categorical_cols[0]
+        y_col = numeric_cols[0] if numeric_cols else categorical_cols[1] if len(categorical_cols) > 1 else categorical_cols[0]
+    else:
+        # When no categorical columns, use the first numeric column as categorical dimension
+        # and the second numeric column as the value (common in year-over-year comparisons)
+        if len(numeric_cols) >= 2:
+            x_col = numeric_cols[0]  # First numeric column (e.g., year_report)
+            y_col = numeric_cols[1]  # Second numeric column (e.g., total_ev_registrations)
+        else:
+            x_col = numeric_cols[0] if numeric_cols else "category"
+            y_col = numeric_cols[0] if numeric_cols else "value"
     
     return ChartPlan(
         chart_type=ChartType.BAR.value,
