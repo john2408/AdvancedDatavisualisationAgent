@@ -46,6 +46,8 @@ def build_figure_from_plan(plan: ChartPlan, df: pd.DataFrame) -> Figure:
         fig = build_box_chart(df_transformed, plan)
     elif plan.chart_type == ChartType.HEATMAP.value:
         fig = build_heatmap_chart(df_transformed, plan)
+    elif plan.chart_type == ChartType.CASCADE.value:
+        fig = build_cascade_chart(df_transformed, plan)
     else:
         raise ValueError(f"Unsupported chart type: {plan.chart_type}")
 
@@ -269,6 +271,74 @@ def build_heatmap_chart(df: pd.DataFrame, plan: ChartPlan) -> Figure:
     else:
         # Fallback to simple bar chart
         return build_simple_bar_chart(df, plan)
+    
+    return fig
+
+
+def build_cascade_chart(df: pd.DataFrame, plan: ChartPlan) -> Figure:
+    """Build cascade/waterfall chart for YoY analysis."""
+    x_col = plan.x
+    y_col = plan.y[0]
+    
+    # Sort by x column to ensure proper order
+    df_sorted = df.sort_values(x_col)
+    
+    # Calculate cascade data
+    values = df_sorted[y_col].tolist()
+    years = df_sorted[x_col].tolist()
+    
+    if len(values) >= 2:
+        start_value = values[0]
+        end_value = values[-1]
+        delta = end_value - start_value
+        
+        # Create cascade data
+        x_data = [str(years[0]), 'Change', str(years[-1])]
+        y_data = [start_value, delta, end_value]
+        
+        # Create the waterfall chart
+        fig = go.Figure()
+        
+        # Base bars (starting values)
+        fig.add_trace(go.Waterfall(
+            name="Year-over-Year Analysis",
+            orientation="v",
+            measure=["absolute", "relative", "total"],
+            x=x_data,
+            textposition="outside",
+            text=[f"{start_value:,.0f}", f"{delta:+,.0f}", f"{end_value:,.0f}"],
+            y=y_data,
+            connector={"mode": "between", "line": {"width": 4, "color": "rgb(0, 0, 0)", "dash": "solid"}},
+            decreasing={"marker": {"color": "#ff6b6b"}},  # Red for decreases
+            increasing={"marker": {"color": "#51cf66"}},  # Green for increases  
+            totals={"marker": {"color": "#339af0"}}       # Blue for totals
+        ))
+        
+        # Update layout
+        fig.update_layout(
+            title=plan.title or f"Year-over-Year Change: {y_col}",
+            xaxis_title=x_col,
+            yaxis_title=y_col,
+            showlegend=False,
+            template="plotly_white"
+        )
+        
+        # Add delta annotation
+        delta_pct = (delta / start_value * 100) if start_value != 0 else 0
+        fig.add_annotation(
+            x=1,  # Position over "Change" bar
+            y=start_value + delta/2,
+            text=f"{delta_pct:+.1f}%",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=2,
+            arrowcolor="black"
+        )
+        
+    else:
+        # Fallback to regular bar chart if insufficient data
+        fig = px.bar(df_sorted, x=x_col, y=y_col, title=plan.title)
     
     return fig
 

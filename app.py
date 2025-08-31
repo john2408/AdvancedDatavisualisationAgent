@@ -589,19 +589,21 @@ def display_welcome_message():
         )
     
     st.write("") # Spacer
-    cols = st.columns([1, 1, 1,1, 1.5]) # Adjust column ratios for centering
-    with cols[0]: 
-        query = "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?"
-        if st.button(query):
-            st.session_state.run_query = query
-    with cols[1]:
-        query = "What are the monthly registrations in total since 2023?"
-        if st.button(query):
-            st.session_state.run_query = query
-    with cols[2]:
-        query =  "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"
-        if st.button(query):
-            st.session_state.run_query = query
+    starter_questions = [
+        "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",
+        "What are the monthly registrations in total since 2023?",
+        "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?",
+        "Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?"
+    ]
+    
+    st.subheader("💡 Explore the Data")
+    cols = st.columns(2)
+    for i, question in enumerate(starter_questions):  # Limit to 4 questions
+        with cols[i % 2]:
+            if st.button(question, key=f"followup_{i}", use_container_width=True):
+                st.session_state.run_query = question
+                st.rerun()
+
 
 def display_visualization(viz_data):
     """Displays the chart and summaries in the main panel."""

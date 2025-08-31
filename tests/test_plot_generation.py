@@ -50,7 +50,7 @@ class TestPlotGeneration(unittest.TestCase):
         """Test that ChartType enum contains expected values."""
         expected_chart_types = [
             'BAR', 'STACKED_BAR', 'LINE', 'MULTI_LINE', 
-            'PIE', 'SCATTER', 'HISTOGRAM', 'BOX', 'HEATMAP'
+            'PIE', 'SCATTER', 'HISTOGRAM', 'BOX', 'HEATMAP', 'CASCADE'
         ]
         
         actual_chart_types = [chart_type.value for chart_type in ChartType]
@@ -280,7 +280,7 @@ class TestPlotGeneration(unittest.TestCase):
         - A DataFrame with year-over-year data (year_report, total_ev_registrations)
         - A user query asking for year-over-year growth trends for electric vehicles
         
-        The function returns a ChartPlan object matching the expected structure for BAR chart (as year-over-year comparisons are best shown with bars).
+        The function returns a ChartPlan object matching the expected structure for CASCADE chart (as year-over-year comparisons are best shown with cascade/waterfall charts that show deltas).
         """
         
         # Load test data
@@ -364,6 +364,101 @@ class TestPlotGeneration(unittest.TestCase):
         print(f"   X Column: {result_plan_dict['x']}")
         print(f"   Y Columns: {result_plan_dict['y']}")
         print(f"   Color Column: {result_plan_dict['color']}")
+        print(f"   Title: {result_plan_dict['title']}")
+
+
+    def test_create_chart_plan_yoy_cascade_electric_vehicles(self):
+        """
+        Test that create_chart_plan returns correct ChartPlan object for YoY cascade chart of electric vehicles.
+        
+        This test validates that when given:
+        - A DataFrame with year-over-year data (year_report, total_ev_registrations)
+        - A user query specifically asking for cascade/waterfall visualization
+        
+        The function returns a ChartPlan object matching the expected structure for CASCADE chart.
+        """
+        
+        # Load test data
+        self.test_dataframe = self.load_test_dataframe_from_json(filename="yoy_electric_veh.json")
+        
+        # Load expected ChartPlan structure
+        expected_plan_path = project_root / "tests" / "test_data" / "chart_plan_yoy_cascade.json"
+        with open(expected_plan_path, 'r') as f:
+            expected_plan_dict = json.load(f)
+        
+        # Test query specifically asking for cascade/waterfall
+        user_query = "Show me a waterfall chart of year-over-year electric vehicle registration changes from 2023 to 2024?"
+        
+        # Validate test data structure
+        self.assertIsInstance(self.test_dataframe, pd.DataFrame)
+        self.assertFalse(self.test_dataframe.empty, "Test DataFrame should not be empty")
+        self.assertIn('year_report', self.test_dataframe.columns, "DataFrame should contain 'year_report' column")
+        self.assertIn('total_ev_registrations', self.test_dataframe.columns, "DataFrame should contain 'total_ev_registrations' column")
+        
+        # Print debug information
+        print(f"\nTest DataFrame shape: {self.test_dataframe.shape}")
+        print(f"Test DataFrame columns: {list(self.test_dataframe.columns)}")
+        print(f"Test DataFrame data types:\n{self.test_dataframe.dtypes}")
+        print(f"Sample data:\n{self.test_dataframe}")
+        print(f"Expected ChartPlan: {expected_plan_dict}")
+        
+        # Call the function under test
+        result_chart_plan = create_chart_plan(self.test_dataframe, user_query)
+        
+        # Validate the result is a ChartPlan object
+        self.assertIsInstance(result_chart_plan, ChartPlan, "Result should be a ChartPlan instance")
+        
+        # Convert result to dictionary for comparison
+        result_plan_dict = result_chart_plan.model_dump()
+        
+        # Validate each field of the ChartPlan
+        self.assertEqual(
+            result_plan_dict['chart_type'], 
+            expected_plan_dict['chart_type'],
+            f"Expected chart_type '{expected_plan_dict['chart_type']}', but got '{result_plan_dict['chart_type']}'"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['x'], 
+            expected_plan_dict['x'],
+            f"Expected x column '{expected_plan_dict['x']}', but got '{result_plan_dict['x']}'"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['y'], 
+            expected_plan_dict['y'],
+            f"Expected y columns {expected_plan_dict['y']}, but got {result_plan_dict['y']}"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['color'], 
+            expected_plan_dict['color'],
+            f"Expected color column '{expected_plan_dict['color']}', but got '{result_plan_dict['color']}'"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['aggregation'], 
+            expected_plan_dict['aggregation'],
+            f"Expected aggregation '{expected_plan_dict['aggregation']}', but got '{result_plan_dict['aggregation']}'"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['transform'], 
+            expected_plan_dict['transform'],
+            f"Expected transform '{expected_plan_dict['transform']}', but got '{result_plan_dict['transform']}'"
+        )
+        
+        self.assertEqual(
+            result_plan_dict['title'], 
+            expected_plan_dict['title'],
+            f"Expected title '{expected_plan_dict['title']}', but got '{result_plan_dict['title']}'"
+        )
+        
+        print(f"✅ Test passed: create_chart_plan returned correct ChartPlan object for CASCADE chart")
+        print(f"   Chart Type: {result_plan_dict['chart_type']}")
+        print(f"   X Column: {result_plan_dict['x']}")
+        print(f"   Y Columns: {result_plan_dict['y']}")
+        print(f"   Transform: {result_plan_dict['transform']}")
         print(f"   Title: {result_plan_dict['title']}")
         
         

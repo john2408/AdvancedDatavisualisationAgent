@@ -26,6 +26,7 @@ class ChartType(Enum):
     HISTOGRAM = "HISTOGRAM"
     BOX = "BOX"
     HEATMAP = "HEATMAP"
+    CASCADE = "CASCADE"
 
 class ChartPlan(BaseModel):
     """Chart plan model for deterministic plot building."""
@@ -144,6 +145,8 @@ def create_chart_plan(df: pd.DataFrame, user_query: str) -> ChartPlan:
         return _create_box_chart_plan(analysis)
     elif chart_type == ChartType.HEATMAP.value:
         return _create_heatmap_chart_plan(analysis)
+    elif chart_type == ChartType.CASCADE.value:
+        return _create_cascade_chart_plan(analysis, df)
     else:
         # Fallback to bar chart if unknown type
         return _create_bar_chart_plan(analysis)
@@ -331,4 +334,40 @@ def _create_heatmap_chart_plan(analysis: Dict) -> ChartPlan:
         y=[y_col],
         color=color_col,
         title=f"Heatmap: {y_col} by {x_col}"
+    )
+
+
+def _create_cascade_chart_plan(analysis: Dict, df: pd.DataFrame) -> ChartPlan:
+    """Create a cascade/waterfall chart plan for YoY analysis."""
+    numeric_cols = analysis['numeric_columns']
+    categorical_cols = analysis['categorical_columns']
+    
+    # For YoY cascade, we expect a time dimension and a value
+    time_col = None
+    value_col = None
+    
+    # Look for year column
+    for col in numeric_cols + categorical_cols:
+        if 'year' in col.lower() or 'time' in col.lower():
+            time_col = col
+            break
+    
+    # Look for value column (should be numeric and not the time column)
+    for col in numeric_cols:
+        if col != time_col:
+            value_col = col
+            break
+    
+    # Fallback if not found
+    if not time_col:
+        time_col = numeric_cols[0] if numeric_cols else categorical_cols[0]
+    if not value_col:
+        value_col = numeric_cols[1] if len(numeric_cols) > 1 else numeric_cols[0]
+    
+    return ChartPlan(
+        chart_type=ChartType.CASCADE.value,
+        x=time_col,
+        y=[value_col],
+        transform="cascade",  # Special transform for cascade calculation
+        title=f"Year-over-Year Change: {value_col}"
     )
