@@ -11,6 +11,9 @@ from typing import Dict, Any
 from frontend.analytics_selector import create_chart_plan
 from frontend.plot_builder import build_figure_from_plan
 from frontend.plotly_styles import apply_white_theme_styling
+import json
+import os
+from dataclasses import asdict
 
 
 def step_4_hybrid_visualization(query_result: pd.DataFrame, user_query: str) -> Dict[str, Any]:
@@ -32,6 +35,17 @@ def step_4_hybrid_visualization(query_result: pd.DataFrame, user_query: str) -> 
         
         # Step 1: Analytics Selector determines chart plan
         plan = create_chart_plan(query_result, user_query)
+        
+        # Store ChartPlan for debugging as JSON under .app_debugger
+        debug_dir = ".app_debugger"
+        os.makedirs(debug_dir, exist_ok=True)
+        try:
+            plan_dict = plan.model_dump()
+            with open(os.path.join(debug_dir, "chart_plan.json"), "w") as f:
+                json.dump(plan_dict, f, indent=2, default=str)
+        except Exception as debug_error:
+            st.warning(f"Debug logging failed: {debug_error}")
+        
         
         st.info(f"📐 Plan: {plan.chart_type} (agg={plan.aggregation}" +
                 (f", transform={plan.transform}" if plan.transform else "") + ")")

@@ -206,11 +206,23 @@ def _create_multi_line_chart_plan(analysis: Dict) -> ChartPlan:
     numeric_cols = analysis['numeric_columns']
     categorical_cols = analysis['categorical_columns']
     
+    # For multi-line charts, prioritize date columns for x-axis
     x_col = date_cols[0] if date_cols else categorical_cols[0] if categorical_cols else numeric_cols[0]
-    y_col = numeric_cols[0] if numeric_cols else categorical_cols[1] if len(categorical_cols) > 1 else categorical_cols[0]
-    color_col = categorical_cols[0] if categorical_cols and x_col != categorical_cols[0] else (
-        categorical_cols[1] if len(categorical_cols) > 1 else None
-    )
+    
+    # Y column should be numeric for values
+    y_col = numeric_cols[0] if numeric_cols else categorical_cols[-1]
+    
+    # Color column should be the grouping column (categorical that's not the x-axis)
+    # This creates separate lines for each category
+    color_col = None
+    for cat_col in categorical_cols:
+        if cat_col != x_col:  # Don't use x-axis column as color grouping
+            color_col = cat_col
+            break
+    
+    # If no suitable categorical column found, use the second categorical if available
+    if not color_col and len(categorical_cols) > 1:
+        color_col = categorical_cols[1]
     
     return ChartPlan(
         chart_type=ChartType.MULTI_LINE.value,

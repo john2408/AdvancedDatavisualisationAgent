@@ -153,7 +153,20 @@ def build_stacked_bar_chart(df: pd.DataFrame, plan: ChartPlan) -> Figure:
 
 def build_line_chart(df: pd.DataFrame, plan: ChartPlan) -> Figure:
     """Build line chart."""
-    if len(plan.y) == 1:
+    # Check if this is a MULTI_LINE chart with color grouping
+    if plan.chart_type == ChartType.MULTI_LINE.value and plan.color:
+        # Multi-line chart with grouping by color column
+        fig = px.line(
+            df,
+            x=plan.x,
+            y=plan.y[0],
+            color=plan.color,
+            title=plan.title or f"{plan.y[0]} by {plan.color} over {plan.x}",
+            color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
+        )
+        # Add markers to lines
+        fig.update_traces(mode='lines+markers')
+    elif len(plan.y) == 1:
         # Single line
         fig = px.line(
             df,
