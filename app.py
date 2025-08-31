@@ -3,8 +3,10 @@ import pandas as pd
 import time
 import json
 from datetime import datetime
-from frontend.utils import load_multiple_css
 from frontend.voice_components import create_voice_input_interface, display_voice_status
+from frontend.utils import load_multiple_css
+from frontend.render_plotly_json import render_plotly_from_json
+from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
 from agents.crew_agents import (
     sql_generator_crew, 
     sql_reviewer_crew, 
@@ -83,120 +85,6 @@ def get_rag_context(query: str):
         return "Recent internal analysis shows that Competitor Z's new model launch has impacted sales of 'Vehicle C' in the North region."
     return None
 
-
-def create_plotly_from_json(plot_spec_json: str, df: pd.DataFrame) -> go.Figure:
-    """Create a Plotly figure from JSON specification and DataFrame."""
-    try:
-        plot_spec = json.loads(plot_spec_json)
-        
-        if "error" in plot_spec:
-            st.error(f"Plot specification error: {plot_spec['error']}")
-            return None
-        
-        plot_type = plot_spec.get("type")
-        data = plot_spec.get("data", {})
-        layout = plot_spec.get("layout", {})
-        
-        if not data:
-            st.warning("No data found in plot specification")
-            return None
-        
-        fig = None
-        
-        if plot_type == "bar":
-            if "color" in data and data["color"]:
-                # Grouped bar chart
-                df_plot = pd.DataFrame({
-                    "x": data["x"],
-                    "y": data["y"],
-                    "color": data["color"]
-                })
-                fig = px.bar(df_plot, x="x", y="y", color="color", title=layout.get("title"),
-                           color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
-            else:
-                # Simple bar chart
-                fig = px.bar(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
-                           color_discrete_sequence=["#1f77b4"])
-                
-        elif plot_type == "line":
-            if "color" in data and data["color"]:
-                df_plot = pd.DataFrame({
-                    "x": data["x"],
-                    "y": data["y"],
-                    "color": data["color"]
-                })
-                fig = px.line(df_plot, x="x", y="y", color="color", title=layout.get("title"),
-                            color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
-            else:
-                fig = px.line(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
-                            color_discrete_sequence=["#1f77b4"])
-                
-        elif plot_type == "scatter":
-            if "color" in data and data["color"]:
-                df_plot = pd.DataFrame({
-                    "x": data["x"],
-                    "y": data["y"],
-                    "color": data["color"]
-                })
-                fig = px.scatter(df_plot, x="x", y="y", color="color", title=layout.get("title"),
-                               color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
-            else:
-                fig = px.scatter(x=data.get("x", []), y=data.get("y", []), title=layout.get("title"),
-                               color_discrete_sequence=["#1f77b4"])
-                
-        elif plot_type == "pie":
-            if "values" in data and "labels" in data:
-                fig = px.pie(values=data["values"], names=data["labels"], title=layout.get("title"),
-                           color_discrete_sequence=["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"])
-            
-        elif plot_type == "histogram":
-            if "x" in data:
-                fig = px.histogram(x=data["x"], title=layout.get("title"),
-                                 color_discrete_sequence=["#1f77b4"])
-            
-        elif plot_type == "box":
-            if "y" in data:
-                fig = px.box(y=data["y"], title=layout.get("title"),
-                           color_discrete_sequence=["#1f77b4"])
-            elif "x" in data:
-                fig = px.box(y=data["x"], title=layout.get("title"),
-                           color_discrete_sequence=["#1f77b4"])
-                
-        elif plot_type == "heatmap":
-            if "z" in data and "x" in data and "y" in data:
-                fig = px.imshow(
-                    z=data["z"], 
-                    x=data["x"], 
-                    y=data["y"], 
-                    title=layout.get("title"),
-                    text_auto=True,
-                    color_continuous_scale="RdBu_r"
-                )
-        
-        if fig:
-            # Apply any additional layout configurations from plot spec
-            if layout.get("xaxis", {}).get("title"):
-                fig.update_xaxes(title_text=layout["xaxis"]["title"])
-            if layout.get("yaxis", {}).get("title"):
-                fig.update_yaxes(title_text=layout["yaxis"]["title"])
-                
-            # Apply white theme styling
-            fig = apply_white_theme_styling(fig)
-                
-            # Set responsive layout and height
-            fig.update_layout(
-                height=500,
-                showlegend=layout.get("showlegend", True)
-            )
-                
-        return fig
-        
-    except json.JSONDecodeError as e:
-        st.error(f"Error parsing plot JSON: {e}")
-        return None
-    except Exception as e:
-        st.error(f"Error creating plot from JSON: {e}")
-        return None
 
 # --- STEP FUNCTIONS ---
 
@@ -294,46 +182,33 @@ def answer_data_question(user_question: str, current_data: pd.DataFrame, data_su
         }
 
 def generate_alternative_visualization(user_request: str, current_data: pd.DataFrame, current_chart_type: str) -> dict:
-    """Generate alternative visualization for current data."""
+    """Generate alternative visualization using new hybrid approach."""
     try:
         st.info("🎨 Creating alternative visualization...")
         
-        # Prepare data for visualization
-        dataframe_json = current_data.to_json(orient='records')
+        # Use the new hybrid approach for alternative visualizations
+        current_chart_context = {"chart_type": current_chart_type}
+        result = generate_alternative_visualization_hybrid(user_request, current_data, current_chart_context)
         
-        alt_viz_output = alternative_viz_crew.kickoff(inputs={
-            "user_request": user_request,
-            "current_data": dataframe_json,
-            "current_chart_type": current_chart_type
-        })
-        
-        viz_spec = alt_viz_output.pydantic
-        
-        # Create Plotly figure from specification
-        if viz_spec.plot_spec:
-            figure = create_plotly_from_json(viz_spec.plot_spec, current_data)
-            if figure:
-                st.success("✨ Alternative visualization created!")
-                return {
-                    "success": True,
-                    "figure": figure,
-                    "plot_type": viz_spec.plot_type,
-                    "title": viz_spec.title,
-                    "summary": f"Created {viz_spec.plot_type} chart: {viz_spec.title}"
-                }
-        
-        return {
-            "success": False,
-            "figure": None,
-            "summary": "Could not create alternative visualization"
-        }
-        
+        if result["success"]:
+            st.success("✨ Alternative visualization created!")
+            return {
+                "success": True,
+                "figure": result["figure"],
+                "plot_type": result.get("chart_plan", {}).chart_type if "chart_plan" in result else "alternative",
+                "title": result.get("chart_plan", {}).title if "chart_plan" in result else "Alternative Chart",
+                "summary": result["summary"]
+            }
+        else:
+            st.warning("Alternative visualization failed, using fallback")
+            return step_4_fallback_visualization(current_data)
+            
     except Exception as e:
         st.error(f"❌ Error creating alternative visualization: {e}")
         return {
             "success": False,
             "figure": None,
-            "summary": f"Visualization generation failed: {str(e)}"
+            "summary": f"Failed to create alternative visualization: {str(e)}"
         }
 
 def generate_follow_up_questions(data_analysis: str, original_query: str, data_insights: list, db_schema: str) -> dict:
@@ -448,6 +323,10 @@ def step_3_execute_query(reviewed_sql: str) -> dict:
         if query_result is not None and isinstance(query_result, pd.DataFrame) and not query_result.empty:
             if "Error" not in query_result.columns:
                 st.success(f"✅ Query executed successfully! Retrieved {len(query_result)} rows.")
+                
+                # Store query result for debugging
+                query_result.to_json("./.app_debugger/executed_query_result.json", orient="columns")
+
                 return {
                     "success": True,
                     "query_result": query_result,
@@ -477,87 +356,15 @@ def step_3_execute_query(reviewed_sql: str) -> dict:
         }
 
 def step_4_generate_visualization(query_result: pd.DataFrame, user_query: str) -> dict:
-    """Step 4: Generate visualization if we have valid results."""
+    """Step 4: Generate visualization using new hybrid approach (Proposal 2)."""
     try:
-        # Step 4a: Data Analysis
-        st.info("📊 Analyzing data patterns...")
-        
-        # Prepare data for analysis crew
-        dataframe_json = query_result.to_json(orient='records')
-        columns_info = list(query_result.columns)
-        dtypes_info = query_result.dtypes.to_dict()
-        sample_data = query_result.head(3).to_dict('records')
-        
-        # Convert dtypes to string representation
-        dtypes_str = {col: str(dtype) for col, dtype in dtypes_info.items()}
-        
-        analysis_inputs = {
-            "columns": ", ".join(columns_info),
-            "shape": f"{query_result.shape[0]} rows × {query_result.shape[1]} columns",
-            "dtypes": str(dtypes_str),
-            "sample_data": str(sample_data),
-            "user_question": user_query
-        }
-        
-        # Run data analysis crew
-        analysis_output = data_analysis_crew.kickoff(inputs=analysis_inputs)
-        analysis_result = analysis_output.pydantic
-        
-        st.success(f"📋 Data analysis completed: {len(analysis_result.key_findings)} key findings")
-        
-        # Step 4b: Visualization Generation
-        st.info("🎨 Creating visualization...")
-        
-        # Prepare data for visualization crew with analysis context
-        viz_inputs = {
-            "dataframe_json": dataframe_json,
-            "analysis": analysis_result.analysis,
-            "recommended_visualizations": ", ".join(analysis_result.recommended_visualizations),
-            "key_findings": ", ".join(analysis_result.key_findings),
-            "user_question": user_query
-        }
-        
-        try:
-            # Run the visualization crew
-            viz_output = data_visualization_crew.kickoff(inputs=viz_inputs)
-            
-            # Extract the plot specification
-            if hasattr(viz_output, 'pydantic') and hasattr(viz_output.pydantic, 'plot_spec'):
-                plot_spec = viz_output.pydantic.plot_spec
-                viz_summary = f"Created {viz_output.pydantic.plot_type} chart: {viz_output.pydantic.title}"
-                
-                # Create the actual Plotly figure
-                fig = create_plotly_from_json(plot_spec, query_result)
-                
-                if fig:
-                    st.success("✨ Visualization created successfully!")
-                    return {
-                        "success": True,
-                        "figure": fig,
-                        "summary": viz_summary,
-                        "analysis": analysis_result.analysis,
-                        "key_findings": analysis_result.key_findings,
-                        "error": None
-                    }
-                else:
-                    st.warning("Failed to create visualization from plot specification")
-                    return step_4_fallback_visualization(query_result)
-            else:
-                st.warning("Visualization crew completed but returned unexpected format")
-                return step_4_fallback_visualization(query_result)
-                
-        except Exception as viz_error:
-            st.warning(f"Could not generate visualization: {viz_error}")
-            return step_4_fallback_visualization(query_result)
+        # Use the new hybrid visualization approach that replaces slow agent-based visualization
+        # with fast analytics selector + deterministic plot builder
+        return step_4_hybrid_visualization(query_result, user_query)
             
     except Exception as e:
-        st.error(f"❌ Error in visualization process: {e}")
-        return {
-            "success": False,
-            "figure": None,
-            "summary": f"Visualization generation failed: {str(e)}",
-            "error": str(e)
-        }
+        st.error(f"❌ Error in hybrid visualization process: {e}")
+        return step_4_fallback_visualization(query_result)
 
 def step_4_fallback_visualization(query_result: pd.DataFrame) -> dict:
     """Create a simple fallback visualization based on the data."""
@@ -782,16 +589,19 @@ def display_welcome_message():
         )
     
     st.write("") # Spacer
-    cols = st.columns([1, 1, 1, 1.5]) # Adjust column ratios for centering
+    cols = st.columns([1, 1, 1,1, 1.5]) # Adjust column ratios for centering
     with cols[0]: 
-        if st.button("What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"):
-            st.session_state.run_query = "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"
+        query = "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?"
+        if st.button(query):
+            st.session_state.run_query = query
     with cols[1]:
-        if st.button("What are the monthly registrations in total since 2023?"):
-            st.session_state.run_query = "What are the monthly registrations in total since 2023?"
+        query = "What are the monthly registrations in total since 2023?"
+        if st.button(query):
+            st.session_state.run_query = query
     with cols[2]:
-        if st.button("How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"):
-            st.session_state.run_query = "How did MERCEDES-BENZ's electric vehicle registrations change from Q1 2023 to Q1 2024?"
+        query =  "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?"
+        if st.button(query):
+            st.session_state.run_query = query
 
 def display_visualization(viz_data):
     """Displays the chart and summaries in the main panel."""
@@ -865,11 +675,11 @@ def display_visualization(viz_data):
             
         # Add some spacing
         st.write("")
-    else:
-        # Show a message if no visualization was generated
-        if viz_data.get("query_result") is not None and isinstance(viz_data["query_result"], pd.DataFrame) and not viz_data["query_result"].empty:
-            if "Error" not in viz_data["query_result"].columns:
-                st.info("💡 No visualization was generated for this query. The data is available in the table above.")
+    # else:
+    #     # Show a message if no visualization was generated
+    #     if viz_data.get("query_result") is not None and isinstance(viz_data["query_result"], pd.DataFrame) and not viz_data["query_result"].empty:
+    #         if "Error" not in viz_data["query_result"].columns:
+    #             st.info("💡 No visualization was generated for this query. The data is available in the table above.")
 
     # Display follow-up questions if available
     if viz_data.get("follow_up_questions") and len(viz_data["follow_up_questions"]) > 0:

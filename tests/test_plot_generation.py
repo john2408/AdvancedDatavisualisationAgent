@@ -195,7 +195,7 @@ class TestPlotGeneration(unittest.TestCase):
         with open(expected_plan_path, 'r') as f:
             expected_plan_dict = json.load(f)
         
-        # Test input values
+        # Test Query
         user_query = "What are the trends in monthly registrations of BMW, AUDI, MERCEDES-BENZ vehicles since 2023?"
         
         # Validate test data structure
