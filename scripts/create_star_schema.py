@@ -173,14 +173,16 @@ class VehicleMarketStarSchemaETL:
         
         return fact_country, fact_district
         
-    def create_dim_time(self, fact_country: pd.DataFrame, fact_district: pd.DataFrame) -> pd.DataFrame:
+    def create_dim_time(self) -> pd.DataFrame:
         """Create the time dimension table."""
         logger.info("Creating DimTime...")
         
         # Combine time data from both fact tables
         time_data = []
-        
-        for df in [fact_country, fact_district]:
+
+        fact_registration = pd.read_parquet(os.path.join(self.data_dir,"fact_registered_vehicles_2023_2024.parquet"))
+
+        for df in [fact_registration]:
             time_subset = df[['year_report', 'month_report']].drop_duplicates()
             time_data.append(time_subset)
             
@@ -505,7 +507,7 @@ class VehicleMarketStarSchemaETL:
             fact_country, fact_district = self.load_fact_tables()
             
             # Create dimension tables
-            dim_time = self.create_dim_time(fact_country, fact_district)
+            dim_time = self.create_dim_time()
             dim_oem = self.create_dim_oem(fact_country, fact_district)
             dim_vehicle = self.create_dim_vehicle(fact_country, fact_district)
             dim_geo_country = self.create_dim_geography_country(fact_country)

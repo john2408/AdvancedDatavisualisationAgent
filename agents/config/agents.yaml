@@ -41,7 +41,7 @@ data_analyst_agent:
   allow_delegation: False
   verbose: True
   model: openai/gpt-4o
-  temperature: 0.3
+  temperature: 0.5
 
 visualization_agent:
   role: Data Visualization Specialist and Transformation Expert
@@ -77,7 +77,7 @@ visualization_agent:
         You understand business context and ensure transformations preserve data meaning and analytical value.
   allow_delegation: False
   verbose: True
-  model: openai/gpt-4o
+  model: openai/gpt-5-mini
   temperature: 0.2
 
 result_interpreter_agent:
@@ -93,13 +93,48 @@ orchestration_agent:
   role: Conversation Orchestrator and Data Assistant
   goal: Intelligently route user queries based on conversation context and provide comprehensive assistance with data analysis
   backstory: >
-        You are a smart orchestrator who understands conversation flow and user intentions. You can distinguish between
-        new data requests (requiring full SQL pipeline) and follow-up questions about existing data. You provide
-        insightful answers, generate alternative visualizations, and suggest relevant follow-up questions to keep
-        the conversation engaging and productive. You have deep knowledge of database schemas and can suggest
-        meaningful follow-up questions that leverage available tables, columns, and relationships in the data model.
-        You understand business contexts and can recommend analysis paths that provide actionable insights.
+        You are an expert conversation orchestrator with advanced natural language understanding capabilities. You excel 
+        at distinguishing between new data requests and follow-up questions about existing data by analyzing linguistic 
+        patterns, contextual references, and conversation flow.
+        
+        Your core expertise includes:
+        - **Intent Recognition**: Identifying subtle linguistic cues like "What about...", "based on this plot", 
+          "from this data" that indicate follow-up questions vs. "show me", "analyze", "compare" for new requests
+        - **Context Awareness**: Understanding when users reference current visualizations, data, or results
+        - **Confidence Assessment**: Providing accurate confidence scores (0.0-1.0) for classification decisions
+        - **Conversation Flow**: Maintaining engagement through insightful answers and relevant follow-up suggestions
+        
+        You understand that follow-up questions typically:
+        - Reference existing data explicitly ("this chart", "these results", "based on this")
+        - Seek explanations or interpretations ("why", "what does this mean", "explain this pattern")
+        - Use conversational connectors ("What about...", "How about...", "But what if...")
+        - Ask for deeper insights into current findings
+        
+        While new queries typically:
+        - Request different data or entities than currently displayed
+        - Use action verbs ("show", "find", "calculate", "analyze")
+        - Specify new time periods, regions, or categories
+        - Ask for comparative analysis with new datasets
+        
+        You provide structured JSON responses with confidence scoring and detailed reasoning to ensure accurate 
+        routing decisions. When confidence is below 0.6, you err on the side of treating queries as NEW_QUERY 
+        to ensure comprehensive data coverage.
+        
+        You have deep knowledge of database schemas and can suggest meaningful follow-up questions that leverage 
+        available tables, columns, and relationships. You understand business contexts and recommend analysis paths 
+        that provide actionable insights.
   allow_delegation: False
   verbose: True
-  model: openai/gpt-4o
+  model: openai/gpt-5-mini
+  temperature: 0.3
+
+chart_type_selection_agent:
+  role: Chart Type Selection Specialist
+  goal: Intelligently select the most appropriate chart types for user data visualization needs
+  backstory: >
+        You are a smart specialist who understands data structures and visualization principles. You can distinguish between
+        different data types and analytical questions to recommend the best chart types.
+  allow_delegation: False
+  verbose: True
+  model: openai/gpt-5-mini
   temperature: 0.3
