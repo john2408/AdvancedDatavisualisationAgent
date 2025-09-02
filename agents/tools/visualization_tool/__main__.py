@@ -1,14 +1,14 @@
 # --- Built-in libraries ---
 import json
 import os
+import ast
 
 # --- Third-party libraries ---
-# These must be listed in requirements.txt:
 import pandas as pd
 import numpy as np
 
 # =====================================================================================
-# --- Visualization Logic ---
+# --- Visualization Logic (No changes needed in this section) ---
 # =====================================================================================
 
 def _prepare_plot_data(df: pd.DataFrame, plot_type: str, x_column: str,
@@ -26,17 +26,18 @@ def _prepare_plot_data(df: pd.DataFrame, plot_type: str, x_column: str,
     if color_column and color_column in df.columns:
         grouping_cols.append(color_column)
     
-    # Filter out empty grouping columns
     grouping_cols = [col for col in grouping_cols if col]
 
     if plot_type in ["bar", "line", "pie"] and x_column and y_column and aggregation:
         try:
-            grouped = df.groupby(grouping_cols)[y_column].agg(aggregation).reset_index()
-            return grouped.to_dict(orient='list')
+            if grouping_cols:
+                grouped = df.groupby(grouping_cols)[y_column].agg(aggregation).reset_index()
+                return grouped.to_dict(orient='list')
+            else:
+                 return df[[x_column, y_column]].to_dict(orient='list')
         except Exception as e:
             return {"error": f"Error during aggregation: {e}"}
     else:
-        # For scatter, histogram, boxplot, or when no aggregation is needed
         cols_to_return = [c for c in [x_column, y_column, color_column] if c and c in df.columns]
         if not cols_to_return:
             return {"error": "No valid columns found for visualization."}
@@ -45,8 +46,21 @@ def _prepare_plot_data(df: pd.DataFrame, plot_type: str, x_column: str,
 
 def _create_bar_spec(data: dict, x_column: str, y_column: str, color_column: str, title: str) -> dict:
     """Creates the specification for a bar chart."""
+    traces = []
+    if color_column and color_column in data:
+        df_temp = pd.DataFrame(data)
+        for name, group in df_temp.groupby(color_column):
+            traces.append({
+                "type": "bar",
+                "name": name,
+                "x": group[x_column].tolist(),
+                "y": group[y_column].tolist()
+            })
+    else:
+        traces.append({"type": "bar", "x": data.get(x_column), "y": data.get(y_column)})
+        
     return {
-        "type": "bar", "data": data,
+        "data": traces,
         "layout": {
             "title": title or f"{y_column} by {x_column}",
             "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
@@ -58,14 +72,26 @@ def _create_bar_spec(data: dict, x_column: str, y_column: str, color_column: str
             "font": {"color": "#2E2E2E", "family": "Arial, sans-serif"},
             "title_font": {"size": 16, "color": "#1f1f1f"},
             "colorway": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"]
-        },
-        "config": {"responsive": True}
+        }
     }
 
 def _create_line_spec(data: dict, x_column: str, y_column: str, color_column: str, title: str) -> dict:
     """Creates the specification for a line chart."""
+    traces = []
+    if color_column and color_column in data:
+        df_temp = pd.DataFrame(data)
+        for name, group in df_temp.groupby(color_column):
+            traces.append({
+                "type": "scatter", "mode": "lines",
+                "name": name,
+                "x": group[x_column].tolist(),
+                "y": group[y_column].tolist()
+            })
+    else:
+        traces.append({"type": "scatter", "mode": "lines", "x": data.get(x_column), "y": data.get(y_column)})
+    
     return {
-        "type": "line", "data": data,
+        "data": traces,
         "layout": {
             "title": title or f"{y_column} over {x_column}",
             "xaxis": {"title": x_column, "title_font": {"color": "#000000"}, "tickfont": {"color": "#000000"}},
@@ -100,7 +126,6 @@ def _create_scatter_spec(data: dict, x_column: str, y_column: str, color_column:
 
 def _create_pie_spec(data: dict, x_column: str, y_column: str, title: str) -> dict:
     """Creates the specification for a pie chart."""
-    # Create a new dictionary for pie data to avoid modifying the original
     pie_data = {
         'labels': data.get(x_column),
         'values': data.get(y_column),
@@ -108,7 +133,7 @@ def _create_pie_spec(data: dict, x_column: str, y_column: str, title: str) -> di
         "textposition": "auto"
     }
     return {
-        "type": "pie", "data": pie_data,
+        "data": [pie_data], "type": "pie",
         "layout": {
             "title": title or f"Distribution of {y_column} by {x_column}",
             "showlegend": True,
@@ -174,16 +199,12 @@ def _generate_plot_spec(df: pd.DataFrame, plot_type: str, x_column: str,
     numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
-    # Auto-select columns if not provided
-    if not x_column and categorical_columns:
-        x_column = categorical_columns[0]
-    if not y_column and numeric_columns:
-        y_column = numeric_columns[0]
+    if not x_column and categorical_columns: x_column = categorical_columns[0]
+    if not y_column and numeric_columns: y_column = numeric_columns[0]
     
     plot_data = _prepare_plot_data(df, plot_type, x_column, y_column, color_column, aggregation)
     
-    if plot_data.get("error"):
-        return plot_data
+    if plot_data.get("error"): return plot_data
 
     specs = {
         "bar": _create_bar_spec, "line": _create_line_spec, "scatter": _create_scatter_spec,
@@ -192,15 +213,11 @@ def _generate_plot_spec(df: pd.DataFrame, plot_type: str, x_column: str,
     }
     
     if plot_type in specs:
-        if plot_type == "pie":
-             return specs[plot_type](plot_data, x_column, y_column, title)
-        elif plot_type == "histogram":
-            return specs[plot_type](plot_data, x_column, title)
-        elif plot_type == "boxplot":
-            return specs[plot_type](plot_data, x_column, y_column, title)
-        elif plot_type == "heatmap":
-            return specs[plot_type](plot_data, title)
-        return specs[plot_type](plot_data, x_column, y_column, color_column, title) # bar, line, scatter
+        if plot_type == "pie": return specs[plot_type](plot_data, x_column, y_column, title)
+        elif plot_type == "histogram": return specs[plot_type](plot_data, x_column, title)
+        elif plot_type == "boxplot": return specs[plot_type](plot_data, x_column, y_column, title)
+        elif plot_type == "heatmap": return specs[plot_type](plot_data, title)
+        return specs[plot_type](plot_data, x_column, y_column, color_column, title)
     else:
         return {"error": f"Unknown chart type: {plot_type}"}
 
@@ -209,34 +226,41 @@ def _generate_plot_spec(df: pd.DataFrame, plot_type: str, x_column: str,
 # =====================================================================================
 def main(params):
     """
-    Main function called by IBM Cloud Functions.
-    Takes a DataFrame and plot parameters and returns a Plotly JSON specification.
+    Main function that now correctly handles a pre-parsed JSON object for the dataframe.
     """
     try:
-        dataframe_json = params.get("dataframe_json")
+        dataframe_input_str = params.get("dataframe_json")
         plot_type = params.get("plot_type")
         
-        if not dataframe_json or not plot_type:
-            raise ValueError("The 'dataframe_json' and 'plot_type' parameters are required.")
-            
-        # Load DataFrame from JSON string (in 'split' format)
-        df = pd.read_json(dataframe_json, orient='split')
+        if not dataframe_input_str or not plot_type:
+            raise ValueError("'dataframe_json' and 'plot_type' are required.")
 
-        # Generate plot specification
+        # --- THIS IS THE FIX ---
+        # The agent sends a string representation of a dict ("{'key': ...}").
+        # This is not valid JSON. We safely evaluate it into a Python dict,
+        # then dump it into a valid JSON string that pandas can read.
+        # A valid JSON string from the notebook will be parsed correctly too.
+        try:
+            # Safely evaluate the string to a Python dictionary
+            temp_dict = ast.literal_eval(dataframe_input_str)
+            # Convert the dictionary to a proper JSON string
+            json_string = json.dumps(temp_dict)
+        except (ValueError, SyntaxError):
+             # If ast.literal_eval fails, it might already be a valid JSON string.
+             json_string = dataframe_input_str
+
+        df = pd.read_json(json_string, orient='split')
+        # --- END OF THE FIX ---
+
         plot_spec = _generate_plot_spec(
-            df=df,
-            plot_type=plot_type,
-            x_column=params.get("x_column", ""),
-            y_column=params.get("y_column", ""),
-            color_column=params.get("color_column", ""),
-            title=params.get("title", "Automatically Generated Chart"),
-            aggregation=params.get("aggregation", "sum") # Set default aggregation to 'sum'
+            df=df, plot_type=plot_type,
+            x_column=params.get("x_column", ""), y_column=params.get("y_column", ""),
+            color_column=params.get("color_column", ""), title=params.get("title", "Auto-Generated Chart"),
+            aggregation=params.get("aggregation", "sum")
         )
         
-        if plot_spec.get("error"):
-             raise ValueError(plot_spec.get("error"))
+        if plot_spec.get("error"): raise ValueError(plot_spec.get("error"))
 
-        # Return successful response
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},
@@ -244,10 +268,7 @@ def main(params):
         }
 
     except Exception as e:
-        print(f"An error occurred: {e}")
         error_body = json.dumps({"error": str(e)})
-        return {
-            'statusCode': 500,
-            'headers': {'Content-Type': 'application/json'},
-            'body': error_body
-        }
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json'}, 'body': error_body}
+
+
