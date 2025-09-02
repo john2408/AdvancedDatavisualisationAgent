@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS-specific files
+.DS_Store
+
+# IDE configuration
+.vscode/
+.idea/
+
+# Virtual environment folders (these should not be in the build context)
+mac_venv/
+venv/
+.venv/
+
+# Dependency management files (we are using requirements.txt)
+poetry.lock
+pyproject.toml
+
+# Documentation and other scripts
+docs/
+scripts/
