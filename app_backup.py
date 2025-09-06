@@ -3,7 +3,9 @@ import pandas as pd
 import time
 import json
 from datetime import datetime
+from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_ibm_voice_status
 from frontend.voice_components import create_voice_input_interface, display_voice_status
+from frontend.unified_tts import create_unified_tts_interface, synthesize_unified_audio, get_voice_display_name
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
 from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
@@ -15,6 +17,14 @@ from agents.crew_agents import (
     orchestration_crew,
     data_question_crew,
     alternative_viz_crew,
+    follow_up_crew
+)
+from backend.sql_utils import get_structured_schema, run_query
+from frontend.plotly_styles import apply_white_theme_styling
+from omegaconf import OmegaConf
+                        voice_name = get_voice_display_name(st.session_state.tts_config)
+                        provider_name = "IBM Watson" if provider == "ibm" else "ElevenLabs"
+                        st.caption(f"🔊 Audio generated with {provider_name} TTS ({voice_name})")tive_viz_crew,
     follow_up_crew
 )
 from backend.sql_utils import get_structured_schema, run_query
@@ -578,6 +588,10 @@ def display_welcome_message():
                 Ask questions about your vehicle registration data in the chat, and I'll create
                 beautiful visualizations for you using AI-generated SQL queries.
             </p>
+            <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
+                🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper<br>
+                🔊 Audio responses powered by IBM Watson Text-to-Speech
+            </p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -726,30 +740,86 @@ if "conversation_mode" not in st.session_state:
 with st.sidebar:
     st.title("📊 Visualization Agent")
     st.markdown("#### Chat with Your Database")
-    st.divider()
+    
+    # Initialize TTS configuration in session state if not present
+    if 'tts_config' not in st.session_state:
+        st.session_state.tts_config = {"enabled": False, "voice": None, "available": False}
+    
+    # Voice Service Selection
+    st.markdown("#### 🎤 Voice Input Service")
+    voice_service = st.radio(
+        "Choose your speech-to-text service:",
+        options=["IBM Watson", "OpenAI Whisper"],
+        index=0,  # Default to IBM Watson
+        help="Select your preferred voice recognition service"
+    )
+    
+    # Display current service branding with color coding
+    if voice_service == "IBM Watson":
+        st.markdown("*Powered by IBM Watson Speech-to-Text* 🔵")
+    else:
+        st.markdown("*Powered by OpenAI Whisper* 🟢")
+    
+    #st.divider()
 
-    # Voice Input Interface
-    voice_query = create_voice_input_interface()
+    # Voice Input Interface - conditional based on selection
+    voice_query = None
+    
+    if voice_service == "IBM Watson":
+        voice_query = create_ibm_voice_input_interface()
+        
+        # IBM Voice status expander
+        with st.expander("🔧 IBM Voice Setup", expanded=False):
+            display_ibm_voice_status()
+            
+    else:  # OpenAI Whisper
+        voice_query = create_voice_input_interface()
+        
+        # OpenAI Voice status expander  
+        with st.expander("🔧 OpenAI Voice Setup", expanded=False):
+            display_voice_status()
+    
+    # Handle voice query result (same for both services)
     if voice_query:
         st.session_state.run_query = voice_query
         st.rerun()
     
-    # Optional: Add voice status expander for troubleshooting
-    with st.expander("🔧 Voice Setup", expanded=False):
-        display_voice_status()
+    #st.divider()
     
-    st.divider()
+    # Unified TTS Control Interface
+    tts_config = create_unified_tts_interface()
+    st.session_state.tts_config = tts_config  # Store TTS config in session state
+    
+    #st.divider()
 
     # Chat history display area
-    chat_container = st.container(height=280)  # Further reduced for voice status
+    chat_container = st.container(height=260)  # Slightly reduced height for service selection
     with chat_container:
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
                 st.caption(message["time"])
+                
+                # Add audio playback for assistant messages if TTS is enabled
+                if (message["role"] == "assistant" and 
+                    hasattr(st.session_state, 'tts_config') and 
+                    st.session_state.tts_config.get("enabled", False)):
+                    
+                    # Generate and display audio for this message
+                    audio_bytes = synthesize_response_audio(
+                        message["content"], 
+                        st.session_state.tts_config
+                    )
+                    
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/wav")
+                        # Show which voice was used
+                        voice_name = st.session_state.tts_config.get("voice", "en-US_AllisonV3Voice")
+                        st.caption(f"🔊 Audio generated with IBM Watson TTS ({voice_name})")
 
-    # Chat input
-    if prompt := st.chat_input("Type or speak your question..."):
+    # Chat input with dynamic placeholder based on selected service
+    placeholder_text = f"Type your question or use {voice_service} voice input above..."
+    if prompt := st.chat_input(placeholder_text):
         st.session_state.run_query = prompt
 
 
@@ -790,6 +860,12 @@ if st.session_state.messages[-1]["role"] == "user":
             "time": visualization_data["ran_at"]
         }
         st.session_state.messages.append(assistant_message)
+        
+        # Generate audio for the assistant response if TTS is enabled
+        if (hasattr(st.session_state, 'tts_config') and 
+            st.session_state.tts_config.get("enabled", False)):
+            # Audio will be generated when the message is displayed in chat history
+            pass
         
         # Rerun to display the new assistant message and the visualization
         st.rerun()
