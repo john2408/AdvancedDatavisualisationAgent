@@ -3,7 +3,6 @@ import pandas as pd
 import time
 import json
 from datetime import datetime
-from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_ibm_voice_status
 from frontend.voice_components import create_voice_input_interface, display_voice_status
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
@@ -579,9 +578,6 @@ def display_welcome_message():
                 Ask questions about your vehicle registration data in the chat, and I'll create
                 beautiful visualizations for you using AI-generated SQL queries.
             </p>
-            <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
-                🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper
-            </p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -730,59 +726,30 @@ if "conversation_mode" not in st.session_state:
 with st.sidebar:
     st.title("📊 Visualization Agent")
     st.markdown("#### Chat with Your Database")
-    
-    # Voice Service Selection
-    st.markdown("#### 🎤 Voice Input Service")
-    voice_service = st.radio(
-        "Choose your speech-to-text service:",
-        options=["IBM Watson", "OpenAI Whisper"],
-        index=0,  # Default to IBM Watson
-        help="Select your preferred voice recognition service"
-    )
-    
-    # Display current service branding with color coding
-    if voice_service == "IBM Watson":
-        st.markdown("*Powered by IBM Watson Speech-to-Text* 🔵")
-    else:
-        st.markdown("*Powered by OpenAI Whisper* 🟢")
-    
     st.divider()
 
-    # Voice Input Interface - conditional based on selection
-    voice_query = None
-    
-    if voice_service == "IBM Watson":
-        voice_query = create_ibm_voice_input_interface()
-        
-        # IBM Voice status expander
-        with st.expander("🔧 IBM Voice Setup", expanded=False):
-            display_ibm_voice_status()
-            
-    else:  # OpenAI Whisper
-        voice_query = create_voice_input_interface()
-        
-        # OpenAI Voice status expander  
-        with st.expander("🔧 OpenAI Voice Setup", expanded=False):
-            display_voice_status()
-    
-    # Handle voice query result (same for both services)
+    # Voice Input Interface
+    voice_query = create_voice_input_interface()
     if voice_query:
         st.session_state.run_query = voice_query
         st.rerun()
     
+    # Optional: Add voice status expander for troubleshooting
+    with st.expander("🔧 Voice Setup", expanded=False):
+        display_voice_status()
+    
     st.divider()
 
     # Chat history display area
-    chat_container = st.container(height=260)  # Slightly reduced height for service selection
+    chat_container = st.container(height=280)  # Further reduced for voice status
     with chat_container:
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
                 st.caption(message["time"])
 
-    # Chat input with dynamic placeholder based on selected service
-    placeholder_text = f"Type your question or use {voice_service} voice input above..."
-    if prompt := st.chat_input(placeholder_text):
+    # Chat input
+    if prompt := st.chat_input("Type or speak your question..."):
         st.session_state.run_query = prompt
 
 
