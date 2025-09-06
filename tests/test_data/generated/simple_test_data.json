@@ -1,0 +1,76 @@
+{
+  "Question1": {
+    "Question": "Which fuel type showed the highest growth rate from 2023 to 2024?",
+    "SQL_Query": "WITH fuel_growth AS (\n    SELECT \n        v.fuel_type,\n        SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count ELSE 0 END) AS registrations_2023,\n        SUM(CASE WHEN t.year_report = 2024 THEN f.vehicle_count ELSE 0 END) AS registrations_2024\n    FROM FactRegisteredVehicles f\n    JOIN DimTime t ON f.time_key = t.time_key\n    JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key\n    WHERE t.year_report IN (2023, 2024)\n    GROUP BY v.fuel_type\n), growth_rate AS (\n    SELECT \n        fuel_type,\n        registrations_2024,\n        registrations_2023,\n        (registrations_2024 - registrations_2023) * 1.0 / NULLIF(registrations_2023, 0) AS growth\n    FROM fuel_growth\n)\nSELECT fuel_type, growth\nFROM growth_rate\nORDER BY growth DESC\nLIMIT 1;",
+    "Dataframe": [
+      {
+        "fuel_type": "DIESEL/ELECTRIC",
+        "growth": 0.07818930041152264
+      }
+    ],
+    "Rows": 1,
+    "Columns": [
+      "fuel_type",
+      "growth"
+    ],
+    "Generated_At": "2025-09-06T17:03:05.068090",
+    "Success": true
+  },
+  "Question2": {
+    "Question": "What is the growth rate among body types from 2023 to 2024?",
+    "SQL_Query": "WITH registrations AS (\n    SELECT \n        v.body_type,\n        t.year_report,\n        SUM(f.vehicle_count) AS total_registrations\n    FROM FactRegisteredVehicles f\n    JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key\n    JOIN DimTime t ON f.time_key = t.time_key\n    WHERE t.year_report IN (2023, 2024) \n    GROUP BY v.body_type, t.year_report\n)\nSELECT \n    r2023.body_type,\n    r2023.total_registrations AS registrations_2023,\n    r2024.total_registrations AS registrations_2024,\n    ((r2024.total_registrations - r2023.total_registrations) * 100.0 / r2023.total_registrations) AS growth_rate\nFROM \n    (SELECT body_type, total_registrations FROM registrations WHERE year_report = 2023) r2023\nJOIN \n    (SELECT body_type, total_registrations FROM registrations WHERE year_report = 2024) r2024\nON r2023.body_type = r2024.body_type;",
+    "Dataframe": [
+      {
+        "body_type": "CABRIO",
+        "registrations_2023": 6256,
+        "registrations_2024": 6487,
+        "growth_rate": 3.692455242966752
+      },
+      {
+        "body_type": "COUPE",
+        "registrations_2023": 31647,
+        "registrations_2024": 33078,
+        "growth_rate": 4.521755616646128
+      },
+      {
+        "body_type": "ESTATE",
+        "registrations_2023": 164832,
+        "registrations_2024": 174373,
+        "growth_rate": 5.788317802368472
+      },
+      {
+        "body_type": "MPV",
+        "registrations_2023": 2065,
+        "registrations_2024": 2207,
+        "growth_rate": 6.876513317191283
+      },
+      {
+        "body_type": "SEDAN",
+        "registrations_2023": 64472,
+        "registrations_2024": 67327,
+        "growth_rate": 4.428278942796873
+      },
+      {
+        "body_type": "SPORTSCOUPE",
+        "registrations_2023": 5224,
+        "registrations_2024": 5367,
+        "growth_rate": 2.737366003062787
+      },
+      {
+        "body_type": "SUV",
+        "registrations_2023": 228425,
+        "registrations_2024": 239467,
+        "growth_rate": 4.833971763160775
+      }
+    ],
+    "Rows": 7,
+    "Columns": [
+      "body_type",
+      "registrations_2023",
+      "registrations_2024",
+      "growth_rate"
+    ],
+    "Generated_At": "2025-09-06T17:03:14.833261",
+    "Success": true
+  }
+}

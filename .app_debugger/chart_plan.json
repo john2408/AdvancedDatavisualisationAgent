@@ -1,0 +1,11 @@
+{
+  "chart_type": "BAR",
+  "x": "oem_name",
+  "y": [
+    "total_registrations"
+  ],
+  "color": null,
+  "aggregation": "sum",
+  "transform": null,
+  "title": "total_registrations by oem_name"
+}
