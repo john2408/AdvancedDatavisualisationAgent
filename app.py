@@ -908,7 +908,6 @@ with st.sidebar:
                         voice_name = get_voice_display_name(st.session_state.tts_config)
                         provider_name = "IBM Watson" if provider == "ibm_watson" else "ElevenLabs"
                         st.caption(f"🔊 Audio generated with {provider_name} TTS ({voice_name})")
-                        st.caption(f"🔊 Audio generated with IBM Watson TTS ({voice_name})")
 
     # Chat input with dynamic placeholder based on selected service
     placeholder_text = f"Type your question or use {voice_service} voice input above..."

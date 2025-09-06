@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Environment variables
 config = OmegaConf.load("config.yaml")
-ELEVEN_LABS_TEXT_TO_SPEECH_KEY = os.environ.get(config.get("elevenlabs_text_to_speech_key"))
+ELEVEN_LABS_TEXT_TO_SPEECH_KEY = os.environ.get('ELEVEN_LABS_TEXT_TO_SPEECH_KEY')
 
 # Available ElevenLabs voices (popular ones)
 ELEVENLABS_VOICES = {

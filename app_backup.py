@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_ibm_voice_status
 from frontend.voice_components import create_voice_input_interface, display_voice_status
-from frontend.unified_tts import create_unified_tts_interface, synthesize_unified_audio, get_voice_display_name
+from frontend.ibm_text_speech import create_tts_control_interface, synthesize_response_audio
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
 from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
@@ -17,14 +17,6 @@ from agents.crew_agents import (
     orchestration_crew,
     data_question_crew,
     alternative_viz_crew,
-    follow_up_crew
-)
-from backend.sql_utils import get_structured_schema, run_query
-from frontend.plotly_styles import apply_white_theme_styling
-from omegaconf import OmegaConf
-                        voice_name = get_voice_display_name(st.session_state.tts_config)
-                        provider_name = "IBM Watson" if provider == "ibm" else "ElevenLabs"
-                        st.caption(f"🔊 Audio generated with {provider_name} TTS ({voice_name})")tive_viz_crew,
     follow_up_crew
 )
 from backend.sql_utils import get_structured_schema, run_query
@@ -786,8 +778,8 @@ with st.sidebar:
     
     #st.divider()
     
-    # Unified TTS Control Interface
-    tts_config = create_unified_tts_interface()
+    # TTS Control Interface
+    tts_config = create_tts_control_interface()
     st.session_state.tts_config = tts_config  # Store TTS config in session state
     
     #st.divider()
