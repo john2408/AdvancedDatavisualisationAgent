@@ -7,8 +7,7 @@ import os
 import sys
 import argparse
 
-# Add the project root to Python path
-sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def main():
     """Main CLI function."""

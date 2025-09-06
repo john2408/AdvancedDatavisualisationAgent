@@ -7,8 +7,11 @@ import os
 import sys
 import json
 
+import json
+
 # Add the project root to Python path
-sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_path)
 
 def test_scoring_logic():
     """Test the scoring logic against known data."""
@@ -16,7 +19,7 @@ def test_scoring_logic():
     print("=" * 40)
     
     # Load actual test results
-    with open('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent/tests/test_data/generated/complete_test_data.json', 'r') as f:
+    with open(os.path.join(parent_path, 'tests/test_data/generated/complete_test_data.json'), 'r') as f:
         test_data = json.load(f)
     
     # Test scoring for a few questions
@@ -67,8 +70,8 @@ def show_test_data_summary():
     """Show a summary of the test data."""
     print("\n📊 Test Data Summary")
     print("=" * 40)
-    
-    with open('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent/tests/test_data/generated/complete_test_data.json', 'r') as f:
+
+    with open(os.path.join(parent_path, 'tests/test_data/generated/complete_test_data.json'), 'r') as f:
         test_data = json.load(f)
     
     successful_questions = 0

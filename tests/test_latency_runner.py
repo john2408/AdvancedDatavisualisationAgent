@@ -8,7 +8,7 @@ import sys
 import time
 
 # Add the project root to Python path
-sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def test_latency_evaluation():
     """Test the latency evaluation with a single question."""

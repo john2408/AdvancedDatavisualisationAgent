@@ -10,7 +10,8 @@ import pandas as pd
 from datetime import datetime
 import time
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+# Add the project root to Python path
+sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
 
 from agents.crew_agents import sql_generator_crew, sql_reviewer_crew
 from backend.sql_utils import run_query

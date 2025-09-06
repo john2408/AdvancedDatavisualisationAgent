@@ -23,8 +23,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 # Add the project root to Python path
-sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 # Import test questions
 from tests.test_data.sample_sql_questions import test_questions
 

@@ -12,7 +12,8 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Any
 
 # Add the project root to Python path
-sys.path.append('/Users/JOHTORR/Repos/AdvancedDatavisualisationAgent')
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.append(project_root)
 
 from agents.crew_agents import sql_generator_crew, sql_reviewer_crew
 from backend.sql_utils import run_query
