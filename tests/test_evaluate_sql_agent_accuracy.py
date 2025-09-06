@@ -293,7 +293,7 @@ class SQLAgentEvaluator:
     def save_evaluation_results(self, results: Dict, output_path: str = None) -> str:
         """Save evaluation results to JSON file."""
         if output_path is None:
-            output_dir = "tests/test_data/evaluation_results"
+            output_dir = "tests/evaluation_results"
             os.makedirs(output_dir, exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = os.path.join(output_dir, f"sql_agent_evaluation_{timestamp}.json")
