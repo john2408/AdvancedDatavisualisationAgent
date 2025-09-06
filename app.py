@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_ibm_voice_status
 from frontend.voice_components import create_voice_input_interface, display_voice_status
+from frontend.ibm_text_speech import create_tts_control_interface, synthesize_response_audio
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
 from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
@@ -580,7 +581,8 @@ def display_welcome_message():
                 beautiful visualizations for you using AI-generated SQL queries.
             </p>
             <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
-                🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper
+                🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper<br>
+                🔊 Audio responses powered by IBM Watson Text-to-Speech
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -731,6 +733,10 @@ with st.sidebar:
     st.title("📊 Visualization Agent")
     st.markdown("#### Chat with Your Database")
     
+    # Initialize TTS configuration in session state if not present
+    if 'tts_config' not in st.session_state:
+        st.session_state.tts_config = {"enabled": False, "voice": None, "available": False}
+    
     # Voice Service Selection
     st.markdown("#### 🎤 Voice Input Service")
     voice_service = st.radio(
@@ -746,7 +752,7 @@ with st.sidebar:
     else:
         st.markdown("*Powered by OpenAI Whisper* 🟢")
     
-    st.divider()
+    #st.divider()
 
     # Voice Input Interface - conditional based on selection
     voice_query = None
@@ -770,7 +776,13 @@ with st.sidebar:
         st.session_state.run_query = voice_query
         st.rerun()
     
-    st.divider()
+    #st.divider()
+    
+    # TTS Control Interface
+    tts_config = create_tts_control_interface()
+    st.session_state.tts_config = tts_config  # Store TTS config in session state
+    
+    #st.divider()
 
     # Chat history display area
     chat_container = st.container(height=260)  # Slightly reduced height for service selection
@@ -779,6 +791,23 @@ with st.sidebar:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
                 st.caption(message["time"])
+                
+                # Add audio playback for assistant messages if TTS is enabled
+                if (message["role"] == "assistant" and 
+                    hasattr(st.session_state, 'tts_config') and 
+                    st.session_state.tts_config.get("enabled", False)):
+                    
+                    # Generate and display audio for this message
+                    audio_bytes = synthesize_response_audio(
+                        message["content"], 
+                        st.session_state.tts_config
+                    )
+                    
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/wav")
+                        # Show which voice was used
+                        voice_name = st.session_state.tts_config.get("voice", "en-US_AllisonV3Voice")
+                        st.caption(f"🔊 Audio generated with IBM Watson TTS ({voice_name})")
 
     # Chat input with dynamic placeholder based on selected service
     placeholder_text = f"Type your question or use {voice_service} voice input above..."
@@ -823,6 +852,12 @@ if st.session_state.messages[-1]["role"] == "user":
             "time": visualization_data["ran_at"]
         }
         st.session_state.messages.append(assistant_message)
+        
+        # Generate audio for the assistant response if TTS is enabled
+        if (hasattr(st.session_state, 'tts_config') and 
+            st.session_state.tts_config.get("enabled", False)):
+            # Audio will be generated when the message is displayed in chat history
+            pass
         
         # Rerun to display the new assistant message and the visualization
         st.rerun()

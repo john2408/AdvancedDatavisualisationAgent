@@ -1,3 +1,5 @@
+ibm_text_to_speech_url: https://api.us-south.text-to-speech.watson.cloud.ibm.com/instances/2ca36c39-3032-40b8-97d9-33239092d27e
+ibm_text_to_speech_key: IBM_TEXT_TO_SPEECH_KEY
 ibm_speech_to_text_url: https://api.au-syd.speech-to-text.watson.cloud.ibm.com/instances/23b37a3c-5727-4460-bf30-5488b47cae02
 ibm_speech_to_text_key: IBM_SPEECH_TO_TEXT_KEY
 db_path: "data/registered_vehicles.sqlite"

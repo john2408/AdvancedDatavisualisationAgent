@@ -3,6 +3,8 @@ IBM Cloud Speech-to-Text Components for Streamlit Application
 
 This module provides voice-to-text functionality using IBM Cloud Speech-to-Text API
 and streamlit-audio-recorder for capturing audio input.
+
+Ref: https://cloud.ibm.com/apidocs/speech-to-text#recognize
 """
 
 import os
