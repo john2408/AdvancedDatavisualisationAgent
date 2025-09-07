@@ -691,7 +691,7 @@ def display_welcome_message():
     
     st.write("") # Spacer
     starter_questions = [
-        "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",
+        "What are the monthly trends in market share for each OEM in 2024?",
         "What are the monthly registrations in total since 2023?",
         "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?",
         "Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?"

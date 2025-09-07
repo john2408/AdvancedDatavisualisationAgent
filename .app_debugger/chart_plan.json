@@ -1,11 +1,11 @@
 {
-  "chart_type": "BAR",
-  "x": "oem_name",
+  "chart_type": "MULTI_LINE",
+  "x": "year_month",
   "y": [
-    "total_registrations"
+    "market_share_pct"
   ],
-  "color": null,
+  "color": "oem_name",
   "aggregation": "sum",
   "transform": null,
-  "title": "total_registrations by oem_name"
+  "title": "market_share_pct trends by oem_name over year_month"
 }
