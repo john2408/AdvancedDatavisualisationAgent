@@ -245,9 +245,15 @@ The implementation of dual speech-to-text services (OpenAI Whisper and IBM Watso
 
 The development and evaluation process revealed several critical lessons that have broader implications for AI-powered business intelligence systems and natural language database interfaces.
 
+
+
 #### Lesson 1: Performance Optimization Requires Strategic AI Usage Rather Than Comprehensive AI Integration
 
-The most important lesson learned involves the strategic application of artificial intelligence components within larger systems. Initial development approaches often assume that more AI integration leads to better results, but this project demonstrated that selective AI usage combined with traditional programming approaches can achieve superior performance outcomes. The visualization system evolution from pure agent-based to hybrid approach illustrates that AI should be applied where it provides unique value (complex pattern recognition, natural language understanding) while traditional algorithms should handle deterministic tasks (chart generation, data formatting). This selective approach reduces external API dependencies, improves response times, and maintains system reliability while preserving the sophisticated capabilities that AI enables.
+The most important lesson learned involves the strategic application of artificial intelligence components within larger systems. Initial development approaches often assume that more AI integration leads to better results, but this project demonstrated that selective AI usage combined with traditional programming approaches can achieve superior performance outcomes. The visualization system evolution from pure agent-based to hybrid approach illustrates that AI should be applied where it provides unique value (complex pattern recognition, natural language understanding) while traditional algorithms should handle deterministic tasks (chart generation, data formatting).
+
+Recent research by [METR (2025)](https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/) on measuring AI ability to complete long tasks demonstrates that model reliability is highly sensitive to task length and scope. On a diverse set of multi-step software and reasoning tasks, the study compared model performance with the time required by human experts. The findings show that tasks which take humans less than four minutes are completed almost flawlessly by current models (close to 100% success rate). However, for tasks requiring more than four hours of human effort, model success rates fall below 10%. METR use this to characterize model ability in terms of the length of tasks (measured in human effort) that a model can complete with a given probability of success (METR, 2025).
+
+This evidence reinforces our design decision: AI is most reliable when used for short, well-defined subtasks. By decomposing workflows into smaller units and delegating deterministic operations to traditional algorithms, the system improves reliability, reduces external API dependencies, and achieves faster response times. Performance optimization, therefore, requires strategic AI usage rather than comprehensive integration, with AI carefully applied only where its unique reasoning capabilities add value.
 
 #### Lesson 2: Database Schema Design Fundamentally Impacts AI Agent Performance
 
