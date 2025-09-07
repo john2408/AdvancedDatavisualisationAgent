@@ -7,6 +7,7 @@ from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_i
 from frontend.voice_components import create_voice_input_interface, display_voice_status
 from frontend.ibm_text_speech import create_tts_control_interface as create_ibm_tts_interface, synthesize_response_audio as synthesize_ibm_audio, IBM_VOICES
 from frontend.elevenlabs_text_speech import create_elevenlabs_tts_interface, synthesize_elevenlabs_audio, ELEVENLABS_VOICES
+from frontend.openai_text_speech import create_openai_tts_interface, synthesize_openai_audio, OPENAI_VOICES
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
 from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
@@ -39,7 +40,7 @@ def create_unified_tts_interface():
     st.markdown("#### 🔊 Audio Responses")
     
     # TTS Provider Selection
-    provider_options = ["IBM Watson", "ElevenLabs"]
+    provider_options = ["IBM Watson", "ElevenLabs", "OpenAI"]
     previously_selected_provider = st.session_state.get('tts_provider', provider_options[0])
     
     # Find index of previously selected provider
@@ -51,7 +52,7 @@ def create_unified_tts_interface():
     selected_provider_index = st.selectbox(
         "Select TTS Provider:",
         range(len(provider_options)),
-        format_func=lambda x: f"🔵 {provider_options[x]}" if provider_options[x] == "IBM Watson" else f"🟢 {provider_options[x]}",
+        format_func=lambda x: f"🔵 {provider_options[x]}" if provider_options[x] == "IBM Watson" else f"🟢 {provider_options[x]}" if provider_options[x] == "ElevenLabs" else f"🟠 {provider_options[x]}",
         index=default_provider_index,
         key="tts_provider_selection"
     )
@@ -87,6 +88,9 @@ def create_unified_tts_interface():
     elif selected_provider == "ElevenLabs":
         tts_config = create_elevenlabs_tts_interface()
         tts_config["provider"] = "elevenlabs"
+    elif selected_provider == "OpenAI":
+        tts_config = create_openai_tts_interface()
+        tts_config["provider"] = "openai"
     else:
         tts_config = {"enabled": False, "provider": "unknown", "voice": None, "available": False}
     
@@ -107,6 +111,8 @@ def synthesize_unified_audio(text: str, tts_config: dict):
             return synthesize_ibm_audio(text, tts_config)
         elif provider == "elevenlabs":
             return synthesize_elevenlabs_audio(text, tts_config)
+        elif provider == "openai":
+            return synthesize_openai_audio(text, tts_config)
         else:
             return None
     except Exception as e:
@@ -125,6 +131,8 @@ def get_voice_display_name(tts_config: dict) -> str:
         return IBM_VOICES[voice]
     elif provider == "elevenlabs" and voice in ELEVENLABS_VOICES:
         return ELEVENLABS_VOICES[voice]
+    elif provider == "openai" and voice in OPENAI_VOICES:
+        return OPENAI_VOICES[voice]
     else:
         return voice
 
@@ -677,7 +685,7 @@ def display_welcome_message():
             </p>
             <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
                 🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper<br>
-                🔊 Audio responses powered by IBM Watson Text-to-Speech & ElevenLabs AI
+                🔊 Audio responses powered by IBM Watson Text-to-Speech, ElevenLabs AI & OpenAI TTS
             </p>
         </div>
     """, unsafe_allow_html=True)

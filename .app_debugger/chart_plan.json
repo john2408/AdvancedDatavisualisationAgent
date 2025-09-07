@@ -2,10 +2,10 @@
   "chart_type": "MULTI_LINE",
   "x": "year_month",
   "y": [
-    "market_share_pct"
+    "total_vehicles"
   ],
   "color": "oem_name",
   "aggregation": "sum",
   "transform": null,
-  "title": "market_share_pct trends by oem_name over year_month"
+  "title": "total_vehicles trends by oem_name over year_month"
 }
