@@ -136,7 +136,6 @@ The system implements a sequential processing pipeline that transforms natural l
 The original visualization implementation employed a `data_visualization_crew` consisting of multiple AI agents for chart generation. This approach utilized:
 
 - **Data Analysis Agent**: Analyzed query results to identify data patterns and visualization opportunities
-- **Chart Type Selection Agent**: Determined appropriate visualization types based on data characteristics
 - **Plotly Generation Agent**: Created interactive charts using natural language descriptions
 
 While this approach provided high-quality visualizations, performance analysis revealed significant latency issues with average response times of 6.5 seconds due to multiple LLM API calls and complex agent coordination.
@@ -163,7 +162,65 @@ The system incorporates dual speech-to-text services to maximize accessibility a
 
 The voice input interface implements automatic silence detection, visual feedback during recording, transcription editing capabilities, and service selection options. Error handling mechanisms ensure graceful degradation when services are unavailable.
 
-### Section 4.5: Text-to-Speech Integration
+### 4.5 Text-to-Speech Integration
 
+The system implements a dual text-to-speech architecture to provide audio responses with flexibility in voice quality, language support, and deployment scenarios. This multi-provider approach ensures service reliability and accommodates different user preferences for audio output.
+
+**IBM Watson Text-to-Speech Integration**: Provides enterprise-grade audio synthesis with six professional voice options spanning multiple genders and regional accents. The implementation supports Speech Synthesis Markup Language (SSML) for advanced pronunciation control and emotional expression. The service offers high-fidelity audio output suitable for business applications and provides consistent latency characteristics for real-time response generation.
+
+**ElevenLabs AI Speech Integration**: Delivers advanced neural voice synthesis with natural intonation patterns and emotional expressiveness. This service supports voice cloning capabilities and provides premium audio quality with human-like characteristics. The implementation includes real-time streaming options for reduced perceived latency and supports custom voice model training.
+
+**Unified Interface Design**: The system presents a consolidated control interface that abstracts provider-specific configurations while maintaining access to advanced features. Users can select between providers, choose specific voices, and configure audio output preferences through a single control panel. Session state management preserves user preferences across interactions, and the system includes automatic fallback mechanisms when primary services become unavailable.
+
+The audio synthesis pipeline implements asynchronous processing to prevent blocking user interactions, temporary file management for audio playback, and comprehensive error handling with graceful degradation to text-only responses when audio services fail.
+
+## 5. Performance and Evaluation
+
+This section presents a comprehensive evaluation of the Advanced Data Visualization Agent's performance across multiple dimensions. The evaluation framework encompasses two primary assessment methodologies: SQL generation accuracy evaluation and system latency performance analysis. These evaluations were conducted using a standardized test suite of 24 representative queries spanning various analytical scenarios including time series analysis, comparative studies, and geographic data exploration.
+
+The evaluation methodology implements automated testing procedures to ensure consistency and reproducibility of results. Performance metrics were collected during production-like conditions to provide realistic assessments of system capabilities and limitations. The evaluation framework serves both as a quality assurance mechanism and as a baseline for future system improvements.
+
+### 5.1 SQL Generation Evaluation
+
+The SQL generation accuracy evaluation assesses the system's capability to translate natural language queries into correct SQL statements that produce expected results. This evaluation employs a comprehensive scoring methodology that evaluates three critical dimensions of query accuracy.
+
+**Evaluation Methodology**: The assessment utilizes a 100-point scoring system distributed across three components: row count accuracy (50 points), column count accuracy (40 points), and column name correctness (10 points). This weighted scoring approach prioritizes data completeness and structural accuracy while accounting for naming conventions.
+
+**Test Dataset**: The evaluation was conducted using 24 diverse natural language queries covering multiple analytical scenarios including temporal analysis, categorical comparisons, geographic data exploration, and growth rate calculations. The test queries were designed to represent typical business intelligence scenarios encountered in real-world applications.
+
+**Performance Results**: The system achieved an overall accuracy score of 82.5% (1,980 out of 2,400 maximum points) across all test scenarios. This performance indicates strong capability in translating natural language queries into functionally correct SQL statements. The evaluation revealed 100% success rate in query execution, with all 24 queries producing valid results without syntax errors or execution failures.
+
+**Detailed Analysis**: 
+- **Perfect Scores (100 points)**: 15 out of 24 queries (62.5%) achieved perfect accuracy scores, demonstrating excellent performance for standard analytical queries
+- **High Performance (≥90 points)**: 18 out of 24 queries (75%) scored 90 points or higher, indicating strong overall system reliability
+- **Performance Variations**: Lower scores typically occurred in complex multi-dimensional queries requiring specific aggregation patterns or precise temporal filtering
+
+**Error Pattern Analysis**: The primary accuracy challenges emerged in queries requiring precise row count matching for complex temporal aggregations and multi-dimensional comparisons. Column structure and naming accuracy remained consistently high across all test scenarios, indicating robust schema understanding and query construction capabilities.
+
+**Evaluation Duration**: The complete evaluation process required 122.6 seconds for 24 queries, averaging approximately 5.1 seconds per query evaluation cycle, which includes SQL generation, review, execution, and result comparison.
+
+### 5.2 Latency Performance Evaluation
+
+The latency evaluation provides comprehensive analysis of system response times across the four-step processing pipeline. This evaluation measures end-to-end performance characteristics and identifies potential bottlenecks in the query processing workflow.
+
+**Evaluation Scope**: The latency assessment examined 24 complete pipeline executions, measuring individual step durations and overall response times. The evaluation captured performance metrics for each pipeline component: SQL generation, SQL review, query execution, and visualization generation.
+
+**Overall Pipeline Performance**: The system demonstrated consistent performance with a mean response time of 5.769 seconds per query. Performance characteristics showed normal distribution with a standard deviation of 1.150 seconds, indicating stable and predictable response times. The system achieved 100% success rate with no pipeline failures during the evaluation period.
+
+**Step-by-Step Performance Analysis**:
+
+**SQL Generation (Step 1)**: Mean execution time of 2.068 seconds with performance range from 1.323 to 3.942 seconds. This step represents approximately 36% of total pipeline duration and demonstrates consistent performance across different query complexities.
+
+**SQL Review (Step 2)**: Average duration of 2.729 seconds, representing the longest individual step in the pipeline at approximately 47% of total execution time. The review process shows slightly higher variability (standard deviation: 0.639 seconds) due to varying optimization requirements across different query types.
+
+**Query Execution (Step 3)**: Highly efficient with mean execution time of 0.171 seconds, demonstrating the effectiveness of the Star Schema design and database optimization. This step contributes only 3% of total pipeline duration, confirming that database operations are not a performance bottleneck.
+
+**Visualization Generation (Step 4)**: Consistent performance with mean duration of 0.802 seconds (approximately 14% of total time). The hybrid visualization approach maintains stable response times across different chart types and data volumes.
+
+**Performance Distribution Analysis**: The system shows excellent consistency with 75% of queries completing within 6.181 seconds (P75) and 95% completing within 8.307 seconds (P95). This performance distribution indicates reliable service levels suitable for interactive business intelligence applications.
+
+**Bottleneck Identification**: The analysis reveals that SQL generation and review steps (Steps 1 and 2) account for approximately 83% of total processing time, representing the primary optimization opportunity. The database query execution and visualization generation demonstrate optimal performance characteristics.
+
+**Comparative Performance**: The hybrid visualization system demonstrates significant performance improvements over the original agent-based approach, achieving the reported 95.6% latency reduction from 6.5 seconds to 0.287 seconds for the visualization component specifically.
 
 
