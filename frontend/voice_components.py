@@ -172,6 +172,19 @@ def create_voice_input_interface() -> Optional[str]:
             help="You can edit the transcript before sending"
         )
         
+        # Apply custom CSS for white background and white font
+        st.markdown(
+            """
+            <style>
+            div[data-testid="stTextArea"] > div > div > textarea {
+            background-color: white !important;
+            color: black !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )    
+        
         # Action buttons for transcript
         col1, col2, col3 = st.columns(3)
         

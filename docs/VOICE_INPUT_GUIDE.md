@@ -1,9 +1,14 @@
 # 🎤 Voice Input Feature Guide
 
 ## Overview
-Your Visualization Agent now supports voice-to-text input using OpenAI Whisper for high-accuracy transcription.
+Your Visualization Agent now supports voice-to-text input using both OpenAI Whisper and IBM Cloud Speech-to-Text for high-accuracy transcription. Choose between two enterprise-grade speech recognition services.
 
 ## How to Use Voice Input
+
+### 🎙️ **Choose Your Service**
+You can now use either:
+- **OpenAI Whisper**: Global model with 100+ languages
+- **IBM Cloud Speech-to-Text**: Enterprise-grade with confidence scoring
 
 ### 1. 🎙️ **Record Your Question**
 - Click the **microphone button** in the sidebar
@@ -12,14 +17,19 @@ Your Visualization Agent now supports voice-to-text input using OpenAI Whisper f
 - You'll see a visual waveform while recording
 
 ### 2. 🔄 **Transcribe Audio**
+**For OpenAI Whisper:**
 - After recording, click **"🔄 Transcribe"** button
 - Wait for OpenAI Whisper to process your audio
-- The transcribed text will appear in the text area
+
+**For IBM Watson:**
+- After recording, click **"🔄 Transcribe with IBM"** button
+- Wait for IBM Cloud Speech-to-Text to process your audio
+- You'll receive confidence scores for transcription quality
 
 ### 3. ✏️ **Edit if Needed**
 - Review the transcription for accuracy
 - Edit the text in the text area if needed
-- The transcription is usually very accurate for clear speech
+- Both services provide highly accurate transcriptions
 
 ### 4. 📤 **Send Your Query**
 - Click **"📤 Send Query"** to submit your question
@@ -63,16 +73,32 @@ Try these sample voice queries:
 - No audio is stored permanently
 
 ### 🔑 **Technical Requirements**
-- OpenAI API key must be set as environment variable
+
+**For OpenAI Whisper:**
+- OpenAI API key must be set as environment variable: `OPENAI_API_KEY`
+- Modern web browser with microphone support
+- Stable internet connection
+
+**For IBM Cloud Speech-to-Text:**
+- IBM Speech-to-Text API key must be set as environment variable: `IBM_SPEECH_TO_TEXT_KEY`
+- IBM service URL configured in `config.yaml`
 - Modern web browser with microphone support
 - Stable internet connection
 
 ## Troubleshooting
 
 ### ❌ **Voice Input Not Available**
+
+**For OpenAI Whisper:**
 - Check that `OPENAI_API_KEY` environment variable is set
 - Restart the Streamlit application
 - Verify your OpenAI account has API access
+
+**For IBM Cloud Speech-to-Text:**
+- Check that `IBM_SPEECH_TO_TEXT_KEY` environment variable is set
+- Verify the IBM service URL in `config.yaml` is correct
+- Ensure your IBM Cloud Speech-to-Text service is active
+- Restart the Streamlit application
 
 ### 🎙️ **Recording Issues**
 - Grant microphone permissions to your browser
@@ -84,21 +110,48 @@ Try these sample voice queries:
 - Reduce background noise
 - Try re-recording the audio
 - Edit the transcript manually if needed
+- Try the alternative transcription service
+
+## Service Comparison
+
+| Feature | OpenAI Whisper | IBM Cloud Speech-to-Text |
+|---------|----------------|--------------------------|
+| **Languages** | 100+ languages | Multiple languages |
+| **Audio Quality** | Excellent with noise | Excellent for clear speech |
+| **Speed** | Fast | Very fast |
+| **Confidence Scores** | Not provided | Yes, provided |
+| **Cost** | ~$0.006/minute | Variable pricing |
+| **Privacy** | OpenAI policies | Enterprise-grade |
+| **Best For** | Multilingual, noisy environments | Enterprise, clear speech |
 
 ## Privacy & Security
 
+**OpenAI Whisper:**
 - Audio is sent to OpenAI Whisper API for transcription
 - No audio files are stored locally or permanently
 - Transcripts are processed like regular text queries
 - OpenAI's data usage policies apply
 
+**IBM Cloud Speech-to-Text:**
+- Audio is sent to IBM Cloud Speech-to-Text API for transcription
+- Enterprise-grade security and privacy
+- No audio files are stored locally or permanently
+- Transcripts are processed like regular text queries
+- IBM Cloud privacy policies apply
+
 ## Cost Considerations
 
-- Voice transcription uses OpenAI Whisper API
+**OpenAI Whisper:**
 - Costs approximately $0.006 per minute of audio
 - Most queries are under 30 seconds (< $0.003 each)
 - Very cost-effective for occasional use
 
+**IBM Cloud Speech-to-Text:**
+- Variable pricing based on usage tier
+- Enterprise plans available
+- Free tier often available for development
+- Cost-effective for enterprise use
+
 ---
 
-**Enjoy hands-free querying of your vehicle registration database!** 🚗📊🎤
+**Enjoy hands-free querying of your vehicle registration database with dual transcription options!** 🚗📊🎤
