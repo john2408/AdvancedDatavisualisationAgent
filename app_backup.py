@@ -5,15 +5,16 @@ import json
 from datetime import datetime
 from frontend.ibm_speech_text import create_ibm_voice_input_interface, display_ibm_voice_status
 from frontend.voice_components import create_voice_input_interface, display_voice_status
-from frontend.ibm_text_speech import create_tts_control_interface, synthesize_response_audio
+from frontend.ibm_text_speech import create_tts_control_interface as create_ibm_tts_interface, synthesize_response_audio as synthesize_ibm_audio, IBM_VOICES
+from frontend.elevenlabs_text_speech import create_elevenlabs_tts_interface, synthesize_elevenlabs_audio, ELEVENLABS_VOICES
+from frontend.openai_text_speech import create_openai_tts_interface, synthesize_openai_audio, OPENAI_VOICES
 from frontend.utils import load_multiple_css
 from frontend.render_plotly_json import render_plotly_from_json
 from frontend.hybrid_visualization import step_4_hybrid_visualization, generate_alternative_visualization_hybrid
 from agents.crew_agents import (
     sql_generator_crew, 
     sql_reviewer_crew, 
-    data_analysis_crew,
-    data_visualization_crew,
+    data_analysis_crew,               
     orchestration_crew,
     data_question_crew,
     alternative_viz_crew,
@@ -32,6 +33,108 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- UNIFIED TTS FUNCTIONS ---
+def create_unified_tts_interface():
+    """Create unified TTS interface with provider selection."""
+    st.markdown("#### 🔊 Audio Responses")
+    
+    # TTS Provider Selection
+    provider_options = ["IBM Watson", "ElevenLabs", "OpenAI"]
+    previously_selected_provider = st.session_state.get('tts_provider', provider_options[0])
+    
+    # Find index of previously selected provider
+    try:
+        default_provider_index = provider_options.index(previously_selected_provider)
+    except ValueError:
+        default_provider_index = 0
+    
+    selected_provider_index = st.selectbox(
+        "Select TTS Provider:",
+        range(len(provider_options)),
+        format_func=lambda x: f"🔵 {provider_options[x]}" if provider_options[x] == "IBM Watson" else f"🟢 {provider_options[x]}" if provider_options[x] == "ElevenLabs" else f"🟠 {provider_options[x]}",
+        index=default_provider_index,
+        key="tts_provider_selection"
+    )
+    
+    selected_provider = provider_options[selected_provider_index]
+    
+    # Store selected provider in session state
+    st.session_state.tts_provider = selected_provider
+    
+    # TTS enable/disable toggle
+    tts_enabled = st.checkbox(
+        f"Enable {selected_provider} audio responses",
+        value=st.session_state.get('tts_enabled', False),
+        help=f"Convert assistant messages to speech using {selected_provider}",
+        key="unified_tts_enabled_checkbox"
+    )
+    
+    # Store TTS enabled state
+    st.session_state.tts_enabled = tts_enabled
+    
+    if not tts_enabled:
+        return {
+            "enabled": False,
+            "provider": selected_provider.lower().replace(" ", "_"),
+            "voice": None,
+            "available": False
+        }
+    
+    # Provider-specific configuration
+    if selected_provider == "IBM Watson":
+        tts_config = create_ibm_tts_interface()
+        tts_config["provider"] = "ibm_watson"
+    elif selected_provider == "ElevenLabs":
+        tts_config = create_elevenlabs_tts_interface()
+        tts_config["provider"] = "elevenlabs"
+    elif selected_provider == "OpenAI":
+        tts_config = create_openai_tts_interface()
+        tts_config["provider"] = "openai"
+    else:
+        tts_config = {"enabled": False, "provider": "unknown", "voice": None, "available": False}
+    
+    # Override the enabled state
+    tts_config["enabled"] = tts_enabled
+    
+    return tts_config
+
+def synthesize_unified_audio(text: str, tts_config: dict):
+    """Synthesize audio using the configured TTS provider."""
+    if not tts_config.get("enabled", False) or not tts_config.get("available", False):
+        return None
+    
+    provider = tts_config.get("provider", "ibm_watson")
+    
+    try:
+        if provider == "ibm_watson":
+            return synthesize_ibm_audio(text, tts_config)
+        elif provider == "elevenlabs":
+            return synthesize_elevenlabs_audio(text, tts_config)
+        elif provider == "openai":
+            return synthesize_openai_audio(text, tts_config)
+        else:
+            return None
+    except Exception as e:
+        st.error(f"Audio synthesis failed with {provider}: {e}")
+        return None
+
+def get_voice_display_name(tts_config: dict) -> str:
+    """Get a human-readable voice name for display."""
+    provider = tts_config.get("provider", "ibm_watson")
+    voice = tts_config.get("voice")
+    
+    if not voice:
+        return "Unknown Voice"
+    
+    if provider == "ibm_watson" and voice in IBM_VOICES:
+        return IBM_VOICES[voice]
+    elif provider == "elevenlabs" and voice in ELEVENLABS_VOICES:
+        return ELEVENLABS_VOICES[voice]
+    elif provider == "openai" and voice in OPENAI_VOICES:
+        return OPENAI_VOICES[voice]
+    else:
+        return voice
 
 # --- LOAD CUSTOM CSS ---
 css_files = [
@@ -582,7 +685,7 @@ def display_welcome_message():
             </p>
             <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
                 🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper<br>
-                🔊 Audio responses powered by IBM Watson Text-to-Speech
+                🔊 Audio responses powered by IBM Watson Text-to-Speech & ElevenLabs AI
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -596,7 +699,7 @@ def display_welcome_message():
     
     st.write("") # Spacer
     starter_questions = [
-        "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",
+        "What are the monthly trends in market share for each OEM in 2024?",
         "What are the monthly registrations in total since 2023?",
         "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?",
         "Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?"
@@ -778,8 +881,8 @@ with st.sidebar:
     
     #st.divider()
     
-    # TTS Control Interface
-    tts_config = create_tts_control_interface()
+    # Unified TTS Control Interface
+    tts_config = create_unified_tts_interface()
     st.session_state.tts_config = tts_config  # Store TTS config in session state
     
     #st.divider()
@@ -798,16 +901,21 @@ with st.sidebar:
                     st.session_state.tts_config.get("enabled", False)):
                     
                     # Generate and display audio for this message
-                    audio_bytes = synthesize_response_audio(
+                    audio_bytes = synthesize_unified_audio(
                         message["content"], 
                         st.session_state.tts_config
                     )
                     
                     if audio_bytes:
-                        st.audio(audio_bytes, format="audio/wav")
-                        # Show which voice was used
-                        voice_name = st.session_state.tts_config.get("voice", "en-US_AllisonV3Voice")
-                        st.caption(f"🔊 Audio generated with IBM Watson TTS ({voice_name})")
+                        # Determine audio format based on provider
+                        provider = st.session_state.tts_config.get("provider", "ibm_watson")
+                        audio_format = "audio/wav" if provider == "ibm_watson" else "audio/mp3"
+                        st.audio(audio_bytes, format=audio_format)
+                        
+                        # Show which voice and provider was used
+                        voice_name = get_voice_display_name(st.session_state.tts_config)
+                        provider_name = "IBM Watson" if provider == "ibm_watson" else "ElevenLabs"
+                        st.caption(f"🔊 Audio generated with {provider_name} TTS ({voice_name})")
 
     # Chat input with dynamic placeholder based on selected service
     placeholder_text = f"Type your question or use {voice_service} voice input above..."

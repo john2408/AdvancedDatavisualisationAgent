@@ -1,0 +1,28 @@
+test_questions = [        
+        "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",
+        "What are the monthly registrations for electric vehicles (EVs) since 2023?",
+        "Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.",
+        "Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.",
+        "Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024",
+        "What are the top 5 car brands by total registrations in 2024?",
+        "What are the monthly registrations in total since 2023?",
+        "What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?",
+        "Year-over-year comparison of SUV registrations from 2023 to 2024?",
+        "Q1 2024 vs Q1 2023 comparison of total vehicle registrations?",
+        "Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?",
+        "Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?",
+        "Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?",
+        "What are the top 3 body types registered in 2024?",
+        "Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?",
+        "Which fuel type showed the highest growth rate from 2023 to 2024?",
+        "What is the growth rate among body types from 2023 to 2024?",
+        "Which country has the highest vehicle registrations?", 
+        "Compare England vs Scotland vehicle body type preferences",
+        "Which districts register the most electric vehicles?",
+        "Find the top regions for BMW registrations",
+        "Find the top regions for MERCEDES-BENZ registrations", 
+        "Find the top regions for AUDI registrations",
+        "Find the top regions for PORSCHE registrations",
+        ]
+
+

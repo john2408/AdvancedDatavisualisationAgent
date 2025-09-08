@@ -1,0 +1,11 @@
+{
+  "chart_type": "MULTI_LINE",
+  "x": "year_month",
+  "y": [
+    "total_vehicles"
+  ],
+  "color": "oem_name",
+  "aggregation": "sum",
+  "transform": null,
+  "title": "total_vehicles trends by oem_name over year_month"
+}

@@ -6,6 +6,7 @@ data/market_share.sqlite
 js_frontend/*
 archive/
 .streamlit/
+.app_debugger/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -193,9 +194,7 @@ Thumbs.db
 *.joblib
 *.h5
 *.hdf5
-*.csv
 *.xlsx
-*.json
 data/raw/
 data/processed/
 models/

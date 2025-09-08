@@ -1,0 +1,170 @@
+{
+  "summary": {
+    "total_questions": 3,
+    "successful_evaluations": 3,
+    "failed_evaluations": 0,
+    "total_score": 300,
+    "max_total_score": 300,
+    "overall_accuracy_percent": 100.0,
+    "average_score_per_question": 100.0,
+    "evaluation_start": "2025-09-06T17:20:37.661354",
+    "evaluation_end": "2025-09-06T17:20:54.074199",
+    "duration_seconds": 16.412845
+  },
+  "results": {
+    "Question1": {
+      "question_num": 1,
+      "question": "What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",
+      "expected": {
+        "rows": 168,
+        "columns": [
+          "year_month",
+          "body_type",
+          "total_registrations"
+        ],
+        "columns_count": 3
+      },
+      "actual": {
+        "success": true,
+        "rows": 168,
+        "columns": [
+          "body_type",
+          "year_month",
+          "total_registrations"
+        ],
+        "columns_count": 3,
+        "error": null
+      },
+      "comparison": {
+        "rows_match": true,
+        "columns_count_match": true,
+        "column_names_match": true,
+        "rows_score": 50,
+        "columns_count_score": 40,
+        "column_names_score": 10,
+        "total_score": 100,
+        "comparison_possible": true,
+        "expected_rows": 168,
+        "actual_rows": 168,
+        "expected_columns": [
+          "year_month",
+          "body_type",
+          "total_registrations"
+        ],
+        "actual_columns": [
+          "body_type",
+          "year_month",
+          "total_registrations"
+        ],
+        "expected_columns_count": 3,
+        "actual_columns_count": 3
+      },
+      "score": 100,
+      "max_score": 100,
+      "timestamp": "2025-09-06T17:20:43.420720"
+    },
+    "Question2": {
+      "question_num": 2,
+      "question": "What are the monthly registrations for electric vehicles (EVs) since 2023?",
+      "expected": {
+        "rows": 24,
+        "columns": [
+          "year_month",
+          "ev_registrations"
+        ],
+        "columns_count": 2
+      },
+      "actual": {
+        "success": true,
+        "rows": 24,
+        "columns": [
+          "year_month",
+          "ev_registrations"
+        ],
+        "columns_count": 2,
+        "error": null
+      },
+      "comparison": {
+        "rows_match": true,
+        "columns_count_match": true,
+        "column_names_match": true,
+        "rows_score": 50,
+        "columns_count_score": 40,
+        "column_names_score": 10,
+        "total_score": 100,
+        "comparison_possible": true,
+        "expected_rows": 24,
+        "actual_rows": 24,
+        "expected_columns": [
+          "year_month",
+          "ev_registrations"
+        ],
+        "actual_columns": [
+          "year_month",
+          "ev_registrations"
+        ],
+        "expected_columns_count": 2,
+        "actual_columns_count": 2
+      },
+      "score": 100,
+      "max_score": 100,
+      "timestamp": "2025-09-06T17:20:48.046465"
+    },
+    "Question3": {
+      "question_num": 3,
+      "question": "Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.",
+      "expected": {
+        "rows": 12,
+        "columns": [
+          "year_month",
+          "petrol_registrations",
+          "electric_registrations"
+        ],
+        "columns_count": 3
+      },
+      "actual": {
+        "success": true,
+        "rows": 12,
+        "columns": [
+          "year_month",
+          "petrol_registrations",
+          "electric_registrations"
+        ],
+        "columns_count": 3,
+        "error": null
+      },
+      "comparison": {
+        "rows_match": true,
+        "columns_count_match": true,
+        "column_names_match": true,
+        "rows_score": 50,
+        "columns_count_score": 40,
+        "column_names_score": 10,
+        "total_score": 100,
+        "comparison_possible": true,
+        "expected_rows": 12,
+        "actual_rows": 12,
+        "expected_columns": [
+          "year_month",
+          "petrol_registrations",
+          "electric_registrations"
+        ],
+        "actual_columns": [
+          "year_month",
+          "petrol_registrations",
+          "electric_registrations"
+        ],
+        "expected_columns_count": 3,
+        "actual_columns_count": 3
+      },
+      "score": 100,
+      "max_score": 100,
+      "timestamp": "2025-09-06T17:20:54.074138"
+    }
+  },
+  "metadata": {
+    "expected_results_file": "tests/test_data/generated/complete_test_data.json",
+    "database_path": "data/registered_vehicles.sqlite",
+    "evaluator_version": "1.0.0"
+  }
+}
