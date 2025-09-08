@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: "SQL Data Fetcher Tool API"
+  description: "An API for executing a read-only SQL query against a PostgreSQL database. It returns a structured summary of the data, intended to be used as a tool by the Data Analyst Agent in watsonx.orchestrate."
+  version: "1.0.0"
+servers:
+  - url: "https://sql-data-fetcher-tool.1zjf0upfwqwy.us-south.codeengine.appdomain.cloud"
+    description: "IBM Cloud Code Engine production server"
+paths:
+  /:
+    post:
+      summary: "Execute SQL Query"
+      description: "Executes a read-only SQL query against the vehicle registrations database and returns a structured summary of the results, including schema and sample data."
+      operationId: "executeSQLQuery"
+      security:
+        - IAMAuth: []
+      requestBody:
+        description: "A JSON object containing the SQL query to be executed."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sql_query:
+                  type: string
+                  description: "The SQL query string to be executed against the database."
+                  example: 'SELECT * FROM "FactRegisteredVehicles" LIMIT 5;'
+              required:
+                - sql_query
+      responses:
+        '200':
+          description: "Successful query execution. Returns a summary of the resulting data."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSummaryResponse'
+        '400':
+          description: "Bad Request. The input JSON is missing the 'sql_query' field or is malformed."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: "Internal Server Error. The query failed to execute due to a database error or other server-side issue."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    IAMAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Requires a bearer token from the IBM Cloud IAM service for authentication."
+  schemas:
+    DataSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data_summary:
+          $ref: '#/components/schemas/DataSummary'
+    DataSummary:
+      type: object
+      properties:
+        columns:
+          type: array
+          items:
+            type: string
+          example: ["VehicleID", "DateID", "GeographyID", "Registrations"]
+        shape:
+          type: array
+          items:
+            type: integer
+          example: [5, 4]
+        dtypes:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            VehicleID: "int64"
+            DateID: "int64"
+        sample_data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          example:
+            - VehicleID: 101
+              DateID: 20230101
+              GeographyID: 1
+              Registrations: 50
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A description of the error that occurred."
+        status:
+          type: string
+          description: "The status of the query, e.g., 'QUERY_FAILED'."
