@@ -1,0 +1,25 @@
+question_num,question,total_runs,successful_runs,success_rate_percent,rows_score_mean,rows_score_std,columns_count_score_mean,columns_count_score_std,column_names_score_mean,column_names_score_std,total_score_mean,total_score_std,expected_rows,expected_columns_count
+1,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",10,10,100.0,30.0,24.49489742783178,40.0,0.0,10.0,0.0,80.0,24.49489742783178,168,3
+2,What are the monthly registrations for electric vehicles (EVs) since 2023?,10,10,100.0,40.0,20.0,40.0,0.0,9.0,3.0,89.0,19.72308292331602,24,2
+3,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,10,10,100.0,10.0,20.0,40.0,0.0,10.0,0.0,60.0,20.0,12,3
+4,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,10,10,100.0,20.0,24.49489742783178,40.0,0.0,5.0,5.0,65.0,28.722813232690143,24,3
+5,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,10,10,100.0,25.0,25.0,40.0,0.0,5.0,5.0,70.0,30.0,48,3
+6,What are the top 5 car brands by total registrations in 2024?,10,10,100.0,50.0,0.0,40.0,0.0,10.0,0.0,100.0,0.0,5,2
+7,What are the monthly registrations in total since 2023?,10,10,100.0,15.0,22.9128784747792,40.0,0.0,10.0,0.0,65.0,22.9128784747792,24,2
+8,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,10,10,100.0,50.0,0.0,40.0,0.0,10.0,0.0,100.0,0.0,2,2
+9,Year-over-year comparison of SUV registrations from 2023 to 2024?,10,10,100.0,50.0,0.0,40.0,0.0,9.0,3.0,99.0,3.0,2,2
+10,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,10,10,100.0,50.0,0.0,32.0,16.0,8.0,4.0,90.0,20.0,2,2
+11,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,10,10,100.0,50.0,0.0,36.0,12.0,9.0,3.0,95.0,15.0,2,2
+12,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,10,10,100.0,50.0,0.0,36.0,12.0,8.0,4.0,94.0,14.966629547095765,2,2
+13,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,10,10,100.0,50.0,0.0,36.0,12.0,8.0,4.0,94.0,14.966629547095765,2,2
+14,What are the top 3 body types registered in 2024?,10,10,100.0,50.0,0.0,40.0,0.0,0.0,0.0,90.0,0.0,3,2
+15,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,10,10,100.0,50.0,0.0,40.0,0.0,4.0,4.898979485566356,94.0,4.898979485566356,2,2
+16,Which fuel type showed the highest growth rate from 2023 to 2024?,10,10,100.0,50.0,0.0,36.0,12.0,1.0,3.0,87.0,12.68857754044952,1,2
+17,What is the growth rate among body types from 2023 to 2024?,10,8,80.0,50.0,0.0,35.0,13.228756555322953,6.25,4.841229182759271,91.25,16.153559979150106,7,4
+18,Which country has the highest vehicle registrations?,10,10,100.0,50.0,0.0,40.0,0.0,10.0,0.0,100.0,0.0,1,2
+19,Compare England vs Scotland vehicle body type preferences,10,10,100.0,10.0,20.0,40.0,0.0,0.0,0.0,50.0,20.0,7,3
+20,Which districts register the most electric vehicles?,10,10,100.0,45.0,15.0,36.0,12.0,0.0,0.0,81.0,27.0,1471,2
+21,Find the top regions for BMW registrations,10,10,100.0,50.0,0.0,40.0,0.0,9.0,3.0,99.0,3.0,206,2
+22,Find the top regions for MERCEDES-BENZ registrations,10,10,100.0,50.0,0.0,40.0,0.0,10.0,0.0,100.0,0.0,206,2
+23,Find the top regions for AUDI registrations,10,10,100.0,50.0,0.0,40.0,0.0,1.0,3.0,91.0,3.0,205,2
+24,Find the top regions for PORSCHE registrations,10,10,100.0,50.0,0.0,40.0,0.0,10.0,0.0,100.0,0.0,204,2
