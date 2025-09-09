@@ -1,0 +1,32 @@
+    openapi: 3.0.0
+    info:
+      title: "SQL Data Fetcher (Local Dev)"
+      description: "A tool that executes a SQL query via a local development server."
+      version: "1.0.0"
+
+    servers:
+      - url: "https://57dea87194bd.ngrok-free.app" 
+        description: "Local development server exposed via ngrok."
+
+    paths:
+      /:
+        post:
+          summary: "Execute SQL Query Locally"
+          operationId: "executeLocalSQLQuery"
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    sql_query:
+                      type: string
+          responses:
+            '200':
+              description: "Successful execution."
+              content:
+                application/json:
+                  schema:
+                    type: object
+    

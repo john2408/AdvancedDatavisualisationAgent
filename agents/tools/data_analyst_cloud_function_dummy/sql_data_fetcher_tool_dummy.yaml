@@ -1,0 +1,73 @@
+openapi: 3.0.0
+info:
+  title: "SQL Data Fetcher (Dummy)"
+  description: "A dummy tool that simulates executing a SQL query and returns a hardcoded data summary. Used for testing the watsonx.orchestrate workflow."
+  version: "1.0.0"
+
+servers:
+  - url: "https://sql-data-fetcher-tool-dummy.1zjf0upfwqwy.us-south.codeengine.appdomain.cloud"
+    description: "IBM Cloud Code Engine production server for the dummy function."
+
+paths:
+  /:
+    post:
+      summary: "Execute a Dummy SQL Query"
+      operationId: "executeDummySQLQuery"
+      description: |
+        Accepts a SQL query string (though it is ignored) and always returns the same 
+        pre-fabricated data summary for a test scenario involving monthly electric SUV registrations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sql_query:
+                  type: string
+                  description: "A SQL query string. This is required but will be ignored by the dummy function."
+              required:
+                - sql_query
+            example:
+              sql_query: "What were the total monthly registrations for electric SUVs in England during 2023?"
+      responses:
+        '200':
+          description: "Successful execution. Returns a hardcoded data summary."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data_summary:
+                    type: object
+                    properties:
+                      columns:
+                        type: array
+                        items:
+                          type: string
+                      shape:
+                        type: array
+                        items:
+                          type: integer
+                      dtypes:
+                        type: object
+                        additionalProperties:
+                          type: string
+                      sample_data:
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: true
+        '400':
+          description: "Bad Request. The 'sql_query' parameter was missing from the request body."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing 'sql_query' in input parameters."

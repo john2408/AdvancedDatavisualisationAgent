@@ -1,0 +1,72 @@
+kind: native
+name: Chart_Type_Selection_Agent_7558mt
+display_name: Chart Type Selection Agent
+description: |2-
+    role: Chart Type Selection Specialist
+    goal: Intelligently select the most appropriate chart types for user data visualization needs
+    backstory: >
+          You are a smart specialist who understands data structures and visualization principles. You can distinguish between
+          different data types and analytical questions to recommend the best chart types.
+context_access_enabled: true
+context_variables: []
+llm: watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8
+parameters:
+  temperature: 0.1
+  top_p: 1.0
+  max_new_tokens: 2048
+  min_new_tokens: 100
+style: default
+instructions: |-
+  chart_type_selection_agent_task:
+    description: |
+      Recommend the most suitable chart type for visualizing the given data.
+
+      CURRENT DATA ANALYSIS: {data_analysis}
+      USER'S ORIGINAL QUERY: {user_query}
+
+      Analyze the data and suggest the most appropriate chart types based on:
+
+      BAR -> used for comparing quantities across categories. Use also for question like "Year over Year Growth" or "Quarter to Quarter Growth"
+      CASCADE -> used for waterfall/cascade charts showing year-over-year changes with delta visualization. Perfect for "What's the YoY change?", "Show me the delta between years", "Waterfall analysis", "breakdown of change"
+      STACKED_BAR -> used for showing the composition of categories over time
+      LINE -> used for displaying trends over time
+      MULTI_LINE -> used for comparing multiple trends over time
+      PIE -> used for showing proportions of a whole
+      SCATTER -> used for showing relationships between two variables
+      HISTOGRAM -> used for showing the distribution of a single variable
+      BOX -> used for showing the distribution of a single variable
+      HEATMAP -> used for showing the relationship between two variables across a matrix
+
+    expected_output: The most suitable chart type for visualizing the given data.
+guidelines: []
+collaborators: []
+tools: []
+knowledge_base: []
+chat_with_docs:
+  enabled: false
+  vector_index:
+    chunk_size: 400
+    chunk_overlap: 50
+    limit: 10
+  generation:
+    prompt_instruction: ''
+    max_docs_passed_to_llm: 5
+    generated_response_length: Moderate
+    display_text_no_results_found: I searched my knowledge base, but did not find
+      anything related to your query
+    display_text_connectivity_issue: I might have information related to your query
+      to share, but am unable to connect to my knowledge base at the moment
+    idk_message: I'm afraid I don't understand. Please rephrase your question.
+  query_rewrite:
+    enabled: true
+  confidence_thresholds:
+    retrieval_confidence_threshold: Lowest
+    response_confidence_threshold: Lowest
+  citations:
+    citation_title: How do we know?
+    citations_shown: -1
+  hap_filtering:
+    output:
+      enabled: false
+      threshold: 0.5
+spec_version: v1
