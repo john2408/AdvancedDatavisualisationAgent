@@ -4,9 +4,9 @@
 
 This report presents the development and implementation of an Advanced Data Visualization Agent, a sophisticated web-based application that bridges the gap between natural language queries and database interaction. The system leverages artificial intelligence technologies to enable non-technical users to interact with complex SQLite databases through conversational interfaces, automatically generating appropriate SQL queries and corresponding data visualizations. 
 
-The application implements a Star Schema database design containing UK vehicle registration data spanning 2023-2024, with over 625,000 records across multiple dimensional tables. The system integrates multiple state-of-the-art AI services including OpenAI's language models for SQL generation, IBM Watson's speech-to-text and text-to-speech services, and ElevenLabs' advanced audio synthesis technology.
+The application implements a Star Schema database design containing UK vehicle registration data spanning 2023-2024, with over 625,000 records across multiple dimensional tables. The system integrates multiple state-of-the-art AI services including OpenAI's language models for SQL generation, comprehensive multi-modal voice interfaces with 2 speech-to-text services (IBM Watson Speech-to-Text and OpenAI Whisper) and 3 text-to-speech services (IBM Watson Text-to-Speech, ElevenLabs AI Speech, and OpenAI Text-to-Speech).
 
-Key innovations include a hybrid visualization system that achieves 95.6% latency reduction compared to traditional agent-based approaches, multi-modal input support through voice and text interfaces, and intelligent conversation management that distinguishes between new queries and follow-up questions. The system demonstrates practical applications in business intelligence, data analytics, and educational environments where database expertise may be limited.
+Key innovations include a hybrid visualization system that achieves 95.6% latency reduction compared to traditional agent-based approaches, comprehensive multi-modal input support through dual speech-to-text services and triple text-to-speech services, and intelligent conversation management that distinguishes between new queries and follow-up questions. The system demonstrates practical applications in business intelligence, data analytics, and educational environments where database expertise may be limited.
 
 ## 1. Introduction
 
@@ -22,7 +22,7 @@ The primary challenge addressed by this project is the creation of an intelligen
 
 1. **Translate natural language queries into accurate SQL statements** while understanding complex database schemas and relationships
 2. **Generate appropriate visualizations automatically** based on the nature of the data and query intent
-3. **Support multi-modal interaction** including voice input and audio output for enhanced accessibility
+3. **Support comprehensive multi-modal interaction** including dual speech-to-text services (IBM Watson and OpenAI Whisper) and triple text-to-speech services (IBM Watson, ElevenLabs, and OpenAI) for enhanced accessibility and user choice
 4. **Maintain conversation context** to enable follow-up questions and iterative data exploration
 5. **Ensure high performance and reliability** suitable for production business environments
 
@@ -64,7 +64,42 @@ This report is organized into the following sections: Section 2 presents the rel
 
 ## 3. System Architecture and Design Methodology 
 
-### 3.1 Application Design
+### 3.1 Multi-Modal Voice Interface Architecture
+
+The system implements a comprehensive multi-modal voice interface architecture that supports both speech input and audio output through multiple service providers, ensuring enterprise-grade reliability and user choice flexibility.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Advanced Data Visualization Agent                │
+├─────────────────────────────────────────────────────────────────────┤
+│                        🎤 VOICE INPUT LAYER                        │
+│  ┌─────────────────────┐    ┌─────────────────────────────────────┐ │
+│  │   IBM Watson STT    │    │         OpenAI Whisper             │ │
+│  │   🔵 Enterprise     │    │      🟢 Multilingual             │ │
+│  │   • Confidence      │    │      • 100+ Languages             │ │
+│  │   • Real-time       │    │      • Noise Robust               │ │
+│  │   • Business Grade  │    │      • Developer Friendly         │ │
+│  └─────────────────────┘    └─────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────┤
+│                     NATURAL LANGUAGE PROCESSING                    │
+│              SQL Generation → Query Execution → Visualization      │
+├─────────────────────────────────────────────────────────────────────┤
+│                        🔊 VOICE OUTPUT LAYER                       │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │
+│ │ IBM Watson TTS  │ │ ElevenLabs AI   │ │    OpenAI TTS          │ │
+│ │ 🔵 Professional │ │ 🟢 Premium      │ │ 🟠 Advanced            │ │
+│ │ • 6 Voices      │ │ • 10 Voices     │ │ • 7 Voices             │ │
+│ │ • Enterprise    │ │ • Emotional     │ │ • Instructions         │ │
+│ │ • SSML Support  │ │ • Voice Cloning │ │ • Streaming API        │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Speech-to-Text Services Integration**: The system provides users with choice between IBM Watson Speech-to-Text (enterprise-grade with confidence scoring) and OpenAI Whisper (multilingual with 100+ language support), enabling optimal service selection based on use case requirements.
+
+**Text-to-Speech Services Integration**: A unified interface manages three premium TTS providers: IBM Watson (6 professional voices with SSML support), ElevenLabs (10 AI voices with emotional expression), and OpenAI (7 advanced voices with custom instructions), providing comprehensive audio output options for diverse user preferences.
+
+### 3.2 Application Design
 
 The system architecture follows a modular design pattern built on the Streamlit framework, enabling rapid development and deployment of interactive web applications. The application employs a multi-tier architecture consisting of presentation, business logic, and data access layers.
 
@@ -152,25 +187,27 @@ To address performance limitations, the system was redesigned with a hybrid appr
 
 This hybrid approach achieved a 95.6% latency reduction (from 6.5 seconds to 0.287 seconds) while maintaining visualization quality and expanding chart type support.
 
-### 4.4 Speech-to-Text Integration
+### 4.4 Comprehensive Speech-to-Text Integration
 
-The system incorporates dual speech-to-text services to maximize accessibility and transcription accuracy across different use cases:
+The system incorporates dual speech-to-text services to maximize accessibility, transcription accuracy, and user choice flexibility across different use cases and environments:
 
-**OpenAI Whisper Integration**: Provides robust multilingual support with offline processing capabilities. The implementation handles audio file format conversion, manages API request/response cycles, and includes confidence scoring for transcription quality assessment.
+**IBM Watson Speech-to-Text Integration**: Provides enterprise-grade accuracy with confidence scoring, real-time processing capabilities, and business-focused optimization for professional use. The implementation includes multiple audio format support, confidence metrics display, and enterprise-level reliability suitable for business applications.
 
-**IBM Watson Speech-to-Text Integration**: Offers enterprise-grade transcription with real-time processing capabilities and domain-specific model support. This service provides detailed confidence metrics and supports custom vocabulary for improved accuracy in specialized domains.
+**OpenAI Whisper Integration**: Offers robust multilingual support with 100+ language recognition, advanced noise robustness for challenging audio conditions, and developer-friendly API integration. The service excels in handling diverse accents and provides high accuracy across various audio quality conditions.
 
-The voice input interface implements automatic silence detection, visual feedback during recording, transcription editing capabilities, and service selection options. Error handling mechanisms ensure graceful degradation when services are unavailable.
+**Unified Voice Interface Features**: Both services implement automatic silence detection (2-second cutoff), real-time waveform display during recording, transcription editing capabilities before submission, and service selection options. The interface provides visual feedback during recording and comprehensive error handling with graceful degradation when services are unavailable.
 
-### 4.5 Text-to-Speech Integration
+### 4.5 Comprehensive Text-to-Speech Integration
 
-The system implements a dual text-to-speech architecture to provide audio responses with flexibility in voice quality, language support, and deployment scenarios. This multi-provider approach ensures service reliability and accommodates different user preferences for audio output.
+The system implements a triple text-to-speech architecture providing comprehensive audio response capabilities with multiple service providers, ensuring maximum flexibility, reliability, and user customization options.
 
-**IBM Watson Text-to-Speech Integration**: Provides enterprise-grade audio synthesis with six professional voice options spanning multiple genders and regional accents. The implementation supports Speech Synthesis Markup Language (SSML) for advanced pronunciation control and emotional expression. The service offers high-fidelity audio output suitable for business applications and provides consistent latency characteristics for real-time response generation.
+**IBM Watson Text-to-Speech Integration**: Delivers enterprise-grade audio synthesis with six professional voice options spanning multiple genders and regional accents. The implementation supports Speech Synthesis Markup Language (SSML) for advanced pronunciation control and emotional expression, offering high-fidelity audio output suitable for business applications with consistent latency characteristics.
 
-**ElevenLabs AI Speech Integration**: Delivers advanced neural voice synthesis with natural intonation patterns and emotional expressiveness. This service supports voice cloning capabilities and provides premium audio quality with human-like characteristics. The implementation includes real-time streaming options for reduced perceived latency and supports custom voice model training.
+**ElevenLabs AI Speech Integration**: Provides advanced neural voice synthesis with natural intonation patterns and emotional expressiveness. This service features 10 premium AI voices with distinct personalities, supports voice cloning capabilities, and delivers high-quality audio with human-like characteristics. The implementation includes options for emotionally expressive delivery suitable for engaging user experiences.
 
-**Unified Interface Design**: The system presents a consolidated control interface that abstracts provider-specific configurations while maintaining access to advanced features. Users can select between providers, choose specific voices, and configure audio output preferences through a single control panel. Session state management preserves user preferences across interactions, and the system includes automatic fallback mechanisms when primary services become unavailable.
+**OpenAI Text-to-Speech Integration**: Offers the latest TTS technology with 7 high-quality voices and unique custom instructions support for tone and style control. The service utilizes streaming API for improved performance, supports up to 4,096 characters per request, and provides MP3 output format with advanced neural synthesis capabilities.
+
+**Unified Interface Design**: The system presents a consolidated control interface that abstracts provider-specific configurations while maintaining access to advanced features. Users can select between providers, choose specific voices, configure custom instructions (OpenAI), and set audio output preferences through a single control panel. Session state management preserves user preferences across interactions, and the system includes automatic fallback mechanisms when primary services become unavailable.
 
 The audio synthesis pipeline implements asynchronous processing to prevent blocking user interactions, temporary file management for audio playback, and comprehensive error handling with graceful degradation to text-only responses when audio services fail.
 
@@ -237,9 +274,9 @@ The most significant finding involves the superiority of hybrid AI architectures
 
 The CrewAI-based multi-agent architecture achieved 82.5% accuracy in SQL generation with 100% execution success rate across 24 diverse test scenarios. The two-agent approach (SQL Generator + SQL Reviewer) demonstrated that collaborative AI systems can provide built-in quality assurance mechanisms that significantly improve output reliability. The system successfully handled complex multi-dimensional queries, temporal analysis, and geographic data exploration, indicating that properly designed agent systems can bridge the gap between natural language understanding and database query construction. The 62.5% perfect score rate (15/24 queries) suggests that the system performs exceptionally well for standard business intelligence scenarios.
 
-#### Finding 3: Multi-Modal Integration Enhances Accessibility and User Experience
+#### Finding 3: Comprehensive Multi-Modal Voice Integration Enhances Accessibility and User Experience
 
-The implementation of dual speech-to-text services (OpenAI Whisper and IBM Watson) and dual text-to-speech services (IBM Watson and ElevenLabs) proved that multi-modal interfaces significantly expand system accessibility and user engagement. The voice input functionality with automatic silence detection and transcription editing capabilities reduced barriers for non-technical users, while audio output options improved accessibility for users with visual impairments. The unified interface design that abstracts provider-specific configurations while maintaining advanced feature access demonstrates that complex multi-service integrations can be presented through intuitive user interfaces. The session state management for user preferences across interactions showed the importance of personalization in AI-powered applications.
+The implementation of comprehensive voice interfaces with 2 speech-to-text services (IBM Watson and OpenAI Whisper) and 3 text-to-speech services (IBM Watson, ElevenLabs, and OpenAI) proved that multi-modal interfaces significantly expand system accessibility, user engagement, and deployment flexibility. The dual speech-to-text approach provides enterprise-grade accuracy through IBM Watson (with confidence scoring) while offering multilingual robustness through OpenAI Whisper (100+ languages). The triple text-to-speech integration delivers professional audio output through IBM Watson (6 enterprise voices with SSML), premium AI-generated speech through ElevenLabs (10 expressive voices), and advanced neural synthesis through OpenAI (7 voices with custom instructions). The unified interface design abstracts provider-specific configurations while maintaining advanced feature access, demonstrating that complex multi-service integrations can be presented through intuitive user interfaces. Session state management for user preferences across interactions showed the importance of personalization in AI-powered applications, while automatic fallback mechanisms ensure service continuity and reliability.
 
 ### 6.2 Lessons Learned
 
