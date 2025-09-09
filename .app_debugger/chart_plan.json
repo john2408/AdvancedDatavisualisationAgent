@@ -2,10 +2,10 @@
   "chart_type": "MULTI_LINE",
   "x": "year_month",
   "y": [
-    "total_vehicles"
+    "monthly_registrations"
   ],
-  "color": "oem_name",
+  "color": "body_type",
   "aggregation": "sum",
   "transform": null,
-  "title": "total_vehicles trends by oem_name over year_month"
+  "title": "monthly_registrations trends by body_type over year_month"
 }

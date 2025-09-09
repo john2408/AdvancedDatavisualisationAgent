@@ -67,11 +67,12 @@ report_path = evaluator.generate_markdown_report(results)
 - **Success Rate Tracking**: Per-question and overall success rate analysis
 - **Data Export**: 3 output formats (JSON, CSV all-runs, CSV summary)
 
-### App Latency Results (2 questions):
-- **Total Pipeline Duration**: 7.31s average (5.04s - 9.59s range)
-- **Slowest Step**: SQL Generation (3.19s avg)
-- **Fastest Step**: Query Execution (0.26s avg)
-- **Success Rate**: 100%
+### App Latency Results (Enhanced Testing):
+- **Multi-Run Capability**: Each question can be run 1-N times for timing consistency analysis
+- **Statistical Metrics**: Mean, median, standard deviation for all timing components
+- **Variance Analysis**: Identification of high-variance vs consistent latency questions
+- **Step-by-Step Analysis**: Individual timing analysis for each pipeline step
+- **Coefficient of Variation**: Timing consistency measurement across multiple runs
 
 ### Step Breakdown:
 1. **SQL Generation**: 3.19s (43.6% of total time)
@@ -101,11 +102,20 @@ python run_evaluation.py
 
 ### Run Latency Evaluation:
 ```bash
-# Full evaluation (24 questions)
+# Full evaluation (24 questions, single run)
 python tests/test_evaluation_app_latency.py
 
 # Limited evaluation  
 python tests/test_evaluation_app_latency.py --max-questions 3
+
+# Multiple runs for timing consistency analysis
+python tests/test_evaluation_app_latency.py --runs 5
+
+# Limited evaluation with multiple runs for robustness testing
+python tests/test_evaluation_app_latency.py --max-questions 5 --runs 3
+
+# Custom output file with multiple runs
+python tests/test_evaluation_app_latency.py --runs 3 --output-file my_latency_report.md
 
 # Quick test
 python minimal_latency_test.py
@@ -123,16 +133,18 @@ All evaluation results are saved to `tests/evaluation_results/`:
 - Console output with statistical summaries
 
 ### Latency Evaluation:
-- `app_agents_latency_evaluation_YYYYMMDD.md` - Comprehensive markdown report
-- Statistical tables, performance insights, failure analysis
+- `app_agents_latency_evaluation_YYYYMMDD_HHMMSS.md` - Comprehensive markdown report with variance analysis
+- `app_agents_latency_evaluation_YYYYMMDD_HHMMSS.csv` - Individual run timing data
+- Statistical tables, performance insights, timing consistency analysis
 
 ## 🔧 Technical Implementation
 
 ### Enhanced Data Structures:
-- `SingleRunResult` dataclass for individual run measurements
-- `SQLAgentEvaluator` class with multi-run support
+- `SingleRunResult` dataclass for individual SQL run measurements
+- `SingleLatencyRun` dataclass for individual timing measurements
+- `SQLAgentEvaluator` and `AppLatencyEvaluator` classes with multi-run support
 - Pandas DataFrame integration for statistical analysis
-- Comprehensive markdown report generation
+- Comprehensive markdown report generation with variance analysis
 
 ### Statistical Analysis:
 - Complete statistical profiles for all scoring components
@@ -146,12 +158,17 @@ All evaluation results are saved to `tests/evaluation_results/`:
 - Error handling and comprehensive logging
 
 ### Statistical Analysis:
-- Complete statistical profiles for all timing data
-- Percentile calculations (P25, P75, P95, P99)
+- Complete statistical profiles for all scoring components and timing data
+- Variance analysis for question consistency identification (both accuracy and latency)
+- Success rate tracking and robustness metrics
+- Perfect score distribution analysis
+- Coefficient of variation for timing consistency measurement
+- Percentile calculations (P25, P75, P95, P99) for performance analysis
 - Performance insights and bottleneck identification
 
 ### Data Structures:
-- `SingleRunResult` dataclass for individual run measurements
+- `SingleRunResult` dataclass for individual SQL accuracy run measurements
+- `SingleLatencyRun` dataclass for individual latency run measurements
 - `StepTiming` dataclass for individual step measurements
 - `PipelineRun` dataclass for complete pipeline execution
 - Pandas DataFrame integration for statistical analysis
