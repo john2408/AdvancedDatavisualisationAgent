@@ -1,11 +1,11 @@
 {
-  "chart_type": "MULTI_LINE",
-  "x": "year_month",
+  "chart_type": "BAR",
+  "x": "region_name",
   "y": [
-    "monthly_registrations"
+    "total_registrations"
   ],
-  "color": "body_type",
+  "color": null,
   "aggregation": "sum",
   "transform": null,
-  "title": "monthly_registrations trends by body_type over year_month"
+  "title": "total_registrations by region_name"
 }
