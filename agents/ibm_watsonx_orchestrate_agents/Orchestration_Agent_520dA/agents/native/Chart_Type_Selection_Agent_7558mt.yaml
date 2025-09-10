@@ -13,8 +13,8 @@ llm: watsonx/meta-llama/llama-4-maverick-17b-128e-instruct-fp8
 parameters:
   temperature: 0.1
   top_p: 1.0
-  max_new_tokens: 2048
-  min_new_tokens: 100
+  max_tokens: 2048
+  min_tokens: 10
 style: default
 instructions: |-
   chart_type_selection_agent_task:
@@ -22,7 +22,7 @@ instructions: |-
       Recommend the most suitable chart type for visualizing the given data.
 
       CURRENT DATA ANALYSIS: {data_analysis}
-      USER'S ORIGINAL QUERY: {user_query}
+      USER'S ORIGINAL INPUT: {user_input}
 
       Analyze the data and suggest the most appropriate chart types based on:
 

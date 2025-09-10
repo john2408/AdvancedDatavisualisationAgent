@@ -1,0 +1,95 @@
+# OpenAPI Specification for the SQL Sanitizer Tool
+# Version: 3.0.0
+
+openapi: 3.0.0
+info:
+  title: "SQL Syntax Sanitizer Tool"
+  description: |-
+    An API that accepts a raw SQL query string and returns a sanitized version.
+    The sanitization process enforces two main rules:
+    1. All known schema identifiers (table names, column names) are enclosed in double quotes.
+    2. All string literals are enclosed in dollar quotes ($$...$$) instead of single quotes.
+    This tool is designed to correct common syntax issues from LLM-generated SQL to ensure it is compliant with a strict database schema.
+  version: "1.0.0"
+
+# Defines the server where the API is hosted.
+servers:
+  - url: "https://sql-sanitizer.1zjf0upfwqwy.us-south.codeengine.appdomain.cloud"
+    description: "IBM Code Engine production server"
+
+# Defines the API endpoints.
+paths:
+  /:
+    post:
+      summary: "Sanitize a raw SQL query"
+      description: "Takes a raw SQL query and applies syntax formatting rules."
+      operationId: "sanitizeSqlQuery"
+      
+      # Describes the request body that the endpoint expects.
+      requestBody:
+        description: "A JSON object containing the raw SQL query."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SqlInput"
+            example:
+              sql_query: "SELECT oem_name, country_origin FROM DimOEM WHERE oem_name IN ('AUDI', 'PORSCHE') AND oem_category = 'Luxury'"
+
+      # Describes the possible responses from the endpoint.
+      responses:
+        '200':
+          description: "SQL query successfully sanitized."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SqlOutput"
+              example:
+                sanitized_query: "SELECT \"oem_name\", \"country_origin\" FROM \"DimOEM\" WHERE \"oem_name\" IN ($$AUDI$$, $$PORSCHE$$) AND \"oem_category\" = $$Luxury$$"
+        
+        '400':
+          description: "Bad Request. The 'sql_query' parameter was missing or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Missing or invalid 'sql_query' parameter in the request body."
+
+        '500':
+          description: "Internal Server Error. An unexpected error occurred during processing."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "An internal error occurred during SQL sanitization."
+
+# Defines reusable components for the specification.
+components:
+  schemas:
+    # Schema for the input (request body).
+    SqlInput:
+      type: object
+      properties:
+        sql_query:
+          type: string
+          description: "The raw, non-compliant SQL query string to be sanitized."
+      required:
+        - sql_query
+
+    # Schema for the successful output (response body).
+    SqlOutput:
+      type: object
+      properties:
+        sanitized_query:
+          type: string
+          description: "The sanitized SQL query with compliant syntax."
+          
+    # A generic schema for error responses.
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: "A message detailing the error."

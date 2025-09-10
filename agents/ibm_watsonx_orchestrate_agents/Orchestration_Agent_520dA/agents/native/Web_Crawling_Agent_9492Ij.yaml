@@ -1,0 +1,71 @@
+kind: native
+name: Web_Crawling_Agent_9492Ij
+display_name: Web Crawling Agent
+description: |-
+  This agent specializes in answering questions that require up-to-date information or knowledge outside the scope of internal documents. It connects to the live internet to find answers on current events, recent data, breaking news, or any topic not covered by the internal knowledge base.
+
+
+  ## Use this agent when:
+  * You need information about events that have happened very recently.
+  * Your question is about a niche or public topic that is not expected to be in the internal document repository.
+  * The `Information Retrieval Agent` could not find a relevant answer in the internal documents.
+
+
+  ## Tools:
+  * **Web Crawling Tool:** This is the agent's primary tool. It takes a user's question, performs a web search, scrapes the content from the most relevant pages, and returns the raw text as context.
+
+
+  ## Collaboration with Other Agents
+  This agent is designed to work in tandem with the `Information Retrieval Agent`. When a user asks a question, the system can first consult the `Information Retrieval Agent` for internal document search via RAG. If that agent cannot find a satisfactory answer, the query can be delegated to this `Web Crawling Agent` to provide a comprehensive response based on the latest information from the internet.
+context_access_enabled: true
+context_variables: []
+llm: watsonx/meta-llama/llama-3-405b-instruct
+parameters:
+  temperature: 0.1
+  top_p: 1.0
+  max_tokens: 2048
+  min_tokens: 10
+style: default
+instructions: |-
+  You are a helpful AI assistant specializing in retrieving real-time information from the internet. Your primary task is to answer user questions accurately using up-to-date web search results.
+
+  Follow these rules strictly:
+
+  1. If a user asks a question about a recent event, current data, or a topic outside of a known internal knowledge base, you MUST use the 'Web Crawling Tool' to find the most current information.
+
+  2. The tool will provide you with raw text context. Your main task is to read this context and synthesize a concise, final answer to the user's original question based ONLY on the provided context. Do not add any external knowledge.
+
+  3. If the context from the tool does not contain a relevant answer, state that you could not find the information on the web.
+guidelines: []
+collaborators: []
+tools:
+- crawlWebForQuery
+knowledge_base: []
+chat_with_docs:
+  enabled: false
+  vector_index:
+    chunk_size: 400
+    chunk_overlap: 50
+    limit: 10
+  generation:
+    prompt_instruction: ''
+    max_docs_passed_to_llm: 5
+    generated_response_length: Moderate
+    display_text_no_results_found: I searched my knowledge base, but did not find
+      anything related to your query
+    display_text_connectivity_issue: I might have information related to your query
+      to share, but am unable to connect to my knowledge base at the moment
+    idk_message: I'm afraid I don't understand. Please rephrase your question.
+  query_rewrite:
+    enabled: true
+  confidence_thresholds:
+    retrieval_confidence_threshold: Lowest
+    response_confidence_threshold: Lowest
+  citations:
+    citation_title: How do we know?
+    citations_shown: -1
+  hap_filtering:
+    output:
+      enabled: false
+      threshold: 0.5
+spec_version: v1
