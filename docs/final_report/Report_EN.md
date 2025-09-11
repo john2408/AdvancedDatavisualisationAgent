@@ -225,6 +225,8 @@ The evaluation framework serves multiple purposes: **quality assurance mechanism
 
 ### 5.1 SQL Generation Robustness Evaluation
 
+![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/sql_accuracy_consistency_analysis.png)
+
 The SQL generation robustness evaluation assesses the system's capability to consistently translate natural language queries into correct SQL statements across multiple executions. This comprehensive evaluation employs both accuracy measurement and variance analysis to determine system reliability and consistency.
 
 **Enhanced Evaluation Methodology**: The assessment utilizes a robust 100-point scoring system distributed across three components: row count accuracy (50 points), column count accuracy (40 points), and column name correctness (10 points). The evaluation implements a **10-run robustness testing protocol** where each of the 24 test queries is executed 10 times to measure consistency and identify performance variance patterns.
@@ -257,6 +259,8 @@ The SQL generation robustness evaluation assesses the system's capability to con
 **Evaluation Efficiency**: The comprehensive 240-run evaluation completed in 1,803.69 seconds (approximately 30 minutes), averaging 7.5 seconds per individual query execution, demonstrating scalable evaluation capabilities suitable for continuous integration testing.
 
 ### 5.2 System Latency Robustness Evaluation
+
+![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/latency_variance_analysis.png)
 
 The system latency evaluation provides comprehensive analysis of response time consistency across the four-step processing pipeline through extensive robustness testing. This evaluation measures end-to-end performance characteristics, identifies potential bottlenecks, and quantifies performance variance across multiple executions.
 
