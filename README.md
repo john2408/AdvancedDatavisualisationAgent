@@ -18,11 +18,15 @@ The application follows a sophisticated pipeline to process user queries:
 4. **`step_3_execute_query`** - Executes the validated SQL query against the SQLite database
 5. **`step_4_generate_visualization`** - Creates appropriate visualizations using the hybrid visualization system
 
+This comprehensive process is better illustrated in the general architecture diagram below.
+
+![Full Architecture](docs/Final_Architecture.png)
+
 ### **Key Features**
 
 - **Natural Language to SQL**: Convert conversational queries into optimized SQL
-- **Multi-Modal Input**: Support for text, voice (IBM Watson/OpenAI Whisper), and conversational interfaces
-- **Audio Output**: Text-to-speech responses using IBM Watson or ElevenLabs
+- **Comprehensive Multi-Modal Input**: Support for text input and dual speech-to-text services (IBM Watson/OpenAI Whisper)
+- **Triple Audio Output**: Text-to-speech responses using IBM Watson, ElevenLabs, and OpenAI TTS services
 - **Smart Visualization**: Automatic chart type selection and generation
 - **Conversation Memory**: Context-aware follow-up question handling
 - **Database Schema Intelligence**: Understanding of Star Schema relationships for optimal queries
@@ -82,7 +86,7 @@ The application supports dual speech-to-text services for maximum flexibility an
 
 ## 🔊 Text-to-Speech Integration
 
-Audio response capabilities using two premium TTS services:
+Audio response capabilities using three premium TTS services:
 
 ### **IBM Watson Text-to-Speech**
 - **Voice Options**: 6 professional voices (3 male, 3 female)
@@ -104,12 +108,21 @@ Audio response capabilities using two premium TTS services:
 - **Multiple Voices**: Professional and conversational options
 - **Real-time Streaming**: Low-latency audio generation
 
+### **OpenAI Text-to-Speech**
+- **Latest TTS Technology**: Advanced neural text-to-speech synthesis
+- **7 Voice Options**: Diverse selection including Alloy, Echo, Fable, Onyx, Nova, Shimmer, and Nova
+- **Custom Instructions**: Personalized speaking style and tone control
+- **Streaming API**: Real-time audio generation for immediate playback
+- **High Quality**: Professional-grade audio output with natural intonation
+- **4,096 Character Limit**: Efficient processing of extended text responses
+
 ### **Audio Features**
-- **Unified Interface**: Single control panel for both services
-- **Voice Selection**: Dropdown menus for voice customization
+- **Unified Interface**: Single control panel for all three services
+- **Voice Selection**: Dropdown menus for voice customization across all providers
 - **Enable/Disable Toggle**: Easy control over audio responses
 - **Session Memory**: Remembers user preferences across sessions
 - **Error Handling**: Graceful fallbacks when services are unavailable
+- **Provider Selection**: Choose between IBM Watson, ElevenLabs, and OpenAI TTS
 
 ## 📈 Visualization Module
 
@@ -165,7 +178,7 @@ The application uses a sophisticated hybrid approach for chart generation:
 - Python 3.8+
 - SQLite database with Star Schema
 - IBM Cloud account (for IBM services)
-- OpenAI API key (for Whisper)
+- OpenAI API key (for Whisper and TTS)
 - ElevenLabs API key (for TTS)
 
 ### **Environment Variables**
@@ -204,6 +217,7 @@ AdvancedDatavisualisationAgent/
 │   ├── ibm_speech_text.py         # IBM Watson Speech-to-Text
 │   ├── ibm_text_speech.py         # IBM Watson Text-to-Speech
 │   ├── elevenlabs_text_speech.py  # ElevenLabs TTS integration
+│   ├── openai_text_speech.py      # OpenAI Text-to-Speech integration
 │   └── voice_components.py        # OpenAI Whisper integration
 ├── data/                           # SQLite database and data files
 ├── docs/                           # Documentation and guides

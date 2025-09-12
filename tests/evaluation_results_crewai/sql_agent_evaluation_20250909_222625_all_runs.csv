@@ -1,0 +1,270 @@
+question_num,run_num,question,success,rows_score,columns_count_score,column_names_score,total_score,expected_rows,actual_rows,expected_columns_count,actual_columns_count,error,timestamp
+1,1,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:56:30.339519
+1,2,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:56:37.357583
+1,3,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,0,40,10,50,168,84,3,3,,2025-09-09T21:56:45.871415
+1,4,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,0,40,10,50,168,84,3,3,,2025-09-09T21:56:53.459113
+1,5,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:57:03.260373
+1,6,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:57:12.271385
+1,7,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,0,40,10,50,168,84,3,3,,2025-09-09T21:57:20.214059
+1,8,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:57:27.534237
+1,9,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,0,40,10,50,168,84,3,3,,2025-09-09T21:57:35.883529
+1,10,"What are the monthly registration trends for BMW, AUDI, and MERCEDES-BENZ by body type since 2023?",True,50,40,10,100,168,168,3,3,,2025-09-09T21:57:43.901058
+2,1,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:57:50.493283
+2,2,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:57:56.208843
+2,3,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T21:58:03.648830
+2,4,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T21:58:09.236547
+2,5,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,0,90,24,24,2,2,,2025-09-09T21:58:17.849052
+2,6,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:58:25.036013
+2,7,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:58:31.538028
+2,8,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:58:36.861833
+2,9,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:58:43.009693
+2,10,What are the monthly registrations for electric vehicles (EVs) since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T21:58:50.078436
+3,1,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:58:56.937386
+3,2,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,50,40,10,100,12,12,3,3,,2025-09-09T21:59:03.756876
+3,3,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:10.902869
+3,4,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:18.067478
+3,5,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:25.556711
+3,6,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:33.224977
+3,7,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:43.181023
+3,8,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T21:59:53.885610
+3,9,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,50,40,10,100,12,12,3,3,,2025-09-09T22:00:02.889934
+3,10,Provide a comparison of monthly registrations for petrol vs electric vehicles since 2023.,True,0,40,10,50,12,24,3,3,,2025-09-09T22:00:13.672669
+4,1,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,50,40,10,100,24,24,3,3,,2025-09-09T22:00:26.667407
+4,2,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,0,40,24,48,3,3,,2025-09-09T22:00:34.934900
+4,3,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,0,40,24,48,3,3,,2025-09-09T22:00:42.637716
+4,4,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,50,40,10,100,24,24,3,3,,2025-09-09T22:00:50.210689
+4,5,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,0,40,24,48,3,3,,2025-09-09T22:01:00.995358
+4,6,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,50,40,10,100,24,24,3,3,,2025-09-09T22:01:09.372146
+4,7,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,0,40,24,48,3,3,,2025-09-09T22:01:15.952277
+4,8,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,50,40,10,100,24,24,3,3,,2025-09-09T22:01:23.567771
+4,9,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,0,40,24,48,3,3,,2025-09-09T22:01:29.673691
+4,10,Provide a comparison of monthly registrations for SUVs vs Sedans since 2023.,True,0,40,10,50,24,12,3,3,,2025-09-09T22:01:36.212099
+5,1,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,0,40,0,40,48,24,3,3,,2025-09-09T22:01:44.324418
+5,2,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,50,40,10,100,48,48,3,3,,2025-09-09T22:01:50.065562
+5,3,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,0,40,0,40,48,24,3,3,,2025-09-09T22:01:58.674023
+5,4,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,50,40,10,100,48,48,3,3,,2025-09-09T22:02:08.795601
+5,5,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,0,40,0,40,48,24,3,3,,2025-09-09T22:02:17.811059
+5,6,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,0,40,0,40,48,24,3,3,,2025-09-09T22:02:26.840934
+5,7,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,0,40,0,40,48,24,3,3,,2025-09-09T22:02:35.443332
+5,8,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,50,40,10,100,48,48,3,3,,2025-09-09T22:02:47.414804
+5,9,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,50,40,10,100,48,48,3,3,,2025-09-09T22:02:55.094109
+5,10,Monthly registrations for ELECTRIC and PATROL vehicles for 2023 and 2024,True,50,40,10,100,48,48,3,3,,2025-09-09T22:03:01.737649
+6,1,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:03:08.882135
+6,2,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:03:30.546969
+6,3,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:03:44.225607
+6,4,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:04:00.704879
+6,5,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:04:11.254661
+6,6,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:04:17.194446
+6,7,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:04:22.990485
+6,8,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:05:16.224577
+6,9,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:05:21.837990
+6,10,What are the top 5 car brands by total registrations in 2024?,True,50,40,10,100,5,5,2,2,,2025-09-09T22:05:27.363156
+7,1,What are the monthly registrations in total since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T22:05:31.938808
+7,2,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:05:38.399054
+7,3,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:05:44.289344
+7,4,What are the monthly registrations in total since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T22:05:50.480951
+7,5,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:05:54.843363
+7,6,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:05:58.679920
+7,7,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:06:03.265666
+7,8,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:06:08.287233
+7,9,What are the monthly registrations in total since 2023?,True,0,40,10,50,24,12,2,2,,2025-09-09T22:06:12.387881
+7,10,What are the monthly registrations in total since 2023?,True,50,40,10,100,24,24,2,2,,2025-09-09T22:06:18.622007
+8,1,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:06:25.795599
+8,2,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:06:32.939620
+8,3,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:06:41.106131
+8,4,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:06:47.147444
+8,5,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:06:55.955315
+8,6,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:01.787144
+8,7,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:08.909001
+8,8,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:15.360738
+8,9,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:21.340009
+8,10,What are the year-over-year growth trends for electric vehicles (2023 vs 2024)?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:27.955927
+9,1,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:34.150772
+9,2,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:42.630702
+9,3,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:50.846909
+9,4,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:07:57.766126
+9,5,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:06.568759
+9,6,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:08:13.940731
+9,7,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:21.119120
+9,8,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:28.881390
+9,9,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:33.815279
+9,10,Year-over-year comparison of SUV registrations from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:43.927020
+10,1,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:49.007637
+10,2,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:08:56.621509
+10,3,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:02.990681
+10,4,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:09.132560
+10,5,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:18.567101
+10,6,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:24.357590
+10,7,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,0,0,50,2,2,2,3,,2025-09-09T22:09:30.820219
+10,8,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:38.626979
+10,9,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,0,0,50,2,2,2,3,,2025-09-09T22:09:45.220638
+10,10,Q1 2024 vs Q1 2023 comparison of total vehicle registrations?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:49.874800
+11,1,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:09:55.015364
+11,2,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:01.386211
+11,3,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:08.619752
+11,4,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:14.785551
+11,5,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:21.449001
+11,6,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:29.869134
+11,7,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:38.335021
+11,8,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:10:45.556428
+11,9,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,0,0,50,2,2,2,3,,2025-09-09T22:10:52.742027
+11,10,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for BMW?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:01.115657
+12,1,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:12.553301
+12,2,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:20.693126
+12,3,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,0,0,50,2,2,2,3,,2025-09-09T22:11:29.652394
+12,4,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:36.706553
+12,5,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:43.551089
+12,6,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:50.540304
+12,7,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:11:56.051754
+12,8,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:02.016269
+12,9,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:12:07.794772
+12,10,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for AUDI?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:15.034897
+13,1,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:12:22.475815
+13,2,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:31.211813
+13,3,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:37.269012
+13,4,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:46.522914
+13,5,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:12:56.484666
+13,6,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:13:03.342600
+13,7,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:13:11.275031
+13,8,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:13:17.384413
+13,9,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,0,0,50,2,2,2,3,,2025-09-09T22:13:23.798647
+13,10,Q1 2024 vs Q1 2023 comparison of total vehicle registrations for MERCEDES-BENZ?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:13:30.697334
+14,1,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:13:35.964650
+14,2,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:13:43.660149
+14,3,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:13:49.813271
+14,4,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:13:54.633667
+14,5,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:01.172929
+14,6,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:06.688452
+14,7,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:12.447791
+14,8,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:18.848100
+14,9,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:28.639653
+14,10,What are the top 3 body types registered in 2024?,True,50,40,0,90,3,3,2,2,,2025-09-09T22:14:37.462755
+15,1,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:14:44.797946
+15,2,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:14:53.810242
+15,3,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:15:02.805314
+15,4,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:15:11.066735
+15,5,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:15:20.439914
+15,6,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:15:26.838680
+15,7,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:15:35.613929
+15,8,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,0,90,2,2,2,2,,2025-09-09T22:15:41.000945
+15,9,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:15:47.060659
+15,10,Show me a waterfall chart of year-over-year petrol vehicle registration changes from 2023 to 2024?,True,50,40,10,100,2,2,2,2,,2025-09-09T22:15:53.169568
+16,1,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:16:04.625801
+16,2,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:16:16.977676
+16,3,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:16:29.315728
+16,4,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:16:37.680836
+16,5,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:16:47.192891
+16,6,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:17:01.119781
+16,7,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,0,0,50,1,1,2,4,,2025-09-09T22:17:15.152022
+16,8,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:17:29.606955
+16,9,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:17:39.593356
+16,10,Which fuel type showed the highest growth rate from 2023 to 2024?,True,50,40,0,90,1,1,2,2,,2025-09-09T22:17:53.767944
+17,1,What is the growth rate among body types from 2023 to 2024?,False,0,0,0,0,7,0,4,0,"Query execution failed: Query failed: Execution failed on sql 'SELECT 
+      v.body_type,
+      SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count ELSE 0 END) AS registrations_2023,
+      SUM(CASE WHEN t.year_report = 2024 THEN f.vehicle_count ELSE 0 END) AS registrations_2024,
+      ROUND(
+        (SUM(CASE WHEN t.year_report = 2024 THEN f.vehicle_count ELSE 0 END) -
+         SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count ELSE 0 END)) * 1.0 /
+         NULLIF(SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count ELSE 0 END), 0) * 1.0 * 100, 0), 
+        2
+      ) AS growth_rate_pct
+    FROM 
+      FactRegisteredVehicles f
+    JOIN 
+      DimTime t ON f.time_key = t.time_key
+    JOIN 
+      DimVehicle v ON f.vehicle_key = v.vehicle_key
+    WHERE 
+      t.year_report IN (2023, 2024)
+    GROUP BY 
+      v.body_type
+    ORDER BY 
+      growth_rate_pct DESC;': near "")"": syntax error",2025-09-09T22:18:09.862411
+17,2,What is the growth rate among body types from 2023 to 2024?,True,50,40,10,100,7,7,4,4,,2025-09-09T22:18:30.324985
+17,3,What is the growth rate among body types from 2023 to 2024?,True,50,40,10,100,7,7,4,4,,2025-09-09T22:18:42.599972
+17,4,What is the growth rate among body types from 2023 to 2024?,True,50,40,0,90,7,7,4,4,,2025-09-09T22:18:53.719926
+17,5,What is the growth rate among body types from 2023 to 2024?,True,50,0,0,50,7,7,4,2,,2025-09-09T22:19:04.023374
+17,6,What is the growth rate among body types from 2023 to 2024?,True,50,40,10,100,7,7,4,4,,2025-09-09T22:19:13.311036
+17,7,What is the growth rate among body types from 2023 to 2024?,True,50,40,10,100,7,7,4,4,,2025-09-09T22:19:21.673237
+17,8,What is the growth rate among body types from 2023 to 2024?,False,0,0,0,0,7,0,4,0,"Query execution failed: Query failed: Execution failed on sql 'SELECT v.body_type,
+       SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count ELSE 0 END) AS count_2023,
+       SUM(CASE WHEN t.year_report = 2024 THEN f.vehicle_count ELSE 0 END) AS count_2024,
+       (SUM(CASE WHEN t.year_report = 2024 THEN f.vehicle_count) - SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count)) * 100.0 / NULLIF(SUM(CASE WHEN t.year_report = 2023 THEN f.vehicle_count), 0) AS growth_rate_percent
+FROM FactRegisteredVehicles f
+JOIN DimTime t ON f.time_key = t.time_key
+JOIN DimVehicle v ON f.vehicle_key = v.vehicle_key
+WHERE t.year_report IN (2023, 2024) 
+GROUP BY v.body_type;': near "")"": syntax error",2025-09-09T22:19:28.782696
+17,9,What is the growth rate among body types from 2023 to 2024?,True,50,40,10,100,7,7,4,4,,2025-09-09T22:19:37.753041
+17,10,What is the growth rate among body types from 2023 to 2024?,True,50,40,0,90,7,7,4,4,,2025-09-09T22:19:53.486192
+18,1,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:19:57.848503
+18,2,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:02.348665
+18,3,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:07.614320
+18,4,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:13.616343
+18,5,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:19.884486
+18,6,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:26.167753
+18,7,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:31.477105
+18,8,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:36.748838
+18,9,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:42.161910
+18,10,Which country has the highest vehicle registrations?,True,50,40,10,100,1,1,2,2,,2025-09-09T22:20:46.320696
+19,1,Compare England vs Scotland vehicle body type preferences,True,50,40,0,90,7,7,3,3,,2025-09-09T22:20:53.256454
+19,2,Compare England vs Scotland vehicle body type preferences,True,50,40,0,90,7,7,3,3,,2025-09-09T22:21:02.137992
+19,3,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:07.212202
+19,4,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:16.017387
+19,5,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:22.287020
+19,6,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:27.915168
+19,7,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:33.217189
+19,8,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:38.774353
+19,9,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:44.140183
+19,10,Compare England vs Scotland vehicle body type preferences,True,0,40,0,40,7,14,3,3,,2025-09-09T22:21:50.948869
+20,1,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:21:56.514192
+20,2,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:01.837717
+20,3,Which districts register the most electric vehicles?,True,0,0,0,0,1471,2602,2,3,,2025-09-09T22:22:08.866123
+20,4,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:13.331517
+20,5,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:18.373931
+20,6,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:24.517491
+20,7,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:30.707086
+20,8,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:36.246536
+20,9,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:41.671598
+20,10,Which districts register the most electric vehicles?,True,50,40,0,90,1471,1471,2,2,,2025-09-09T22:22:50.603479
+21,1,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:22:57.716391
+21,2,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:03.265023
+21,3,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:08.354518
+21,4,Find the top regions for BMW registrations,True,50,40,0,90,206,206,2,2,,2025-09-09T22:23:15.692617
+21,5,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:22.380872
+21,6,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:27.758616
+21,7,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:32.857889
+21,8,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:37.806650
+21,9,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:42.465606
+21,10,Find the top regions for BMW registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:47.086918
+22,1,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:52.981771
+22,2,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:23:58.163484
+22,3,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:04.099937
+22,4,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:09.424255
+22,5,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:14.818191
+22,6,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:20.464809
+22,7,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:25.757885
+22,8,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:31.043678
+22,9,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:36.464004
+22,10,Find the top regions for MERCEDES-BENZ registrations,True,50,40,10,100,206,206,2,2,,2025-09-09T22:24:42.396622
+23,1,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:24:49.423998
+23,2,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:24:53.667881
+23,3,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:24:58.359545
+23,4,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:03.257275
+23,5,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:08.683522
+23,6,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:14.154176
+23,7,Find the top regions for AUDI registrations,True,50,40,10,100,205,205,2,2,,2025-09-09T22:25:18.953531
+23,8,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:23.979991
+23,9,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:28.624780
+23,10,Find the top regions for AUDI registrations,True,50,40,0,90,205,205,2,2,,2025-09-09T22:25:33.501218
+24,1,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:25:38.971699
+24,2,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:25:43.830316
+24,3,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:25:49.424960
+24,4,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:25:53.926662
+24,5,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:00.317982
+24,6,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:05.540728
+24,7,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:09.848743
+24,8,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:16.090709
+24,9,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:20.391050
+24,10,Find the top regions for PORSCHE registrations,True,50,40,10,100,204,204,2,2,,2025-09-09T22:26:25.074057

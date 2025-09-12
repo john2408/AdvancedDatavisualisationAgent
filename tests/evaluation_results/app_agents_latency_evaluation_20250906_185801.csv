@@ -1,2 +1,0 @@
-Question_Number,Question,Total_Duration_Seconds,Step1_Generate_SQL_Seconds,Step2_Review_SQL_Seconds,Step3_Execute_Query_Seconds,Step4_Generate_Visualization_Seconds,Status,Failed_Step,Timestamp
-1,What are the top 5 car brands by total registrations in 2024?,7.68,4.02,2.54,0.15,0.98,Success,,2025-09-06T18:58:01.025336
