@@ -66,38 +66,17 @@ This report is organized into the following sections: Section 2 presents the rel
 
 ### 3.1 Multi-Modal Voice Interface Architecture
 
-The system implements a comprehensive multi-modal voice interface architecture that supports both speech input and audio output through multiple service providers, ensuring enterprise-grade reliability and user choice flexibility.
+The Advanced Data Visualization Agent implements a comprehensive four-layer architecture designed to provide seamless natural language database interaction through multiple modalities. The system leverages enterprise-grade AI services across each architectural layer to ensure reliability, scalability, and user accessibility.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    Advanced Data Visualization Agent                │
-├─────────────────────────────────────────────────────────────────────┤
-│                        🎤 VOICE INPUT LAYER                        │
-│  ┌─────────────────────┐    ┌─────────────────────────────────────┐ │
-│  │   IBM Watson STT    │    │         OpenAI Whisper             │ │
-│  │   🔵 Enterprise     │    │      🟢 Multilingual             │ │
-│  │   • Confidence      │    │      • 100+ Languages             │ │
-│  │   • Real-time       │    │      • Noise Robust               │ │
-│  │   • Business Grade  │    │      • Developer Friendly         │ │
-│  └─────────────────────┘    └─────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────────┤
-│                     NATURAL LANGUAGE PROCESSING                    │
-│              SQL Generation → Query Execution → Visualization      │
-├─────────────────────────────────────────────────────────────────────┤
-│                        🔊 VOICE OUTPUT LAYER                       │
-│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │
-│ │ IBM Watson TTS  │ │ ElevenLabs AI   │ │    OpenAI TTS          │ │
-│ │ 🔵 Professional │ │ 🟢 Premium      │ │ 🟠 Advanced            │ │
-│ │ • 6 Voices      │ │ • 10 Voices     │ │ • 7 Voices             │ │
-│ │ • Enterprise    │ │ • Emotional     │ │ • Instructions         │ │
-│ │ • SSML Support  │ │ • Voice Cloning │ │ • Streaming API        │ │
-│ └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
-```
+![Full Architecture](../Final_Architecture.png)
 
-**Speech-to-Text Services Integration**: The system provides users with choice between IBM Watson Speech-to-Text (enterprise-grade with confidence scoring) and OpenAI Whisper (multilingual with 100+ language support), enabling optimal service selection based on use case requirements.
+**Voice Input Layer**: The input layer provides dual speech-to-text capabilities through IBM Watson Speech-to-Text and OpenAI Whisper services, enabling users to interact with the system through natural speech. IBM Watson delivers enterprise-grade accuracy with confidence scoring and real-time processing optimized for business environments, while OpenAI Whisper provides robust multilingual support with advanced noise resistance for diverse audio conditions. This dual-provider approach ensures maximum accessibility and reliability, allowing users to select the most appropriate service based on their specific use case requirements, language preferences, and environmental conditions.
 
-**Text-to-Speech Services Integration**: A unified interface manages three premium TTS providers: IBM Watson (6 professional voices with SSML support), ElevenLabs (10 AI voices with emotional expression), and OpenAI (7 advanced voices with custom instructions), providing comprehensive audio output options for diverse user preferences.
+**Natural Language Processing Layer**: The core processing layer orchestrates sophisticated AI-driven query interpretation and database interaction through the CrewAI multi-agent framework. This layer implements intention orchestration to classify user queries and manage conversation context, followed by a four-step pipeline: SQL generation using domain-specific database knowledge, SQL review for optimization and validation, query execution against the SQLite Star Schema database, and intelligent visualization generation. The layer integrates seamlessly with the Streamlit framework to provide responsive web-based interactions while maintaining session state for conversational continuity.
+
+**Voice Output Layer**: The output layer implements comprehensive text-to-speech capabilities through three premium providers: IBM Watson Text-to-Speech (6 professional voices with SSML support), ElevenLabs (10 AI voices with emotional expression and natural intonation), and OpenAI Text-to-Speech (7 advanced voices with custom instruction support). This multi-provider architecture ensures users can select voice characteristics that match their preferences while providing redundancy and service reliability. The unified interface abstracts provider-specific configurations while maintaining access to advanced features such as emotional expression control and pronunciation customization.
+
+**Data Layer**: The foundation layer consists of a SQLite database implementing a Traditional Star Schema design optimized for analytical workloads and Business Intelligence queries. The schema includes FactRegisteredVehicles (625,476 records) as the central fact table, supported by dimensional tables for time (DimTime), geography (DimGeographyCountry, DimGeographyDistrict), manufacturers (DimOEM), and vehicle characteristics (DimVehicle). Domain knowledge integration through YAML configuration provides comprehensive schema understanding to the AI agents, including table structures, relationships, business rules, and query optimization patterns. This structured approach enables the system to generate efficient SQL queries while maintaining data consistency and supporting complex analytical operations across the UK vehicle registration dataset.
 
 ### 3.2 Application Design
 

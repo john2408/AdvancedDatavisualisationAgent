@@ -18,6 +18,10 @@ The application follows a sophisticated pipeline to process user queries:
 4. **`step_3_execute_query`** - Executes the validated SQL query against the SQLite database
 5. **`step_4_generate_visualization`** - Creates appropriate visualizations using the hybrid visualization system
 
+This comprehensive process is better illustrated in the general architecture diagram below.
+
+![Full Architecture](docs/Final_Architecture.png)
+
 ### **Key Features**
 
 - **Natural Language to SQL**: Convert conversational queries into optimized SQL
