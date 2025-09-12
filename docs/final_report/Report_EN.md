@@ -104,13 +104,24 @@ The system implements a multi-agent architecture using the CrewAI framework, whe
 
 #### 3.3.1 Agent Descriptions: Roles and Tasks
 
-**SQL Generator Agent**: Responsible for translating natural language queries into syntactically correct SQL statements. This agent utilizes domain-specific knowledge about the database schema and applies pattern recognition to identify query intent and required table joins.
+The system employs a sophisticated multi-agent architecture where each agent is configured with specific models, temperature settings, and task definitions through YAML configuration files. The `agents.yaml` file defines agent characteristics while `tasks.yaml` specifies their operational objectives, creating a comprehensive CrewAI framework for natural language database interaction.
 
-**SQL Reviewer Agent**: Functions as a quality assurance mechanism, analyzing generated SQL queries for optimization opportunities, syntax validation, and logical correctness. This agent implements a secondary validation layer to ensure query accuracy and performance.
+**SQL Generator Agent (query_generator_agent)**: Responsible for translating natural language queries into syntactically correct SQL statements using OpenAI's GPT-4o model with a low temperature setting (0.2) to ensure consistent and accurate SQL generation. This agent operates as a "Senior Data Analyst" with comprehensive database schema knowledge and applies pattern recognition to identify query intent and required table joins.
 
-**Orchestration Agent**: Manages conversation flow by distinguishing between new data requests and follow-up questions, maintaining conversation context, and routing queries to appropriate processing pipelines.
+**SQL Reviewer Agent (query_reviewer_agent)**: Functions as a quality assurance mechanism using GPT-4o with temperature 0.2, analyzing generated SQL queries for optimization opportunities, syntax validation, and logical correctness. Operating as a "SQL Code Reviewer", this agent implements a secondary validation layer to ensure query accuracy and performance optimization.
 
-**Visualization Agents**: Specialized agents for chart type selection and data presentation, including both the original data visualization crew and the optimized chart type crew for the hybrid visualization system.
+*Configuration Integration*: The `review_task` in `tasks.yaml` receives the generated SQL from the first agent and applies systematic review criteria, ensuring only schema-compliant queries are executed. The low temperature setting ensures consistent review standards across all query evaluations.
+
+**Orchestration Agent (orchestration_agent)**: Manages conversation flow using GPT-5-mini with temperature 0.3, distinguishing between new data requests and follow-up questions while maintaining conversation context and routing queries to appropriate processing pipelines. This agent operates as a "Conversation Orchestrator" with advanced natural language understanding capabilities for intent classification.
+
+*Task Coordination Example*: The `orchestration_task` defines sophisticated classification criteria with confidence scoring, analyzing linguistic patterns and conversation context to determine whether user input represents a new query or follow-up question. The slightly higher temperature (0.3) allows for nuanced interpretation while maintaining reliability.
+
+**Visualization Agents**: The system includes multiple visualization specialists:
+- **Data Analysis Agent**: Uses GPT-4o (temperature 0.5) for flexible data pattern recognition and insight generation
+- **Visualization Agent**: Employs GPT-5-mini (temperature 0.2) for deterministic chart type selection and data transformation
+- **Chart Type Selection Agent**: Utilizes GPT-5-mini (temperature 0.3) for intelligent visualization recommendations
+
+*CrewAI Configuration Pattern*: Each agent's YAML configuration specifies `allow_delegation: False` and `verbose: True` for controlled execution flow and comprehensive logging. The tasks are designed with structured input parameters (e.g., `{db_schema}`, `{user_input}`, `{dataframe_json}`) that enable seamless data flow between agents while maintaining type safety and error handling.
 
 #### 3.3.2 Database Domain Knowledge Integration
 
