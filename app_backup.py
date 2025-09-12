@@ -685,7 +685,7 @@ def display_welcome_message():
             </p>
             <p style="text-align: center; color: #1f77b4 !important; font-size: 0.9rem; font-style: italic;">
                 🎤 Voice input powered by IBM Watson Speech-to-Text & OpenAI Whisper<br>
-                🔊 Audio responses powered by IBM Watson Text-to-Speech, ElevenLabs AI & OpenAI TTS
+                🔊 Audio responses powered by IBM Watson Text-to-Speech & ElevenLabs AI
             </p>
         </div>
     """, unsafe_allow_html=True)

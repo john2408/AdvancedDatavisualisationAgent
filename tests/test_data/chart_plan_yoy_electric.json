@@ -1,0 +1,11 @@
+{
+  "chart_type": "CASCADE",
+  "x": "year_report",
+  "y": [
+    "total_ev_registrations"
+  ],
+  "color": null,
+  "aggregation": "sum",
+  "transform": "cascade",
+  "title": "Year-over-Year Change: total_ev_registrations"
+}
