@@ -215,7 +215,6 @@ The evaluation framework serves multiple purposes: **quality assurance mechanism
 
 ### 5.1 SQL Generation Robustness Evaluation
 
-![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/sql_accuracy_consistency_analysis.png)
 
 The SQL generation robustness evaluation assesses the system's capability to consistently translate natural language queries into correct SQL statements across multiple executions. This comprehensive evaluation employs both accuracy measurement and variance analysis to determine system reliability and consistency.
 
@@ -238,19 +237,14 @@ The SQL generation robustness evaluation assesses the system's capability to con
 - **Columns Count Score**: Mean 38.66 ± 7.22 points (median: 40.0)
 - **Column Names Score**: Mean 6.76 ± 4.69 points (median: 10.0)
 
-**Consistency Categories**:
-- **Highly Consistent Questions** (std dev < 5, success rate > 80%): 10 questions including Q6, Q8, Q14, Q18, Q22 with perfect consistency (0.0 standard deviation)
-- **Variable Performance Questions** (std dev > 10): 14 questions showing higher variance, with Q5 (std dev: 30.0), Q4 (std dev: 28.7), and Q20 (std dev: 27.0) representing the highest variability
+**Performance Consistency Analysis**:
 
-**Reliability Assessment**: The evaluation revealed that **100% of questions (24/24) achieved at least one successful run**, with **zero questions experiencing complete failure** across all 10 attempts. This demonstrates robust error recovery and consistent functionality across diverse query types.
+![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/sql_accuracy_consistency_analysis.png)
 
-**Performance Distribution**: The variance analysis shows that while mean performance is high (86.84%), the system exhibits different consistency patterns across query types. Simple analytical queries demonstrate near-perfect consistency, while complex multi-dimensional temporal queries show expected variance due to LLM non-deterministic behavior.
-
-**Evaluation Efficiency**: The comprehensive 240-run evaluation completed in 1,803.69 seconds (approximately 30 minutes), averaging 7.5 seconds per individual query execution, demonstrating scalable evaluation capabilities suitable for continuous integration testing.
+The coefficient of variation (CV) measures the relative variability of SQL accuracy scores across multiple runs, where lower percentages indicate more consistent performance and higher percentages suggest greater variability in system responses. The consistency analysis chart reveals distinct performance categories across the 24 evaluation questions, with **High Consistency questions (CV < 10%)** shown in green achieving perfect or near-perfect reproducibility (Q6, Q8, Q14, Q18, Q22, Q24 all showing 0.0% variation), **Moderate Consistency questions (10% ≤ CV < 25%)** displayed in orange representing acceptable production-level reliability (Q16, Q21, Q13, Q12, Q17, Q2, Q10), and **Variable Performance questions (CV ≥ 25%)** highlighted in red indicating queries requiring additional optimization or human-in-the-loop intervention (Q1, Q20, Q3, Q7, Q19, Q5, Q4 with Q19 showing the highest variance at 42.2%). This distribution demonstrates that 71% of questions achieve high to moderate consistency levels suitable for production deployment, while 29% exhibit higher variance patterns that correlate with query ambiguity and interpretive complexity.
 
 ### 5.2 System Latency Robustness Evaluation
 
-![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/latency_variance_analysis.png)
 
 The system latency evaluation provides comprehensive analysis of response time consistency across the four-step processing pipeline through extensive robustness testing. This evaluation measures end-to-end performance characteristics, identifies potential bottlenecks, and quantifies performance variance across multiple executions.
 
@@ -288,17 +282,9 @@ The system latency evaluation provides comprehensive analysis of response time c
 
 **Performance Consistency Analysis**:
 
-**Most Consistent Questions** (Coefficient of Variation < 10%):
-- Question 2 (Electric vehicles analysis): Mean 5.28s ± 0.44s (CV: 8.4%)
-- Question 4 (SUVs vs Sedans comparison): Mean 6.12s ± 0.49s (CV: 7.9%)
-- Question 3 (Petrol vs electric comparison): Mean 6.48s ± 0.50s (CV: 7.8%)
-- Question 20 (District electric vehicles): Mean 6.20s ± 0.46s (CV: 7.4%)
-- Question 7 (Monthly registrations total): Mean 5.02s ± 0.36s (CV: 7.2%)
+![SQL Accuracy Consistency Analysis](../../tests/evaluation_results_crewai/latency_variance_analysis.png)
 
-**Highest Variance Questions** (Coefficient of Variation > 25%):
-- Question 19 (England vs Scotland comparison): Mean 8.75s ± 3.86s (CV: 44.1%)
-- Question 15 (Waterfall chart analysis): Mean 9.44s ± 3.48s (CV: 36.9%)
-- Question 14 (Top 3 body types): Mean 9.58s ± 2.63s (CV: 27.5%)
+The coefficient of variation (CV) for system latency measures the relative variability of response times across multiple executions, where lower percentages indicate more predictable performance and higher percentages suggest greater timing inconsistency that could impact user experience. The latency consistency analysis chart demonstrates a clear performance distribution across the 24 evaluation questions, with **High Consistency questions (CV < 15%)** shown in green representing highly predictable response times suitable for production environments (Q7, Q20, Q3, Q4, Q2, Q22, Q10, Q8, Q9, Q17, Q5, Q24, Q11, Q18, Q6, Q21, Q23 achieving CV values ranging from 7.2% to 13.3%), **Moderate Consistency questions (15% ≤ CV < 25%)** displayed in orange indicating acceptable but variable performance (Q16, Q13, Q1, Q12, Q14 with CV values from 15.9% to 24.5%), and **Variable Performance questions (CV ≥ 25%)** highlighted in red showing high timing unpredictability requiring optimization attention (Q15, Q19 with CV values of 36.9% and 44.1% respectively). This distribution reveals that 71% of questions (17/24) achieve high consistency suitable for production deployment, 21% (5/24) demonstrate moderate variability that remains acceptable for most use cases, and only 8% (2/24) exhibit high variance patterns that correlate with query complexity and interpretive ambiguity, with Q19 again representing the most problematic case showing the strongest correlation between SQL accuracy variance (42.2%) and latency variance (44.1%), confirming that ambiguous queries create cascading effects impacting both correctness and performance predictability.
 
 **Performance Optimization Insights**: The analysis confirms that SQL generation and review components (Steps 1 and 2) account for approximately 83% of total processing time, representing the primary optimization opportunity. Database operations remain highly efficient, and the hybrid visualization system demonstrates the effectiveness of the performance optimization approach.
 
