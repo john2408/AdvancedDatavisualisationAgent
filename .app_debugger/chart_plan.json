@@ -1,11 +1,11 @@
 {
-  "chart_type": "BAR",
-  "x": "region_name",
+  "chart_type": "MULTI_LINE",
+  "x": "year_month",
   "y": [
-    "total_registrations"
+    "monthly_registrations"
   ],
-  "color": null,
+  "color": "oem_name",
   "aggregation": "sum",
   "transform": null,
-  "title": "total_registrations by region_name"
+  "title": "monthly_registrations trends by oem_name over year_month"
 }
