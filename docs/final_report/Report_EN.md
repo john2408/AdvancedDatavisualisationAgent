@@ -66,9 +66,11 @@ This report is organized into the following sections: Section 2 presents the rel
 
 ### 3.1 Multi-Modal Voice Interface Architecture
 
-The Advanced Data Visualization Agent implements a comprehensive four-layer architecture designed to provide seamless natural language database interaction through multiple modalities. The system leverages enterprise-grade AI services across each architectural layer to ensure reliability, scalability, and user accessibility.
+The Advanced Data Visualization Agent implements a comprehensive five-layer architecture designed to provide seamless natural language database interaction through multiple modalities. The system leverages enterprise-grade AI services across each architectural layer to ensure reliability, scalability, and user accessibility.
 
 ![Full Architecture](../Final_Architecture.png)
+
+**Front End Layer**: The presentation layer provides the user interface through the Streamlit framework, offering a responsive web-based application that serves as the primary interaction point for users. This layer manages the complete user experience including text input interfaces, voice recording controls, visualization displays, and audio output playback. The Streamlit framework enables rapid development and deployment while providing session state management for conversation continuity, real-time feedback during voice interactions, and seamless integration with all underlying system components. The front-end layer abstracts the complexity of multi-modal interactions, presenting users with an intuitive interface that supports both technical and non-technical users in their database exploration tasks.
 
 **Voice Input Layer**: The input layer provides dual speech-to-text capabilities through IBM Watson Speech-to-Text and OpenAI Whisper services, enabling users to interact with the system through natural speech. IBM Watson delivers enterprise-grade accuracy with confidence scoring and real-time processing optimized for business environments, while OpenAI Whisper provides robust multilingual support with advanced noise resistance for diverse audio conditions. This dual-provider approach ensures maximum accessibility and reliability, allowing users to select the most appropriate service based on their specific use case requirements, language preferences, and environmental conditions.
 
