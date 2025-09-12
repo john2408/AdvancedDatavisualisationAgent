@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: DataFrame Visualization Tool
+  description: Erstellt eine Plotly JSON-Spezifikation aus einem DataFrame und Visualisierungsparametern.
+  version: 1.0.0
+servers:
+  - url: https://visualization-tool.1zjf0upfwqwy.us-south.codeengine.appdomain.cloud
+paths:
+  /run:
+    post:
+      summary: Generiert eine Visualisierungsspezifikation
+      operationId: generate_visualization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dataframe_json:
+                  type: string
+                  description: JSON-Repräsentation des Pandas DataFrame (im 'split'-Format).
+                  example: '{"columns":["col1", "col2"],"index":[0,1],"data":[[1,"a"],[2,"b"]]}'
+                plot_type:
+                  type: string
+                  description: Art des Diagramms (z.B. 'bar', 'line').
+                x_column:
+                  type: string
+                  description: Spalte für die X-Achse.
+                y_column:
+                  type: string
+                  description: Spalte für die Y-Achse.
+                color_column:
+                  type: string
+                  description: Spalte für die Farb-Gruppierung.
+                title:
+                  type: string
+                  description: Titel des Diagramms.
+                aggregation:
+                  type: string
+                  description: Aggregationsmethode (z.B. 'sum', 'mean').
+      responses:
+        '200':
+          description: Eine erfolgreiche Antwort mit der Plotly JSON-Spezifikation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plot_spec:
+                    type: object
+                    description: Die generierte Plotly JSON-Spezifikation.
+
